@@ -1,0 +1,760 @@
+import 'package:flutter/material.dart';
+
+import 'home_screen.dart';
+import 'screening_screen.dart';
+import 'doctor_screen.dart';
+import 'edukasi_screen.dart';
+import 'login_screen.dart';
+
+import '../widgets/bottom_navigation.dart';
+
+import 'personal_information_screen.dart';
+import 'about_stomachy_screen.dart';
+import 'history_screen.dart';
+import 'food_recommendation_screen.dart';
+import 'sport_recommendation_screen.dart';
+import 'settings_screen.dart';
+import 'grafik_screen.dart';
+import 'change_password_screen.dart';
+
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // ===============================================================
+  // VARIABLE
+  // ===============================================================
+
+  int _selectedIndex = 4;
+
+  final Color backgroundColor = const Color(0xFFFFF5EF);
+  final Color primaryBrown = const Color(0xFF5A392F);
+  final Color softOrange = const Color(0xFFFFE3D1);
+
+  // ===============================================================
+  // BUILD
+  // ===============================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: backgroundColor,
+
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(
+            22,
+            16,
+            22,
+            110,
+          ),
+          child: Column(
+            children: [
+              // =====================================================
+              // PROFILE HEADER
+              // =====================================================
+
+              _buildProfileHeader(),
+
+              const SizedBox(height: 18),
+
+              // =====================================================
+              // MENU PROFILE
+              // =====================================================
+
+              _buildMenuCard(),
+
+              const SizedBox(height: 43),
+
+              // =====================================================
+              // TOMBOL KELUAR
+              // =====================================================
+
+              _buildLogoutButton(),
+
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+
+      // =============================================================
+      // BOTTOM NAVIGATION
+      // =============================================================
+
+      bottomNavigationBar: AppBottomNavigation(
+        selectedIndex: _selectedIndex,
+        onItemSelected: _onNavigationTap,
+      ),
+    );
+  }
+
+  // ===============================================================
+  // BOTTOM NAVIGATION
+  // ===============================================================
+
+  void _onNavigationTap(int index) {
+    // =============================================================
+    // JIKA PROFIL DIKLIK LAGI
+    // =============================================================
+
+    if (index == _selectedIndex) {
+      return;
+    }
+
+    // =============================================================
+    // BERANDA
+    // =============================================================
+
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
+      return;
+    }
+
+    // =============================================================
+    // SKRINING
+    // =============================================================
+
+    if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ScreeningScreen(),
+        ),
+      );
+      return;
+    }
+
+    // =============================================================
+    // DOKTER
+    // =============================================================
+
+    if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const DoctorScreen(),
+        ),
+      );
+      return;
+    }
+
+    // =============================================================
+    // EDUKASI
+    // =============================================================
+
+    if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const EdukasiScreen(),
+        ),
+      );
+      return;
+    }
+
+    // =============================================================
+    // PROFIL
+    // =============================================================
+
+    if (index == 4) {
+      return;
+    }
+  }
+
+  // ===============================================================
+  // PROFILE HEADER
+  // ===============================================================
+
+  Widget _buildProfileHeader() {
+    return Container(
+      width: double.infinity,
+      height: 86,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 15,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFFF806A),
+          width: 0.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // =========================================================
+          // FOTO PROFIL
+          // =========================================================
+
+          Container(
+            width: 58,
+            height: 58,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFE8E8E8),
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/profil_jerome.jpeg',
+                fit: BoxFit.cover,
+                errorBuilder: (
+                  context,
+                  error,
+                  stackTrace,
+                ) {
+                  return const Icon(
+                    Icons.person,
+                    size: 38,
+                    color: Color(0xFF777777),
+                  );
+                },
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          // =========================================================
+          // NAMA DAN EMAIL
+          // =========================================================
+
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Jerome Polin',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF30221E),
+                  ),
+                ),
+
+                SizedBox(height: 5),
+
+                Text(
+                  'jeromepolin12@gmail.com',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 14,
+                    color: Color(0xFF493C37),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===============================================================
+  // MENU PROFILE
+  // ===============================================================
+
+  Widget _buildMenuCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        24,
+        12,
+        14,
+        8,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFFF806A),
+          width: 0.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // =========================================================
+          // INFORMASI PRIBADI
+          // =========================================================
+
+          _buildProfileMenuItem(
+            icon: Icons.person_outline_rounded,
+            title: 'Informasi Pribadi',
+            subtitle: 'Kelola informasi pribadi anda',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const PersonalInformationScreen(),
+                ),
+              );
+            },
+          ),
+
+          _buildDivider(),
+
+          // =========================================================
+          // RIWAYAT
+          // =========================================================
+
+          _buildProfileMenuItem(
+            icon: Icons.access_time_rounded,
+            title: 'Riwayat',
+            subtitle: 'Lihat riwayat cek AI dan konsultasi anda',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HistoryScreen(),
+                ),
+              );
+            },
+          ),
+
+          _buildDivider(),
+
+          // =========================================================
+          // REKOMENDASI OLAHRAGA
+          // =========================================================
+
+          _buildProfileMenuItem(
+            icon: Icons.directions_bike_outlined,
+            title: 'Rekomendasi Olahraga',
+            subtitle: 'Pilihan olahraga untukmu',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const RecommendationSportScreen(),
+                ),
+              );
+            },
+          ),
+
+          _buildDivider(),
+
+          // =========================================================
+          // REKOMENDASI MAKANAN
+          // =========================================================
+
+          _buildProfileMenuItem(
+            icon: Icons.local_drink_outlined,
+            title: 'Rekomendasi Makanan',
+            subtitle: 'Pilihan makanan untuk lambungmu',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const FoodRecommendationScreen(),
+                ),
+              );
+            },
+          ),
+
+          _buildDivider(),
+
+          // =========================================================
+          // GRAFIK
+          // =========================================================
+
+          _buildProfileMenuItem(
+            icon: Icons.show_chart_rounded,
+            title: 'Grafik',
+            subtitle: 'Lihat perkembangan hasil skrining GERD',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const GrafikScreen(),
+                ),
+              );
+            },
+          ),
+
+          _buildDivider(),
+
+          // =========================================================
+          // PENGATURAN
+          // =========================================================
+
+          _buildProfileMenuItem(
+            icon: Icons.settings_outlined,
+            title: 'Pengaturan',
+            subtitle: 'Kelola preferensi dan pengaturan aplikasi',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+
+          _buildDivider(),
+
+          // =========================================================
+          // TENTANG STOMACHY
+          // =========================================================
+
+          _buildProfileMenuItem(
+            icon: Icons.info_outline_rounded,
+            title: 'Tentang Stomachy',
+            subtitle: 'Informasi versi dan kebijakan aplikasi',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const AboutStomachyScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===============================================================
+  // PROFILE MENU ITEM
+  // ===============================================================
+
+  Widget _buildProfileMenuItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        height: 70,
+        child: Row(
+          children: [
+            // =======================================================
+            // ICON
+            // =======================================================
+
+            Container(
+              width: 35,
+              height: 35,
+              decoration: BoxDecoration(
+                color: softOrange,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                icon,
+                size: 22,
+                color: const Color(0xFF705044),
+              ),
+            ),
+
+            const SizedBox(width: 9),
+
+            // =======================================================
+            // TEXT
+            // =======================================================
+
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: primaryBrown,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 14,
+                      color: Color(0xFF776C67),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 5),
+
+            // =======================================================
+            // ARROW
+            // =======================================================
+
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 25,
+              color: Color(0xFF222222),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===============================================================
+  // DIVIDER
+  // ===============================================================
+
+  Widget _buildDivider() {
+    return Container(
+      height: 1,
+      color: const Color(0xFFF3C8B8),
+    );
+  }
+
+  // ===============================================================
+  // LOGOUT BUTTON
+  // ===============================================================
+
+  Widget _buildLogoutButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 53,
+      child: OutlinedButton(
+        onPressed: () {
+          _showLogoutDialog();
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color(0xFFFFEEE5),
+          side: const BorderSide(
+            color: Color(0xFFFF806A),
+            width: 0.9,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(17),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(
+              Icons.logout_rounded,
+              size: 18,
+              color: Color(0xFFB9543A),
+            ),
+
+            SizedBox(width: 8),
+
+            Text(
+              'Keluar',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFB9543A),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===============================================================
+  // LOGOUT DIALOG
+  // ===============================================================
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.65),
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 45,
+          ),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              28,
+              20,
+              25,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ===================================================
+                // JUDUL
+                // ===================================================
+
+                const Text(
+                  'Konfirmasi Logout',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFB9543A),
+                  ),
+                ),
+
+                const SizedBox(height: 7),
+
+                // ===================================================
+                // PESAN
+                // ===================================================
+
+                const Text(
+                  'Apakah anda yakin ingin keluar dari sistem?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 14,
+                    color: Color(0xFF493C37),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ===================================================
+                // BUTTON
+                // ===================================================
+
+                Row(
+                  children: [
+                    // ===============================================
+                    // BATAL
+                    // ===============================================
+
+                    Expanded(
+                      child: SizedBox(
+                        height: 30,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            side: const BorderSide(
+                              color: Color(0xFFB9543A),
+                              width: 0.8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(7),
+                            ),
+                          ),
+                          child: const Text(
+                            'Batal',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFFB9543A),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 10),
+
+                    // ===============================================
+                    // YA, KELUAR
+                    // ===============================================
+
+                    Expanded(
+                      child: SizedBox(
+                        height: 30,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Tutup dialog
+                            Navigator.pop(dialogContext);
+
+                            // Hapus seluruh halaman sebelumnya
+                            // dan kembali ke LoginScreen.
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const LoginScreen(),
+                              ),
+                              (route) => false,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color(0xFFB9543A),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(7),
+                            ),
+                          ),
+                          child: const Text(
+                            'Ya, Keluar',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
