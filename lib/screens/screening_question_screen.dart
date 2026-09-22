@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../widgets/bottom_navigation.dart';
 
+import 'screening/screening_data_diri.dart';
+import 'screening/screening_kondisi.dart';
+import 'screening/screening_gejala.dart';
+
 import 'home_screen.dart';
 import 'doctor_screen.dart';
 import 'edukasi_screen.dart';
@@ -88,11 +92,7 @@ class _ScreeningQuestionScreenState
   // ============================================================
 
   void _onNavigationTap(int index) {
-
-    // ============================================================
     // BERANDA
-    // ============================================================
-
     if (index == 0) {
       Navigator.pushReplacement(
         context,
@@ -103,10 +103,7 @@ class _ScreeningQuestionScreenState
       return;
     }
 
-    // ============================================================
     // SKRINING
-    // ============================================================
-
     if (index == 1) {
       setState(() {
         _selectedIndex = 1;
@@ -114,10 +111,7 @@ class _ScreeningQuestionScreenState
       return;
     }
 
-    // ============================================================
     // DOKTER
-    // ============================================================
-
     if (index == 2) {
       Navigator.pushReplacement(
         context,
@@ -128,10 +122,7 @@ class _ScreeningQuestionScreenState
       return;
     }
 
-    // ============================================================
     // EDUKASI
-    // ============================================================
-
     if (index == 3) {
       Navigator.pushReplacement(
         context,
@@ -142,10 +133,7 @@ class _ScreeningQuestionScreenState
       return;
     }
 
-    // ============================================================
     // PROFIL
-    // ============================================================
-
     if (index == 4) {
       Navigator.push(
         context,
@@ -182,11 +170,7 @@ class _ScreeningQuestionScreenState
   // ============================================================
 
   void _nextStep() {
-
-    // ============================================================
     // LANGKAH 1 → LANGKAH 2
-    // ============================================================
-
     if (currentStep == 1) {
       if (!step1Complete) {
         _showMessage(
@@ -202,10 +186,7 @@ class _ScreeningQuestionScreenState
       return;
     }
 
-    // ============================================================
     // LANGKAH 2 → LANGKAH 3
-    // ============================================================
-
     if (currentStep == 2) {
       if (!step2Complete) {
         _showMessage(
@@ -221,10 +202,7 @@ class _ScreeningQuestionScreenState
       return;
     }
 
-    // ============================================================
     // LANGKAH 3 → LANGKAH 4
-    // ============================================================
-
     if (currentStep == 3) {
       if (!step3Complete) {
         _showMessage(
@@ -328,14 +306,65 @@ class _ScreeningQuestionScreenState
 
                     const SizedBox(height: 18),
 
+                    // ==================================================
+                    // STEP 1
+                    // ==================================================
+
                     if (currentStep == 1)
-                      _buildStep1(),
+                      ScreeningDataDiri(
+                        age: age,
+                        gender: gender,
+                        brown: brown,
+                        cardColor: cardColor,
+                        onAgeChanged: (value) {
+                          setState(() {
+                            age = value;
+                          });
+                        },
+                        onGenderChanged: (value) {
+                          setState(() {
+                            gender = value;
+                          });
+                        },
+                      ),
+
+                    // ==================================================
+                    // STEP 2
+                    // ==================================================
 
                     if (currentStep == 2)
-                      _buildStep2(),
+                      ScreeningKondisi(
+                        answers: step2Answers,
+                        brown: brown,
+                        cardColor: cardColor,
+                        symptomImages: symptomImages,
+                        onAnswer: (entry) {
+                          setState(() {
+                            step2Answers[entry.key] = entry.value;
+                          });
+                        },
+                      ),
+
+                    // ==================================================
+                    // STEP 3
+                    // ==================================================
 
                     if (currentStep == 3)
-                      _buildStep3(),
+                      ScreeningGejala(
+                        answers: step3Answers,
+                        brown: brown,
+                        cardColor: cardColor,
+                        symptomImages: symptomImages,
+                        onAnswer: (entry) {
+                          setState(() {
+                            step3Answers[entry.key] = entry.value;
+                          });
+                        },
+                      ),
+
+                    // ==================================================
+                    // STEP 4
+                    // ==================================================
 
                     if (currentStep == 4)
                       _buildStep4(),
@@ -420,10 +449,10 @@ class _ScreeningQuestionScreenState
 
         Row(
           children: [
-            for (int i = 1; i <= 5; i++) ...[
+            for (int i = 1; i <= 4; i++) ...[
               _buildProgressCircle(i),
 
-              if (i < 5)
+              if (i < 4)
                 Expanded(
                   child: Container(
                     height: 2,
@@ -509,669 +538,11 @@ class _ScreeningQuestionScreenState
         Text(
           subtitle,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             color: Color(0xFF5C514C),
           ),
         ),
       ],
-    );
-  }
-
-  // ============================================================
-  // LANGKAH 1
-  // ============================================================
-
-  Widget _buildStep1() {
-    return Column(
-      children: [
-        _buildAgeCard(),
-
-        const SizedBox(height: 20),
-
-        _buildGenderCard(),
-      ],
-    );
-  }
-
-  // ============================================================
-  // KARTU USIA
-  // ============================================================
-
-  Widget _buildAgeCard() {
-    return Container(
-      width: double.infinity,
-      height: 95,
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: const Color(0xFFFF775C),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.13),
-            blurRadius: 3,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 55,
-            child: Icon(
-              Icons.person_rounded,
-              size: 42,
-              color: Color(0xFFB05039),
-            ),
-          ),
-
-          const SizedBox(width: 10),
-
-          const Text(
-            'Usia',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-
-          const SizedBox(width: 15),
-
-          Expanded(
-            child: SizedBox(
-              height: 38,
-              child: TextField(
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  setState(() {
-                    age = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Isi usia anda',
-                  hintStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF99918E),
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 12,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF8B817D),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFB05039),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 15),
-
-          const Text(
-            'Tahun',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // KARTU JENIS KELAMIN
-  // ============================================================
-
-  Widget _buildGenderCard() {
-    return Container(
-      width: double.infinity,
-      height: 95,
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: const Color(0xFFFF775C),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.13),
-            blurRadius: 3,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 55,
-            child: Icon(
-              Icons.wc_rounded,
-              size: 44,
-              color: Color(0xFFB05039),
-            ),
-          ),
-
-          const SizedBox(width: 10),
-
-          Expanded(
-            child: Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.center,
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Jenis Kelamin',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                Row(
-                  children: [
-                    _buildGenderButton('Perempuan'),
-
-                    const SizedBox(width: 8),
-
-                    _buildGenderButton('Laki - laki'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGenderButton(String value) {
-    bool selected = gender == value;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          gender = value;
-        });
-      },
-      child: Container(
-        width: 98,
-        height: 36,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFFFE3D9)
-              : const Color(0xFFFFFCF9),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: selected
-                ? brown
-                : const Color(0xFF9A908B),
-          ),
-        ),
-        child: Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            color: selected
-                ? brown
-                : const Color(0xFF827A76),
-            fontWeight: selected
-                ? FontWeight.w600
-                : FontWeight.w400,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // LANGKAH 2
-  // ============================================================
-
-  Widget _buildStep2() {
-    return Column(
-      children: [
-        _buildYesNoCard(
-          title: 'Perut terasa penuh',
-          question:
-              'Apakah kamu sering merasa perut penuh setelah makan?',
-        ),
-
-        const SizedBox(height: 15),
-
-        _buildYesNoCard(
-          title: 'Waktu tidur',
-          question:
-              'Apakah kamu mendapatkan waktu tidur yang cukup?',
-        ),
-
-        const SizedBox(height: 15),
-
-        _buildYesNoCard(
-          title: 'Penggunaan obat',
-          question:
-              'Apakah kamu sedang mengonsumsi obat tertentu saat ini?',
-        ),
-
-        const SizedBox(height: 15),
-
-        _buildYesNoCard(
-          title: 'Panas di dada',
-          question:
-              'Apakah kamu sering merasakan sensasi panas atau terbakar di dada?',
-        ),
-
-        const SizedBox(height: 15),
-
-        _buildYesNoCard(
-          title: 'Asam lambung naik',
-          question:
-              'Apakah kamu pernah merasakan asam atau rasa pahit naik ke tenggorokan?',
-        ),
-
-        const SizedBox(height: 15),
-
-        _buildYesNoCard(
-          title: 'Nyeri dada atau ulu hati',
-          question:
-              'Apakah kamu sering merasakan nyeri atau tidak nyaman di dada atau ulu hati?',
-        ),
-      ],
-    );
-  }
-
-  // ============================================================
-  // KARTU YA / TIDAK
-  // ============================================================
-
-  Widget _buildYesNoCard({
-    required String title,
-    required String question,
-  }) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(
-        minHeight: 110,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 9,
-      ),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: const Color(0xFFFF775C),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 3,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 62,
-            height: 62,
-            alignment: Alignment.center,
-            child: Image.asset(
-              symptomImages[title]!,
-              width: 57,
-              height: 57,
-              fit: BoxFit.contain,
-              errorBuilder:
-                  (context, error, stackTrace) {
-                return const Icon(
-                  Icons.image_not_supported_outlined,
-                  color: Color(0xFFB05039),
-                  size: 35,
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(width: 10),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                Text(
-                  question,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.15,
-                    color: Color(0xFF766D68),
-                  ),
-                ),
-
-                const SizedBox(height: 7),
-
-                Row(
-                  children: [
-                    _buildYesNoButton(
-                      title: title,
-                      value: true,
-                      label: 'Ya',
-                    ),
-
-                    const SizedBox(width: 18),
-
-                    _buildYesNoButton(
-                      title: title,
-                      value: false,
-                      label: 'Tidak',
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildYesNoButton({
-    required String title,
-    required bool value,
-    required String label,
-  }) {
-    bool selected =
-        step2Answers[title] == value;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          step2Answers[title] = value;
-        });
-      },
-      child: Container(
-        width: 70,
-        height: 21,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFFFE0D5)
-              : Colors.white,
-          borderRadius:
-              BorderRadius.circular(15),
-          border: Border.all(
-            color: selected
-                ? brown
-                : const Color(0xFFFF765B),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color:
-                  Colors.black.withOpacity(0.08),
-              blurRadius: 2,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: selected
-                ? FontWeight.w600
-                : FontWeight.w400,
-            color: Colors.black,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // LANGKAH 3
-  // ============================================================
-
-  Widget _buildStep3() {
-    return Column(
-      children: [
-        _buildFrequencyCard(
-          title: 'Panas di dada',
-          question:
-              'Seberapa sering kamu merasakan sensasi panas atau terbakar di dada?',
-        ),
-
-        const SizedBox(height: 15),
-
-        _buildFrequencyCard(
-          title: 'Asam lambung naik',
-          question:
-              'Seberapa sering kamu merasakan asam atau rasa pahit naik ke tenggorokan?',
-        ),
-
-        const SizedBox(height: 15),
-
-        _buildFrequencyCard(
-          title: 'Nyeri dada atau ulu hati',
-          question:
-              'Seberapa sering kamu merasakan nyeri atau tidak nyaman di dada atau ulu hati?',
-        ),
-      ],
-    );
-  }
-
-  // ============================================================
-  // KARTU FREKUENSI
-  // ============================================================
-
-  Widget _buildFrequencyCard({
-    required String title,
-    required String question,
-  }) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(
-        minHeight: 110,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 9,
-      ),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius:
-            BorderRadius.circular(17),
-        border: Border.all(
-          color: const Color(0xFFFF775C),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color:
-                Colors.black.withOpacity(0.12),
-            blurRadius: 3,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 62,
-            height: 62,
-            alignment: Alignment.center,
-            child: Image.asset(
-              symptomImages[title]!,
-              width: 57,
-              height: 57,
-              fit: BoxFit.contain,
-              errorBuilder:
-                  (context, error, stackTrace) {
-                return const Icon(
-                  Icons.image_not_supported_outlined,
-                  color: Color(0xFFB05039),
-                  size: 35,
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(width: 10),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                Text(
-                  question,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.15,
-                    color: Color(0xFF766D68),
-                  ),
-                ),
-
-                const SizedBox(height: 7),
-
-                Row(
-                  children: [
-                    _buildFrequencyButton(
-                      title: title,
-                      value: 'Tidak Ada',
-                    ),
-
-                    const SizedBox(width: 7),
-
-                    _buildFrequencyButton(
-                      title: title,
-                      value: 'Mingguan',
-                    ),
-
-                    const SizedBox(width: 7),
-
-                    _buildFrequencyButton(
-                      title: title,
-                      value: 'Bulanan',
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFrequencyButton({
-    required String title,
-    required String value,
-  }) {
-    bool selected =
-        step3Answers[title] == value;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          step3Answers[title] = value;
-        });
-      },
-      child: Container(
-        height: 21,
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 10,
-        ),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFFFE0D5)
-              : Colors.white,
-          borderRadius:
-              BorderRadius.circular(15),
-          border: Border.all(
-            color: selected
-                ? brown
-                : const Color(0xFFFF765B),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color:
-                  Colors.black.withOpacity(0.08),
-              blurRadius: 2,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Text(
-          value,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: selected
-                ? FontWeight.w600
-                : FontWeight.w400,
-            color: Colors.black,
-          ),
-        ),
-      ),
     );
   }
 
@@ -1295,8 +666,7 @@ class _ScreeningQuestionScreenState
         ),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
@@ -1391,8 +761,7 @@ class _ScreeningQuestionScreenState
             shadowColor:
                 Colors.black.withOpacity(0.25),
             shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(25),
             ),
           ),
           child: Text(
@@ -1401,7 +770,7 @@ class _ScreeningQuestionScreenState
                 : 'Lanjutkan',
             style: const TextStyle(
               fontFamily: 'Fredoka',
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
           ),
