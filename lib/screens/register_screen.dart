@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'home_screen.dart';
+import '../services/google_auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       TextEditingController();
 
   bool obscurePassword = true;
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -30,22 +34,222 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   // ===============================================================
-  // REGISTER
+  // REGISTER EMAIL + PASSWORD
   // ===============================================================
 
-  void _register() {
-    // Untuk sementara setelah daftar langsung masuk ke Beranda.
-    //
-    // Nanti bagian ini bisa diganti dengan Firebase/
-    // database untuk menyimpan akun pengguna.
+  Future<void> _register() async {
+    if (isLoading) return;
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
-      ),
-    );
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showMessage(
+        'Nama, email, dan kata sandi wajib diisi.',
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      _showMessage(
+        'Kata sandi minimal 6 karakter.',
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final user = credential.user;
+
+      if (user == null) {
+        throw Exception('User gagal dibuat.');
+      }
+
+      await user.updateDisplayName(name);
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set({
+        'name': name,
+        'email': email,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      String message = 'Pendaftaran gagal.';
+
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'Email tersebut sudah terdaftar.';
+          break;
+
+        case 'invalid-email':
+          message = 'Format email tidak valid.';
+          break;
+
+        case 'weak-password':
+          message = 'Kata sandi terlalu lemah.';
+          break;
+
+        case 'operation-not-allowed':
+          message =
+              'Pendaftaran Email/Password belum diaktifkan di Firebase.';
+          break;
+
+        case 'network-request-failed':
+          message =
+              'Tidak ada koneksi internet. Coba lagi.';
+          break;
+      }
+
+      _showMessage(message);
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Data gagal disimpan ke Firebase: ${e.message ?? e.code}',
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Terjadi kesalahan: $e',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
+
+  // ===============================================================
+  // REGISTER / LOGIN GOOGLE
+  // ===============================================================
+
+  Future<void> _registerWithGoogle() async {
+    if (isLoading) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final credential =
+          await GoogleAuthService.signInWithGoogle();
+
+      final user = credential.user;
+
+      if (user == null) {
+        throw Exception(
+          'Akun Google gagal dibuat.',
+        );
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+        {
+          'name': user.displayName ?? '',
+          'email': user.email ?? '',
+          'createdAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      String message = 'Google gagal masuk.';
+
+      switch (e.code) {
+        case 'account-exists-with-different-credential':
+          message =
+              'Email Google ini sudah terdaftar dengan metode login lain.';
+          break;
+
+        case 'network-request-failed':
+          message =
+              'Tidak ada koneksi internet. Coba lagi.';
+          break;
+
+        case 'user-disabled':
+          message =
+              'Akun ini telah dinonaktifkan.';
+          break;
+
+        case 'invalid-credential':
+          message =
+              'Kredensial Google tidak valid. Silakan coba lagi.';
+          break;
+      }
+
+      _showMessage(message);
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Google gagal masuk: $e',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  // ===============================================================
+  // PESAN
+  // ===============================================================
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+  }
+
+  // ===============================================================
+  // BUILD
+  // ===============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +257,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF4EC),
-
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -106,11 +309,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         size: size.width * 0.04,
                         color: const Color(0xFFFF7775),
                       ),
-
                       SizedBox(
                         width: size.width * 0.02,
                       ),
-
                       Expanded(
                         child: Text(
                           'Yuk, mulai jaga kesehatan lambungmu bersama STOMACHY!',
@@ -189,7 +390,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
 
                       // =================================================
-                      // NAMA LENGKAP
+                      // NAMA
                       // =================================================
 
                       _buildTextField(
@@ -197,6 +398,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         hintText: 'Nama Lengkap',
                         icon: Icons.person_outline,
                         width: size.width,
+                        keyboardType: TextInputType.name,
                       ),
 
                       SizedBox(
@@ -204,14 +406,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
 
                       // =================================================
-                      // EMAIL / NOMOR HP
+                      // EMAIL
                       // =================================================
 
                       _buildTextField(
                         controller: emailController,
-                        hintText: 'Email atau Nomor HP',
+                        hintText: 'Email',
                         icon: Icons.email_outlined,
                         width: size.width,
+                        keyboardType: TextInputType.emailAddress,
                       ),
 
                       SizedBox(
@@ -236,10 +439,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         width: double.infinity,
                         height: size.height * 0.045,
                         child: ElevatedButton(
-                          onPressed: _register,
+                          onPressed:
+                              isLoading ? null : _register,
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 const Color(0xFFB7D1B0),
+                            disabledBackgroundColor:
+                                const Color(0xFFD5DFD2),
                             foregroundColor: Colors.black,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -247,14 +453,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   BorderRadius.circular(30),
                             ),
                           ),
-                          child: Text(
-                            'Daftar',
-                            style: TextStyle(
-                              fontFamily: 'Nunito',
-                              fontSize: size.width * 0.030,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child:
+                                      CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  'Daftar',
+                                  style: TextStyle(
+                                    fontFamily: 'Nunito',
+                                    fontSize:
+                                        size.width * 0.030,
+                                    fontWeight:
+                                        FontWeight.w700,
+                                  ),
+                                ),
                         ),
                       ),
 
@@ -263,7 +480,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
 
                       // =================================================
-                      // ATAU
+                      // DIVIDER
                       // =================================================
 
                       _buildDividerText(size),
@@ -273,7 +490,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
 
                       // =================================================
-                      // SOCIAL BUTTON
+                      // GOOGLE
                       // =================================================
 
                       Row(
@@ -282,14 +499,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         children: [
                           _socialButton(
                             icon: Icons.g_mobiledata,
-                          ),
-
-                          SizedBox(
-                            width: size.width * 0.06,
-                          ),
-
-                          _socialButton(
-                            icon: Icons.phone_in_talk_outlined,
+                            onPressed: isLoading
+                                ? null
+                                : _registerWithGoogle,
                           ),
                         ],
                       ),
@@ -314,16 +526,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               color: Colors.grey[700],
                             ),
                           ),
-
                           GestureDetector(
-                            onTap: () {
-                              Navigator.pop(context);
-                            },
+                            onTap: isLoading
+                                ? null
+                                : () {
+                                    Navigator.pop(context);
+                                  },
                             child: Text(
                               'Masuk sekarang',
                               style: TextStyle(
                                 fontFamily: 'Nunito',
-                                fontSize: size.width * 0.021,
+                                fontSize:
+                                    size.width * 0.021,
                                 fontWeight: FontWeight.w700,
                                 color:
                                     const Color(0xFFC5674E),
@@ -356,9 +570,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String hintText,
     required IconData icon,
     required double width,
+    required TextInputType keyboardType,
   }) {
     return TextField(
       controller: controller,
+      keyboardType: keyboardType,
+      textInputAction: TextInputAction.next,
       style: TextStyle(
         fontFamily: 'Nunito',
         fontSize: width * 0.022,
@@ -405,6 +622,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return TextField(
       controller: passwordController,
       obscureText: obscurePassword,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) {
+        if (!isLoading) {
+          _register();
+        }
+      },
       style: TextStyle(
         fontFamily: 'Nunito',
         fontSize: size.width * 0.022,
@@ -470,7 +693,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             color: const Color(0xFFD4D0CC),
           ),
         ),
-
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: 10,
@@ -484,7 +706,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         ),
-
         Expanded(
           child: Container(
             height: 0.5,
@@ -501,15 +722,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _socialButton({
     required IconData icon,
+    required VoidCallback? onPressed,
   }) {
     return SizedBox(
       width: 42,
       height: 42,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFFF8F4),
+          disabledBackgroundColor:
+              const Color(0xFFF0EAE6),
           foregroundColor: const Color(0xFFB85E47),
+          disabledForegroundColor:
+              const Color(0xFFB8AAA3),
           elevation: 1,
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(

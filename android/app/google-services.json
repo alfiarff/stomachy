@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "132280576015",
+    "project_id": "stomachy-78ae9",
+    "storage_bucket": "stomachy-78ae9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:132280576015:android:f7cd4b14d4269d37e71b7a",
+        "android_client_info": {
+          "package_name": "com.example.stomachy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "132280576015-giidapsc0dkdvrlcpjfao26bna7kk4mf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.stomachy",
+            "certificate_hash": "7535e69a809c0048e5f81b46e64f4180fef819a0"
+          }
+        },
+        {
+          "client_id": "132280576015-t2l30v89jor9cg0ft66f0gu6g0alngi3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1gHK6zKPBUwJMdHNgWRzgblJrX2y2MWU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "132280576015-t2l30v89jor9cg0ft66f0gu6g0alngi3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
