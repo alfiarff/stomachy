@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
@@ -43,7 +45,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -99,17 +100,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ===============================================================
 
   void _onNavigationTap(int index) {
-    // =============================================================
-    // JIKA PROFIL DIKLIK LAGI
-    // =============================================================
-
     if (index == _selectedIndex) {
       return;
     }
-
-    // =============================================================
-    // BERANDA
-    // =============================================================
 
     if (index == 0) {
       Navigator.pushReplacement(
@@ -121,10 +114,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    // =============================================================
-    // SKRINING
-    // =============================================================
-
     if (index == 1) {
       Navigator.pushReplacement(
         context,
@@ -134,10 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       return;
     }
-
-    // =============================================================
-    // DOKTER
-    // =============================================================
 
     if (index == 2) {
       Navigator.pushReplacement(
@@ -149,10 +134,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    // =============================================================
-    // EDUKASI
-    // =============================================================
-
     if (index == 3) {
       Navigator.pushReplacement(
         context,
@@ -162,10 +143,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       return;
     }
-
-    // =============================================================
-    // PROFIL
-    // =============================================================
 
     if (index == 4) {
       return;
@@ -177,6 +154,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ===============================================================
 
   Widget _buildProfileHeader() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return _buildProfileHeaderContent(
+        name: 'Pengguna',
+        email: '',
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        String name = user.displayName ?? '';
+        String email = user.email ?? '';
+
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data =
+              snapshot.data!.data() as Map<String, dynamic>?;
+
+          if (data != null) {
+            final firestoreName =
+                data['name']?.toString().trim();
+
+            final firestoreEmail =
+                data['email']?.toString().trim();
+
+            if (firestoreName != null &&
+                firestoreName.isNotEmpty) {
+              name = firestoreName;
+            }
+
+            if (firestoreEmail != null &&
+                firestoreEmail.isNotEmpty) {
+              email = firestoreEmail;
+            }
+          }
+        }
+
+        if (name.isEmpty) {
+          name = 'Pengguna';
+        }
+
+        return _buildProfileHeaderContent(
+          name: name,
+          email: email,
+        );
+      },
+    );
+  }
+
+  // ===============================================================
+  // PROFILE HEADER CONTENT
+  // ===============================================================
+
+  Widget _buildProfileHeaderContent({
+    required String name,
+    required String email,
+  }) {
     return Container(
       width: double.infinity,
       height: 86,
@@ -241,10 +279,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Jerome Polin',
-                  style: TextStyle(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -252,13 +292,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
 
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
 
                 Text(
-                  'jeromepolin12@gmail.com',
-                  style: TextStyle(
+                  email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 14,
+                    fontSize: 12,
                     color: Color(0xFF493C37),
                   ),
                 ),
@@ -300,10 +342,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          // =========================================================
-          // INFORMASI PRIBADI
-          // =========================================================
-
           _buildProfileMenuItem(
             icon: Icons.person_outline_rounded,
             title: 'Informasi Pribadi',
@@ -321,10 +359,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           _buildDivider(),
 
-          // =========================================================
-          // RIWAYAT
-          // =========================================================
-
           _buildProfileMenuItem(
             icon: Icons.access_time_rounded,
             title: 'Riwayat',
@@ -340,10 +374,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
 
           _buildDivider(),
-
-          // =========================================================
-          // REKOMENDASI OLAHRAGA
-          // =========================================================
 
           _buildProfileMenuItem(
             icon: Icons.directions_bike_outlined,
@@ -362,10 +392,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           _buildDivider(),
 
-          // =========================================================
-          // REKOMENDASI MAKANAN
-          // =========================================================
-
           _buildProfileMenuItem(
             icon: Icons.local_drink_outlined,
             title: 'Rekomendasi Makanan',
@@ -383,10 +409,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           _buildDivider(),
 
-          // =========================================================
-          // GRAFIK
-          // =========================================================
-
           _buildProfileMenuItem(
             icon: Icons.show_chart_rounded,
             title: 'Grafik',
@@ -403,10 +425,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           _buildDivider(),
 
-          // =========================================================
-          // PENGATURAN
-          // =========================================================
-
           _buildProfileMenuItem(
             icon: Icons.settings_outlined,
             title: 'Pengaturan',
@@ -422,10 +440,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
 
           _buildDivider(),
-
-          // =========================================================
-          // TENTANG STOMACHY
-          // =========================================================
 
           _buildProfileMenuItem(
             icon: Icons.info_outline_rounded,
@@ -463,10 +477,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         height: 70,
         child: Row(
           children: [
-            // =======================================================
-            // ICON
-            // =======================================================
-
             Container(
               width: 35,
               height: 35,
@@ -482,10 +492,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
             const SizedBox(width: 9),
-
-            // =======================================================
-            // TEXT
-            // =======================================================
 
             Expanded(
               child: Column(
@@ -512,7 +518,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 14,
+                      fontSize: 12,
                       color: Color(0xFF776C67),
                     ),
                   ),
@@ -521,10 +527,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
             const SizedBox(width: 5),
-
-            // =======================================================
-            // ARROW
-            // =======================================================
 
             const Icon(
               Icons.chevron_right_rounded,
@@ -578,9 +580,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               size: 18,
               color: Color(0xFFB9543A),
             ),
-
             SizedBox(width: 8),
-
             Text(
               'Keluar',
               style: TextStyle(
@@ -627,10 +627,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ===================================================
-                // JUDUL
-                // ===================================================
-
                 const Text(
                   'Konfirmasi Logout',
                   textAlign: TextAlign.center,
@@ -644,32 +640,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 7),
 
-                // ===================================================
-                // PESAN
-                // ===================================================
-
                 const Text(
                   'Apakah anda yakin ingin keluar dari sistem?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 14,
+                    fontSize: 12,
                     color: Color(0xFF493C37),
                   ),
                 ),
 
                 const SizedBox(height: 16),
 
-                // ===================================================
-                // BUTTON
-                // ===================================================
-
                 Row(
                   children: [
-                    // ===============================================
-                    // BATAL
-                    // ===============================================
-
                     Expanded(
                       child: SizedBox(
                         height: 30,
@@ -692,7 +676,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             'Batal',
                             style: TextStyle(
                               fontFamily: 'Nunito',
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               color: Color(0xFFB9543A),
                             ),
@@ -703,20 +687,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     const SizedBox(width: 10),
 
-                    // ===============================================
-                    // YA, KELUAR
-                    // ===============================================
-
                     Expanded(
                       child: SizedBox(
                         height: 30,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // Tutup dialog
+                          onPressed: () async {
+                            await FirebaseAuth.instance.signOut();
+
+                            if (!mounted) return;
+
                             Navigator.pop(dialogContext);
 
-                            // Hapus seluruh halaman sebelumnya
-                            // dan kembali ke LoginScreen.
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
@@ -741,7 +722,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             'Ya, Keluar',
                             style: TextStyle(
                               fontFamily: 'Nunito',
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

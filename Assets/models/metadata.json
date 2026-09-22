@@ -1,0 +1,213 @@
+{
+    "model_name": "STOMACHY ANN",
+    "model_type": "Artificial Neural Network",
+    "input_shape": [
+        39
+    ],
+    "output_shape": [
+        1
+    ],
+    "target": {
+        "0": "GORD-",
+        "1": "GORD+"
+    },
+    "prediction_threshold": 0.5,
+    "feature_names": [
+        "Age (umut)",
+        "Gender (jenis kelamin)_Female",
+        "Gender (jenis kelamin)_Male",
+        "HeartBurn (dada panas)_All the time",
+        "HeartBurn (dada panas)_No",
+        "HeartBurn (dada panas)_Once a month",
+        "HeartBurn (dada panas)_Once a week",
+        "HeartBurn (dada panas)_Twice a week",
+        "HBfrequency_Daily",
+        "HBfrequency_Monthly",
+        "HBfrequency_No symptoms",
+        "HBfrequency_Weekly",
+        "Reflux (Regurgitasi/asam lambung naik)_All the time",
+        "Reflux (Regurgitasi/asam lambung naik)_No",
+        "Reflux (Regurgitasi/asam lambung naik)_Once a month",
+        "Reflux (Regurgitasi/asam lambung naik)_Once a week",
+        "Reflux (Regurgitasi/asam lambung naik)_Twice a week",
+        "RefluxFrequency_Daily",
+        "RefluxFrequency_Monthly",
+        "RefluxFrequency_No symptoms",
+        "RefluxFrequency_Weekly",
+        "ChestPain (Nyeri ulu hati)_All the time",
+        "ChestPain (Nyeri ulu hati)_No",
+        "ChestPain (Nyeri ulu hati)_Once a month",
+        "ChestPain (Nyeri ulu hati)_Once a week",
+        "ChestPain (Nyeri ulu hati)_Twice a week",
+        "CPfrequency_Daily",
+        "CPfrequency_Monthly",
+        "CPfrequency_No symptoms",
+        "CPfrequency_Weekly",
+        "AbdFullness (Mual)_All the time",
+        "AbdFullness (Mual)_No",
+        "AbdFullness (Mual)_Once a month",
+        "AbdFullness (Mual)_Once a week",
+        "AbdFullness (Mual)_Twice a week",
+        "Medication (Konsumsi obat tambaha)_No",
+        "Medication (Konsumsi obat tambaha)_yes",
+        "EnoughSleep (sulit tidur malam)_no",
+        "EnoughSleep (sulit tidur malam)_yes"
+    ],
+    "categorical_columns": [
+        "Gender (jenis kelamin)",
+        "HeartBurn (dada panas)",
+        "HBfrequency",
+        "Reflux (Regurgitasi/asam lambung naik)",
+        "RefluxFrequency",
+        "ChestPain (Nyeri ulu hati)",
+        "CPfrequency",
+        "AbdFullness (Mual)",
+        "Medication (Konsumsi obat tambaha)",
+        "EnoughSleep (sulit tidur malam)"
+    ],
+    "encoder_categories": {
+        "Gender (jenis kelamin)": [
+            "Female",
+            "Male"
+        ],
+        "HeartBurn (dada panas)": [
+            "All the time",
+            "No",
+            "Once a month",
+            "Once a week",
+            "Twice a week"
+        ],
+        "HBfrequency": [
+            "Daily",
+            "Monthly",
+            "No symptoms",
+            "Weekly"
+        ],
+        "Reflux (Regurgitasi/asam lambung naik)": [
+            "All the time",
+            "No",
+            "Once a month",
+            "Once a week",
+            "Twice a week"
+        ],
+        "RefluxFrequency": [
+            "Daily",
+            "Monthly",
+            "No symptoms",
+            "Weekly"
+        ],
+        "ChestPain (Nyeri ulu hati)": [
+            "All the time",
+            "No",
+            "Once a month",
+            "Once a week",
+            "Twice a week"
+        ],
+        "CPfrequency": [
+            "Daily",
+            "Monthly",
+            "No symptoms",
+            "Weekly"
+        ],
+        "AbdFullness (Mual)": [
+            "All the time",
+            "No",
+            "Once a month",
+            "Once a week",
+            "Twice a week"
+        ],
+        "Medication (Konsumsi obat tambaha)": [
+            "No",
+            "yes"
+        ],
+        "EnoughSleep (sulit tidur malam)": [
+            "no",
+            "yes"
+        ]
+    },
+    "scaler": {
+        "type": "MinMaxScaler",
+        "min": [
+            -0.34615384615384615,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        "scale": [
+            0.019230769230769232,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+        ]
+    }
+}

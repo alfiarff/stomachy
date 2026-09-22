@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
@@ -89,6 +91,8 @@ class _ScreeningHistoryScreenState
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       backgroundColor: backgroundColor,
 
@@ -107,50 +111,63 @@ class _ScreeningHistoryScreenState
 
               const SizedBox(height: 20),
 
-              // RIWAYAT 1
-              _buildHistoryCard(
-                date: '12 Agustus 2026 - 10:24',
-                status: 'Berisiko GERD',
-                complaint:
-                    'Perut terasa penuh,\nPanas di dada, asam naik',
-                age: '20 tahun',
-                gender: 'Perempuan',
-                symptom: '3 Gejala utama',
-                image:
-                    'assets/images/riwayat_berisiko_gerd.png',
-                isRisk: true,
-              ),
+              if (user == null)
+                _buildEmptyHistory(
+                  'Silakan login terlebih dahulu.',
+                )
+              else
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .collection('screening_history')
+                      .orderBy(
+                        'createdAt',
+                        descending: true,
+                      )
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 40),
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFB9543A),
+                        ),
+                      );
+                    }
 
-              const SizedBox(height: 17),
+                    if (snapshot.hasError) {
+                      return _buildEmptyHistory(
+                        'Belum ada riwayat skrining.',
+                      );
+                    }
 
-              // RIWAYAT 2
-              _buildHistoryCard(
-                date: '26 Juli 2026 - 19:30',
-                status: 'Tidak Berisiko GERD',
-                complaint: 'Mual',
-                age: '19 tahun',
-                gender: 'Laki-laki',
-                symptom: '1 Gejala utama',
-                image:
-                    'assets/images/riwayat_tidak_berisiko_gerd.png',
-                isRisk: false,
-              ),
+                    final documents =
+                        snapshot.data?.docs ?? [];
 
-              const SizedBox(height: 17),
+                    if (documents.isEmpty) {
+                      return _buildEmptyHistory(
+                        'Belum ada riwayat skrining.',
+                      );
+                    }
 
-              // RIWAYAT 3
-              _buildHistoryCard(
-                date: '10 Juli 2026 - 10:15',
-                status: 'Berisiko GERD',
-                complaint:
-                    'Asam naik, nyeri dada,\nperut terasa penuh',
-                age: '21 tahun',
-                gender: 'Perempuan',
-                symptom: '3 Gejala utama',
-                image:
-                    'assets/images/riwayat_berisiko_gerd.png',
-                isRisk: true,
-              ),
+                    return Column(
+                      children: [
+                        for (int i = 0;
+                            i < documents.length;
+                            i++) ...[
+                          _buildHistoryCardFromFirestore(
+                            documents[i],
+                          ),
+
+                          if (i != documents.length - 1)
+                            const SizedBox(height: 17),
+                        ],
+                      ],
+                    );
+                  },
+                ),
 
               const SizedBox(height: 28),
 
@@ -171,6 +188,206 @@ class _ScreeningHistoryScreenState
         onItemSelected: _onNavigationTap,
       ),
     );
+  }
+
+  // ===============================================================
+  // EMPTY HISTORY
+  // ===============================================================
+
+  Widget _buildEmptyHistory(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        vertical: 35,
+        horizontal: 20,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF9),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.10),
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.history_rounded,
+            size: 45,
+            color: Color(0xFFB9543A),
+          ),
+
+          const SizedBox(height: 12),
+
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 13,
+              color: Color(0xFF493C37),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===============================================================
+  // FIRESTORE HISTORY CARD
+  // ===============================================================
+
+  Widget _buildHistoryCardFromFirestore(
+    QueryDocumentSnapshot<Map<String, dynamic>> document,
+  ) {
+    final data = document.data();
+
+    final String date = _formatDate(
+      data['createdAt'],
+      data['date'],
+    );
+
+    final String status =
+        data['status']?.toString().isNotEmpty == true
+            ? data['status'].toString()
+            : (data['isRisk'] == true
+                ? 'Berisiko GERD'
+                : 'Tidak Berisiko GERD');
+
+    final String complaint =
+        data['complaint']?.toString().isNotEmpty == true
+            ? data['complaint'].toString()
+            : 'Tidak ada keluhan';
+
+    final String age =
+        data['age']?.toString().isNotEmpty == true
+            ? data['age'].toString()
+            : '-';
+
+    final String gender =
+        data['gender']?.toString().isNotEmpty == true
+            ? data['gender'].toString()
+            : '-';
+
+    final String symptom =
+        data['symptom']?.toString().isNotEmpty == true
+            ? data['symptom'].toString()
+            : '0 Gejala utama';
+
+    final bool isRisk = data['isRisk'] == true;
+
+    final String image = isRisk
+        ? 'assets/images/riwayat_berisiko_gerd.png'
+        : 'assets/images/riwayat_tidak_berisiko_gerd.png';
+
+    return _buildHistoryCard(
+      date: date,
+      status: status,
+      complaint: complaint,
+      age: age,
+      gender: gender,
+      symptom: symptom,
+      image: image,
+      isRisk: isRisk,
+      step2Answers: _convertStep2Answers(
+        data['step2Answers'],
+      ),
+      step3Answers: _convertStep3Answers(
+        data['step3Answers'],
+      ),
+    );
+  }
+
+  // ===============================================================
+  // FORMAT DATE
+  // ===============================================================
+
+  String _formatDate(
+    dynamic createdAt,
+    dynamic oldDate,
+  ) {
+    if (createdAt is Timestamp) {
+      final date = createdAt.toDate();
+
+      final day = date.day.toString().padLeft(2, '0');
+      final month = _monthName(date.month);
+      final year = date.year.toString();
+
+      final hour = date.hour.toString().padLeft(2, '0');
+      final minute = date.minute.toString().padLeft(2, '0');
+
+      return '$day $month $year - $hour:$minute';
+    }
+
+    if (oldDate != null &&
+        oldDate.toString().isNotEmpty) {
+      return oldDate.toString();
+    }
+
+    return '-';
+  }
+
+  String _monthName(int month) {
+    const months = [
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    return months[month];
+  }
+
+  // ===============================================================
+  // CONVERT STEP 2 ANSWERS
+  // ===============================================================
+
+  Map<String, bool?> _convertStep2Answers(
+    dynamic value,
+  ) {
+    final result = <String, bool?>{};
+
+    if (value is Map) {
+      value.forEach((key, answer) {
+        if (answer is bool) {
+          result[key.toString()] = answer;
+        }
+      });
+    }
+
+    return result;
+  }
+
+  // ===============================================================
+  // CONVERT STEP 3 ANSWERS
+  // ===============================================================
+
+  Map<String, String?> _convertStep3Answers(
+    dynamic value,
+  ) {
+    final result = <String, String?>{};
+
+    if (value is Map) {
+      value.forEach((key, answer) {
+        if (answer != null) {
+          result[key.toString()] = answer.toString();
+        }
+      });
+    }
+
+    return result;
   }
 
   // ===============================================================
@@ -233,6 +450,8 @@ class _ScreeningHistoryScreenState
     required String symptom,
     required String image,
     required bool isRisk,
+    required Map<String, bool?> step2Answers,
+    required Map<String, String?> step3Answers,
   }) {
     final Color cardColor = isRisk
         ? const Color(0xFFFFFCF9)
@@ -264,6 +483,9 @@ class _ScreeningHistoryScreenState
               symptom: symptom,
               image: image,
               isRisk: isRisk,
+              step2Answers: step2Answers,
+              step3Answers: step3Answers,
+              saveToHistory: false,
             ),
           ),
         );
@@ -323,7 +545,7 @@ class _ScreeningHistoryScreenState
                     date,
                     style: const TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: Color(0xFF77716E),
                     ),
@@ -354,7 +576,7 @@ class _ScreeningHistoryScreenState
                           text: 'Keluhan: ',
                           style: TextStyle(
                             fontFamily: 'Nunito',
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF30221E),
                           ),
@@ -363,7 +585,7 @@ class _ScreeningHistoryScreenState
                           text: complaint,
                           style: const TextStyle(
                             fontFamily: 'Nunito',
-                            fontSize: 14,
+                            fontSize: 12,
                             height: 1.3,
                             fontWeight: FontWeight.w400,
                             color: Color(0xFF493C37),
@@ -484,7 +706,7 @@ class _ScreeningHistoryScreenState
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: borderColor,
               ),

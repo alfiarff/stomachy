@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'screening_screen.dart';
 import 'doctor_screen.dart';
@@ -21,6 +23,66 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color purple = const Color(0xFFB5A4E8);
+
+  String _userName = 'Pengguna';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  // ===================================================================
+  // LOAD NAMA PENGGUNA
+  // ===================================================================
+
+  Future<void> _loadUserName() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        return;
+      }
+
+      // Ambil nama dari Firebase Authentication terlebih dahulu
+      String name = user.displayName ?? '';
+
+      // Ambil nama dari Firestore jika tersedia
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data();
+
+        if (data != null) {
+          final firestoreName = data['name'];
+
+          if (firestoreName is String &&
+              firestoreName.trim().isNotEmpty) {
+            name = firestoreName.trim();
+          }
+        }
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _userName = name.isNotEmpty ? name : 'Pengguna';
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      final user = FirebaseAuth.instance.currentUser;
+
+      setState(() {
+        _userName = user?.displayName?.isNotEmpty == true
+            ? user!.displayName!
+            : 'Pengguna';
+      });
+    }
+  }
 
   void _onNavigationTap(int index) {
     // Skrining
@@ -218,18 +280,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Halo, Jerome Polin! 👋',
-                  style: TextStyle(
-                    fontSize: 14,
+                  'Halo, $_userName! 👋',
+                  style: const TextStyle(
+                    fontSize: 12,
                     color: Color(0xFF4D3028),
                   ),
                 ),
 
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
 
-                Text(
+                const Text(
                   'Bagaimana Kondisi \nLambungmu\nHari Ini?',
                   style: TextStyle(
                     fontFamily: 'Fredoka',
@@ -299,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   'Cek gejala dan kebiasaanmu\ndalam beberapa menit dengan AI',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 12,
                     height: 1.3,
                   ),
                 ),
@@ -334,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Mulai Cek Sekarang',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -405,7 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Text(
                   'Risiko GERD Terakhir',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     color: Color(0xFF4D3129),
                   ),
                 ),
@@ -427,7 +489,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Text(
                   'Keluhan: Panas di dada, asam naik,\nperut terasa penuh.',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     height: 1.3,
                     color: Color(0xFF392B27),
                   ),
@@ -448,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       '12 Agustus 2026 - 10:24',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         color: Color(0xFF777777),
                       ),
                     ),
@@ -542,7 +604,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF493028),
                     ),
@@ -555,7 +617,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       height: 1.25,
                       color: Color(0xFF555555),
                     ),
@@ -661,7 +723,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           height: 1.15,
                           color: Color(0xFF5D4B45),
                         ),
@@ -740,7 +802,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 12,
                               height: 1.2,
                               color: Color(0xFF675B57),
                             ),
@@ -768,7 +830,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   'Baca Artikel',
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                   ),

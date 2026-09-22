@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../services/stomachy_model_service.dart';
+
 import 'home_screen.dart';
-import 'screening_screen.dart';
 import 'screening_result_screen.dart';
 import 'doctor_screen.dart';
 import 'edukasi_screen.dart';
@@ -40,7 +41,17 @@ class _ScreeningLoadingScreenState
 
   Timer? timer;
 
-  // Index bottom navigation
+  bool modelFinished = false;
+  bool navigationStarted = false;
+
+  double? probability;
+  String? prediction;
+
+  String? analysisError;
+
+  final StomachyModelService model =
+      StomachyModelService();
+
   int _selectedIndex = 1;
 
   // ===============================================================
@@ -54,7 +65,7 @@ class _ScreeningLoadingScreenState
       const Color(0xFFB05039);
 
   // ===============================================================
-  // INIT STATE
+  // INIT
   // ===============================================================
 
   @override
@@ -68,17 +79,260 @@ class _ScreeningLoadingScreenState
   // START ANALYSIS
   // ===============================================================
 
-  void _startAnalysis() {
-    const totalDuration =
-        Duration(seconds: 4);
+  Future<void> _startAnalysis() async {
+    _startProgress();
+
+    try {
+      final double ageValue =
+          double.parse(widget.age.trim());
+
+      // -----------------------------------------------------------
+      // LOAD MODEL
+      // -----------------------------------------------------------
+
+      await model.loadModel();
+
+      // -----------------------------------------------------------
+      // MAPPING GENDER
+      // -----------------------------------------------------------
+
+      final String modelGender =
+          _mapGender(widget.gender);
+
+      // -----------------------------------------------------------
+      // MAPPING HEARTBURN
+      // -----------------------------------------------------------
+
+      final String heartBurn =
+          _mapSymptom(
+        step2Value:
+            widget.step2Answers['Panas di dada'],
+        frequency:
+            widget.step3Answers['Panas di dada'],
+      );
+
+      final String hbFrequency =
+          _mapFrequency(
+        step2Value:
+            widget.step2Answers['Panas di dada'],
+        frequency:
+            widget.step3Answers['Panas di dada'],
+      );
+
+      // -----------------------------------------------------------
+      // MAPPING REFLUX
+      // -----------------------------------------------------------
+
+      final String reflux =
+          _mapSymptom(
+        step2Value:
+            widget.step2Answers['Asam lambung naik'],
+        frequency:
+            widget.step3Answers['Asam lambung naik'],
+      );
+
+      final String refluxFrequency =
+          _mapFrequency(
+        step2Value:
+            widget.step2Answers['Asam lambung naik'],
+        frequency:
+            widget.step3Answers['Asam lambung naik'],
+      );
+
+      // -----------------------------------------------------------
+      // MAPPING CHEST PAIN
+      // -----------------------------------------------------------
+
+      final String chestPain =
+          _mapSymptom(
+        step2Value:
+            widget.step2Answers[
+                'Nyeri dada atau ulu hati'],
+        frequency:
+            widget.step3Answers[
+                'Nyeri dada atau ulu hati'],
+      );
+
+      final String cpFrequency =
+          _mapFrequency(
+        step2Value:
+            widget.step2Answers[
+                'Nyeri dada atau ulu hati'],
+        frequency:
+            widget.step3Answers[
+                'Nyeri dada atau ulu hati'],
+      );
+
+      // -----------------------------------------------------------
+      // ABDOMINAL FULLNESS
+      // -----------------------------------------------------------
+
+      final bool? fullnessAnswer =
+          widget.step2Answers[
+              'Perut terasa penuh'];
+
+      final String abdFullness =
+          fullnessAnswer == true
+              ? 'All the time'
+              : 'No';
+
+      // -----------------------------------------------------------
+      // MEDICATION
+      // -----------------------------------------------------------
+
+      final bool? medicationAnswer =
+          widget.step2Answers[
+              'Penggunaan obat'];
+
+      final String medication =
+          medicationAnswer == true
+              ? 'yes'
+              : 'No';
+
+      // -----------------------------------------------------------
+      // ENOUGH SLEEP
+      // -----------------------------------------------------------
+
+      final bool? sleepAnswer =
+          widget.step2Answers[
+              'Waktu tidur'];
+
+      final String enoughSleep =
+          sleepAnswer == true
+              ? 'yes'
+              : 'no';
+
+      // -----------------------------------------------------------
+      // DEBUG INPUT
+      // -----------------------------------------------------------
+
+      debugPrint(
+        '==============================',
+      );
+
+      debugPrint(
+        'STOMACHY MODEL INPUT',
+      );
+
+      debugPrint(
+        'Age: $ageValue',
+      );
+
+      debugPrint(
+        'Gender: $modelGender',
+      );
+
+      debugPrint(
+        'HeartBurn: $heartBurn',
+      );
+
+      debugPrint(
+        'HB Frequency: $hbFrequency',
+      );
+
+      debugPrint(
+        'Reflux: $reflux',
+      );
+
+      debugPrint(
+        'Reflux Frequency: $refluxFrequency',
+      );
+
+      debugPrint(
+        'Chest Pain: $chestPain',
+      );
+
+      debugPrint(
+        'CP Frequency: $cpFrequency',
+      );
+
+      debugPrint(
+        'Abd Fullness: $abdFullness',
+      );
+
+      debugPrint(
+        'Medication: $medication',
+      );
+
+      debugPrint(
+        'Enough Sleep: $enoughSleep',
+      );
+
+      // -----------------------------------------------------------
+      // RUN MODEL
+      // -----------------------------------------------------------
+
+      final double result =
+          model.predict(
+        age: ageValue,
+        gender: modelGender,
+        heartBurn: heartBurn,
+        hbFrequency: hbFrequency,
+        reflux: reflux,
+        refluxFrequency: refluxFrequency,
+        chestPain: chestPain,
+        cpFrequency: cpFrequency,
+        abdFullness: abdFullness,
+        medication: medication,
+        enoughSleep: enoughSleep,
+      );
+
+      final String resultClass =
+          model.classify(result);
+
+      probability = result;
+      prediction = resultClass;
+
+      modelFinished = true;
+
+      debugPrint(
+        '==============================',
+      );
+
+      debugPrint(
+        'STOMACHY MODEL RESULT',
+      );
+
+      debugPrint(
+        'Probability GORD+: $result',
+      );
+
+      debugPrint(
+        'Prediction: $resultClass',
+      );
+
+      debugPrint(
+        '==============================',
+      );
+
+      _tryFinish();
+    } catch (e) {
+      debugPrint(
+        'STOMACHY MODEL ERROR: $e',
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        analysisError =
+            'Terjadi kesalahan saat menganalisis data.';
+      });
+    }
+  }
+
+  // ===============================================================
+  // PROGRESS
+  // ===============================================================
+
+  void _startProgress() {
+    const int totalMilliseconds = 4000;
+    const int intervalMilliseconds = 100;
 
     int elapsed = 0;
 
-    const interval = 100;
-
     timer = Timer.periodic(
       const Duration(
-        milliseconds: interval,
+        milliseconds: intervalMilliseconds,
       ),
       (timer) {
         if (!mounted) {
@@ -86,52 +340,142 @@ class _ScreeningLoadingScreenState
           return;
         }
 
-        elapsed += interval;
+        elapsed += intervalMilliseconds;
 
         setState(() {
           progress =
-              elapsed /
-              totalDuration.inMilliseconds;
+              elapsed / totalMilliseconds;
 
-          // Supaya tidak lebih dari 100%
           if (progress > 1.0) {
             progress = 1.0;
           }
         });
 
-        // =========================================================
-        // SELESAI LOADING
-        // =========================================================
-
         if (progress >= 1.0) {
           timer.cancel();
 
-          Future.delayed(
-            const Duration(
-              milliseconds: 300,
-            ),
-            () {
-              if (!mounted) return;
-
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ScreeningResultScreen(
-                    age: widget.age,
-                    gender: widget.gender,
-                    step2Answers:
-                        widget.step2Answers,
-                    step3Answers:
-                        widget.step3Answers,
-                  ),
-                ),
-              );
-            },
-          );
+          _tryFinish();
         }
       },
     );
+  }
+
+  // ===============================================================
+  // FINISH
+  // ===============================================================
+
+  void _tryFinish() {
+    if (!mounted) return;
+
+    if (navigationStarted) return;
+
+    if (!modelFinished) return;
+
+    if (progress < 1.0) return;
+
+    if (probability == null ||
+        prediction == null) {
+      return;
+    }
+
+    navigationStarted = true;
+
+    Future.delayed(
+      const Duration(
+        milliseconds: 300,
+      ),
+      () {
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                ScreeningResultScreen(
+              age: widget.age,
+              gender: widget.gender,
+              step2Answers:
+                  widget.step2Answers,
+              step3Answers:
+                  widget.step3Answers,
+
+              probability:
+                  probability,
+
+              prediction:
+                  prediction,
+
+              isRisk:
+                  prediction == 'GORD+',
+
+              saveToHistory: true,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ===============================================================
+  // MAPPING GENDER
+  // ===============================================================
+
+  String _mapGender(String value) {
+    if (value == 'Perempuan') {
+      return 'Female';
+    }
+
+    return 'Male';
+  }
+
+  // ===============================================================
+  // MAPPING FREQUENCY
+  // ===============================================================
+
+  String _mapFrequency({
+    required bool? step2Value,
+    required String? frequency,
+  }) {
+    if (step2Value == false) {
+      return 'No symptoms';
+    }
+
+    switch (frequency) {
+      case 'Mingguan':
+        return 'Weekly';
+
+      case 'Bulanan':
+        return 'Monthly';
+
+      case 'Tidak Ada':
+      default:
+        return 'No symptoms';
+    }
+  }
+
+  // ===============================================================
+  // MAPPING SYMPTOM
+  // ===============================================================
+
+  String _mapSymptom({
+    required bool? step2Value,
+    required String? frequency,
+  }) {
+    if (step2Value == false) {
+      return 'No';
+    }
+
+    switch (frequency) {
+      case 'Mingguan':
+        return 'Once a week';
+
+      case 'Bulanan':
+        return 'Once a month';
+
+      case 'Tidak Ada':
+      default:
+        return 'No';
+    }
   }
 
   // ===============================================================
@@ -139,10 +483,6 @@ class _ScreeningLoadingScreenState
   // ===============================================================
 
   void _onNavigationTap(int index) {
-    // =============================================================
-    // BERANDA
-    // =============================================================
-
     if (index == 0) {
       Navigator.pushReplacement(
         context,
@@ -155,19 +495,9 @@ class _ScreeningLoadingScreenState
       return;
     }
 
-    // =============================================================
-    // SKRINING
-    // =============================================================
-
     if (index == 1) {
-      // Karena sedang berada di bagian Skrining,
-      // tidak perlu pindah halaman.
       return;
     }
-
-    // =============================================================
-    // DOKTER
-    // =============================================================
 
     if (index == 2) {
       Navigator.pushReplacement(
@@ -181,10 +511,6 @@ class _ScreeningLoadingScreenState
       return;
     }
 
-    // =============================================================
-    // EDUKASI
-    // =============================================================
-
     if (index == 3) {
       Navigator.pushReplacement(
         context,
@@ -196,10 +522,6 @@ class _ScreeningLoadingScreenState
 
       return;
     }
-
-    // =============================================================
-    // PROFIL
-    // =============================================================
 
     if (index == 4) {
       Navigator.push(
@@ -222,6 +544,8 @@ class _ScreeningLoadingScreenState
   void dispose() {
     timer?.cancel();
 
+    model.dispose();
+
     super.dispose();
   }
 
@@ -237,18 +561,10 @@ class _ScreeningLoadingScreenState
     return Scaffold(
       backgroundColor: backgroundColor,
 
-      // =============================================================
-      // BODY
-      // =============================================================
-
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 8),
-
-            // =======================================================
-            // HEADER
-            // =======================================================
 
             const SizedBox(
               height: 45,
@@ -263,10 +579,6 @@ class _ScreeningLoadingScreenState
                 ),
               ),
             ),
-
-            // =======================================================
-            // CONTENT
-            // =======================================================
 
             Expanded(
               child: Center(
@@ -293,9 +605,7 @@ class _ScreeningLoadingScreenState
                       ),
                       border: Border.all(
                         color:
-                            const Color(
-                          0xFFFF775C,
-                        ),
+                            const Color(0xFFFF775C),
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -307,20 +617,11 @@ class _ScreeningLoadingScreenState
                         ),
                       ],
                     ),
-
-                    // =================================================
-                    // CARD CONTENT
-                    // =================================================
-
                     child: Column(
                       children: [
                         const SizedBox(
                           height: 5,
                         ),
-
-                        // =============================================
-                        // MASCOT
-                        // =============================================
 
                         Expanded(
                           flex: 4,
@@ -338,9 +639,7 @@ class _ScreeningLoadingScreenState
                                     .psychology_rounded,
                                 size: 130,
                                 color:
-                                    Color(
-                                  0xFFB05039,
-                                ),
+                                    Color(0xFFB05039),
                               );
                             },
                           ),
@@ -349,10 +648,6 @@ class _ScreeningLoadingScreenState
                         const SizedBox(
                           height: 8,
                         ),
-
-                        // =============================================
-                        // TITLE
-                        // =============================================
 
                         const Text(
                           'AI sedang menganalisis\n'
@@ -374,17 +669,13 @@ class _ScreeningLoadingScreenState
                           height: 16,
                         ),
 
-                        // =============================================
-                        // DESCRIPTION
-                        // =============================================
-
                         const Text(
                           'Mohon tunggu beberapa saat.\n'
                           'Hasil akan segera ditampilkan.',
                           textAlign:
                               TextAlign.center,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 12,
                             height: 1.4,
                           ),
                         ),
@@ -392,10 +683,6 @@ class _ScreeningLoadingScreenState
                         const SizedBox(
                           height: 18,
                         ),
-
-                        // =============================================
-                        // PROGRESS
-                        // =============================================
 
                         Row(
                           children: [
@@ -433,7 +720,7 @@ class _ScreeningLoadingScreenState
                               '$percentage%',
                               style:
                                   const TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 fontWeight:
                                     FontWeight
                                         .w600,
@@ -445,10 +732,6 @@ class _ScreeningLoadingScreenState
                         const SizedBox(
                           height: 35,
                         ),
-
-                        // =============================================
-                        // TAHUKAH KAMU
-                        // =============================================
 
                         Container(
                           width:
@@ -486,10 +769,6 @@ class _ScreeningLoadingScreenState
                           ),
                           child: Row(
                             children: [
-                              // =======================================
-                              // ICON TIPS
-                              // =======================================
-
                               Image.asset(
                                 'assets/images/ikon_tips.png',
                                 width: 50,
@@ -517,10 +796,6 @@ class _ScreeningLoadingScreenState
                                 width: 8,
                               ),
 
-                              // =======================================
-                              // TEXT
-                              // =======================================
-
                               const Expanded(
                                 child: Column(
                                   crossAxisAlignment:
@@ -534,7 +809,7 @@ class _ScreeningLoadingScreenState
                                         fontFamily:
                                             'Nunito',
                                         fontSize:
-                                            14,
+                                            12,
                                         fontWeight:
                                             FontWeight
                                                 .bold,
@@ -572,15 +847,9 @@ class _ScreeningLoadingScreenState
         ),
       ),
 
-      // =============================================================
-      // BOTTOM NAVIGATION
-      // =============================================================
-
       bottomNavigationBar:
           AppBottomNavigation(
         selectedIndex: _selectedIndex,
-
-        // INI YANG SEBELUMNYA KOSONG
         onItemSelected:
             _onNavigationTap,
       ),
