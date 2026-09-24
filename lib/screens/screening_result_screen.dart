@@ -9,6 +9,43 @@ import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/bottom_navigation.dart';
 
+// ===============================================================
+// ASSET MASKOT HASIL SKRINING
+// Berisiko      -> maskot cemas (tampilan MERAH)
+// Tidak berisiko -> maskot senyum (tampilan HIJAU)
+// Kalau punya asset khusus sesuai Figma, ganti path di bawah.
+// ===============================================================
+const String kResultMascotRisk =
+    'assets/images/maskot_berisiko.png';
+
+const String kResultMascotSafe =
+    'assets/images/maskot_happy.png';
+
+// ===============================================================
+// TEMA WARNA HASIL
+// MERAH -> berisiko GERD
+// HIJAU -> tidak berisiko GERD
+// ===============================================================
+class ResultTheme {
+  final Color accent;
+  final Color accentSoft;
+
+  const ResultTheme({
+    required this.accent,
+    required this.accentSoft,
+  });
+
+  static const ResultTheme risk = ResultTheme(
+    accent: Color(0xFFE93636),
+    accentSoft: Color(0xFFFFE1DE),
+  );
+
+  static const ResultTheme safe = ResultTheme(
+    accent: Color(0xFF18865A),
+    accentSoft: Color(0xFFDCF2E4),
+  );
+}
+
 class ScreeningResultScreen extends StatefulWidget {
   final String? date;
   final String? status;
@@ -62,73 +99,64 @@ class _ScreeningResultScreenState
   static const Color primaryBrown =
       Color(0xFF493028);
 
-  static const Color accentBrown =
-      Color(0xFFB65339);
+  static const Color bodyText =
+      Color(0xFF4A382F);
 
   // ===============================================================
-  // HASIL
+  // HASIL + TEMA
   // ===============================================================
 
   bool get isRiskResult {
-    if (widget.prediction != null) {
+    if (widget.prediction != null &&
+        widget.prediction!.isNotEmpty) {
       return widget.prediction == 'GORD+';
     }
 
     return widget.isRisk ?? false;
   }
 
-  String get resultTitle {
-    if (isRiskResult) {
-      return 'Kamu berisiko mengalami';
-    }
+  ResultTheme get resultTheme =>
+      isRiskResult ? ResultTheme.risk : ResultTheme.safe;
 
-    return 'Kamu tidak menunjukkan';
-  }
+  String get resultImage => isRiskResult
+      ? kResultMascotRisk
+      : kResultMascotSafe;
 
-  String get resultSubtitle {
-    if (isRiskResult) {
-      return 'GERD';
-    }
-
-    return 'risiko GERD';
-  }
+  String get resultStatus =>
+      isRiskResult ? 'GORD+' : 'GORD-';
 
   String get resultDescription {
     if (isRiskResult) {
-      return 'Berdasarkan jawaban yang kamu masukkan, terdapat\n'
-          'pola gejala yang sesuai dengan risiko '
-          'Gastroesophageal\n'
+      return 'Berdasarkan jawaban yang kamu masukkan, terdapat pola '
+          'gejala yang sesuai dengan risiko Gastroesophageal '
           'Reflux Disease (GERD).';
     }
 
-    return 'Berdasarkan jawaban yang kamu masukkan, '
-        'model tidak\n'
-        'menunjukkan pola yang sesuai dengan risiko '
-        'Gastroesophageal\n'
+    return 'Berdasarkan jawaban yang kamu masukkan, tidak ditemukan '
+        'pola gejala yang mengarah pada risiko Gastroesophageal '
         'Reflux Disease (GERD).';
   }
 
-  String get resultImage {
-    if (widget.image != null &&
-        widget.image!.isNotEmpty) {
-      return widget.image!;
-    }
+  String get adviceTitle => isRiskResult
+      ? 'Saran untuk kamu'
+      : 'Saran untuk tetap sehat';
 
+  List<String> get adviceList {
     if (isRiskResult) {
-      return 'assets/images/maskot_berisiko.png';
+      return const [
+        'Perhatikan pola makan dan gaya hidup',
+        'Hindari makanan pemicu',
+        'Jaga berat badan ideal',
+        'Jika keluhan berlanjut, konsultasikan ke dokter',
+      ];
     }
 
-    return 'assets/images/maskot_berisiko.png';
-  }
-
-  String get resultStatus {
-    if (widget.prediction != null) {
-      return widget.prediction!;
-    }
-
-    return isRiskResult
-        ? 'GORD+'
-        : 'GORD-';
+    return const [
+      'Jaga pola makan teratur',
+      'Hindari makanan yang memicu keluhan',
+      'Istirahat yang cukup',
+      'Tetap perhatikan perubahan gejala',
+    ];
   }
 
   String get probabilityText {
@@ -140,6 +168,57 @@ class _ScreeningResultScreenState
         widget.probability! * 100;
 
     return '${percentage.toStringAsFixed(2)}%';
+  }
+
+  // ===============================================================
+  // KELUHAN + JUMLAH GEJALA (UNTUK DISIMPAN KE RIWAYAT)
+  // ===============================================================
+
+  String get generatedComplaint {
+    final List<String> complaints = [];
+
+    final answers = widget.step2Answers;
+
+    if (answers != null) {
+      if (answers['Panas di dada'] == true) {
+        complaints.add('Panas di dada');
+      }
+
+      if (answers['Asam lambung naik'] == true) {
+        complaints.add('asam lambung naik');
+      }
+
+      if (answers['Nyeri dada atau ulu hati'] == true) {
+        complaints.add('nyeri dada atau ulu hati');
+      }
+
+      if (answers['Perut terasa penuh'] == true) {
+        complaints.add('perut terasa penuh');
+      }
+    }
+
+    if (complaints.isEmpty) {
+      return 'Tidak ada keluhan';
+    }
+
+    return complaints.join(', ');
+  }
+
+  String get generatedSymptomCount {
+    int count = 0;
+
+    final answers = widget.step2Answers;
+
+    if (answers != null) {
+      if (answers['Panas di dada'] == true) count++;
+      if (answers['Asam lambung naik'] == true) count++;
+      if (answers['Nyeri dada atau ulu hati'] == true) {
+        count++;
+      }
+      if (answers['Perut terasa penuh'] == true) count++;
+    }
+
+    return '$count Gejala utama';
   }
 
   // ===============================================================
@@ -238,12 +317,10 @@ class _ScreeningResultScreenState
                 .toIso8601String(),
 
         'status':
-            widget.status ??
             resultStatus,
 
         'complaint':
-            widget.complaint ??
-            resultSubtitle,
+            generatedComplaint,
 
         'age':
             widget.age ?? '',
@@ -252,22 +329,20 @@ class _ScreeningResultScreenState
             widget.gender ?? '',
 
         'symptom':
-            widget.symptom ??
-            resultSubtitle,
+            generatedSymptomCount,
 
         'image':
-            widget.image ??
-            resultImage,
+            isRiskResult
+                ? 'assets/images/riwayat_berisiko_gerd.png'
+                : 'assets/images/riwayat_tidak_berisiko_gerd.png',
 
         'isRisk':
-            widget.isRisk ??
             isRiskResult,
 
         'probability':
             widget.probability ?? 0.0,
 
         'prediction':
-            widget.prediction ??
             resultStatus,
 
         'createdAt':
@@ -432,25 +507,31 @@ class _ScreeningResultScreenState
             children: [
               _buildHeader(),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               _buildResultCard(),
 
-              const SizedBox(height: 25),
+              const SizedBox(height: 18),
 
               _buildProbability(),
 
-              const SizedBox(height: 25),
+              const SizedBox(height: 24),
 
               _buildAdviceSection(),
 
-              const SizedBox(height: 31),
+              const SizedBox(height: 26),
 
               _buildDisclaimer(),
 
-              const SizedBox(height: 35),
+              // =====================================================
+              // TOMBOL DOKTER HANYA MUNCUL JIKA BERISIKO
+              // (sesuai desain Figma, versi hijau tanpa tombol)
+              // =====================================================
+              if (isRiskResult) ...[
+                const SizedBox(height: 30),
 
-              _buildDoctorButton(),
+                _buildDoctorButton(),
+              ],
 
               const SizedBox(height: 24),
             ],
@@ -528,22 +609,23 @@ class _ScreeningResultScreenState
   Widget _buildResultCard() {
     return Container(
       width: double.infinity,
-      constraints:
-          const BoxConstraints(
-        minHeight: 328,
+
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        24,
+        20,
+        22,
       ),
 
       decoration:
           BoxDecoration(
         color: cardColor,
         borderRadius:
-            BorderRadius.circular(10),
+            BorderRadius.circular(16),
       ),
 
       child: Column(
         children: [
-          const SizedBox(height: 20),
-
           SizedBox(
             width: 150,
             height: 150,
@@ -558,73 +640,105 @@ class _ScreeningResultScreenState
                 error,
                 stackTrace,
               ) {
-                return const Icon(
+                return Icon(
                   Icons
                       .medical_services_rounded,
                   size: 100,
-                  color: accentBrown,
+                  color: resultTheme.accent,
                 );
               },
             ),
           ),
 
-          const SizedBox(height: 3),
+          const SizedBox(height: 10),
 
-          Text(
-            resultTitle,
-            textAlign:
-                TextAlign.center,
-
-            style: const TextStyle(
-              fontFamily: 'Fredoka',
-              fontSize: 20,
-              fontWeight:
-                  FontWeight.w600,
-              color: primaryBrown,
-            ),
-          ),
-
-          const SizedBox(height: 3),
-
-          Text(
-            resultSubtitle,
-            textAlign:
-                TextAlign.center,
-
-            style: const TextStyle(
-              fontFamily: 'Fredoka',
-              fontSize: 25,
-              fontWeight:
-                  FontWeight.w500,
-              color: accentBrown,
-            ),
-          ),
+          _buildResultTitle(),
 
           const SizedBox(height: 2),
 
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 18,
-            ),
+          Text(
+            'GERD',
+            textAlign:
+                TextAlign.center,
 
-            child: Text(
-              resultDescription,
-              textAlign:
-                  TextAlign.center,
-
-              style: const TextStyle(
-                fontSize: 10,
-                height: 1.35,
-                color:
-                    Color(0xFF332823),
-              ),
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 26,
+              fontWeight:
+                  FontWeight.w700,
+              color: resultTheme.accent,
             ),
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 8),
+
+          Text(
+            resultDescription,
+            textAlign:
+                TextAlign.center,
+
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              height: 1.45,
+              color: bodyText,
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  // ===============================================================
+  // JUDUL HASIL
+  // Kata "tidak" diwarnai HIJAU pada hasil aman
+  // ===============================================================
+
+  Widget _buildResultTitle() {
+    const baseStyle = TextStyle(
+      fontFamily: 'Fredoka',
+      fontSize: 20,
+      fontWeight:
+          FontWeight.w600,
+      color: primaryBrown,
+    );
+
+    if (isRiskResult) {
+      return const Text(
+        'Kamu berisiko mengalami',
+        textAlign:
+            TextAlign.center,
+        style: baseStyle,
+      );
+    }
+
+    return Text.rich(
+      TextSpan(
+        text: 'Kamu ',
+
+        style: baseStyle,
+
+        children: [
+          TextSpan(
+            text: 'tidak',
+
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 20,
+              fontWeight:
+                  FontWeight.w700,
+              color: resultTheme.accent,
+            ),
+          ),
+
+          const TextSpan(
+            text: ' berisiko mengalami',
+          ),
+        ],
+      ),
+
+      textAlign:
+          TextAlign.center,
     );
   }
 
@@ -649,16 +763,16 @@ class _ScreeningResultScreenState
         borderRadius:
             BorderRadius.circular(15),
         border: Border.all(
-          color:
-              const Color(0xFFFFD7B8),
+          color: resultTheme.accentSoft,
+          width: 1.2,
         ),
       ),
 
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.analytics_rounded,
-            color: accentBrown,
+            color: resultTheme.accent,
             size: 24,
           ),
 
@@ -679,12 +793,12 @@ class _ScreeningResultScreenState
 
           Text(
             probabilityText,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Fredoka',
               fontSize: 16,
               fontWeight:
                   FontWeight.w700,
-              color: accentBrown,
+              color: resultTheme.accent,
             ),
           ),
         ],
@@ -702,13 +816,13 @@ class _ScreeningResultScreenState
           CrossAxisAlignment.start,
 
       children: [
-        const Padding(
+        Padding(
           padding:
               EdgeInsets.only(left: 8),
 
           child: Text(
-            'Saran untuk kamu',
-            style: TextStyle(
+            adviceTitle,
+            style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 15,
               fontWeight:
@@ -720,21 +834,8 @@ class _ScreeningResultScreenState
 
         const SizedBox(height: 9),
 
-        _buildAdviceItem(
-          'Perhatikan pola makan dan gaya hidup',
-        ),
-
-        _buildAdviceItem(
-          'Hindari makanan pemicu',
-        ),
-
-        _buildAdviceItem(
-          'Jaga berat badan ideal',
-        ),
-
-        _buildAdviceItem(
-          'Jika keluhan berlanjut, konsultasikan ke dokter',
-        ),
+        for (final advice in adviceList)
+          _buildAdviceItem(advice),
       ],
     );
   }
@@ -750,7 +851,7 @@ class _ScreeningResultScreenState
       padding:
           const EdgeInsets.only(
         left: 17,
-        bottom: 6,
+        bottom: 7,
       ),
 
       child: Row(
@@ -759,23 +860,22 @@ class _ScreeningResultScreenState
 
         children: [
           Container(
-            width: 15,
-            height: 15,
+            width: 18,
+            height: 18,
 
-            decoration:
-                const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: accentBrown,
+              color: resultTheme.accent,
             ),
 
             child: const Icon(
-              Icons.check,
-              size: 10,
+              Icons.check_rounded,
+              size: 13,
               color: Colors.white,
             ),
           ),
 
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
 
           Expanded(
             child: Text(
@@ -786,8 +886,7 @@ class _ScreeningResultScreenState
                 fontSize: 12,
                 fontWeight:
                     FontWeight.w500,
-                color:
-                    Color(0xFF332823),
+                color: bodyText,
               ),
             ),
           ),
@@ -803,11 +902,11 @@ class _ScreeningResultScreenState
   Widget _buildDisclaimer() {
     return Container(
       width: double.infinity,
-      height: 37,
 
       padding:
           const EdgeInsets.symmetric(
         horizontal: 13,
+        vertical: 10,
       ),
 
       decoration:
@@ -818,7 +917,7 @@ class _ScreeningResultScreenState
             BorderRadius.circular(20),
         border: Border.all(
           color:
-              const Color(0xFFFFD7B8),
+              const Color(0xFFF3DCC9),
           width: 1,
         ),
       ),
@@ -826,26 +925,27 @@ class _ScreeningResultScreenState
       child: Row(
         children: [
           Container(
-            width: 15,
-            height: 15,
+            width: 16,
+            height: 16,
 
             decoration:
                 BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: accentBrown,
-                width: 1,
+                color: resultTheme.accent,
+                width: 1.2,
               ),
             ),
 
-            child: const Center(
+            child: Center(
               child: Text(
                 '!',
                 style: TextStyle(
-                  fontSize: 9,
+                  fontSize: 10,
+                  height: 1.0,
                   fontWeight:
                       FontWeight.w700,
-                  color: accentBrown,
+                  color: resultTheme.accent,
                 ),
               ),
             ),
@@ -857,9 +957,9 @@ class _ScreeningResultScreenState
             child: Text(
               'Hasil skrining ini bukan merupakan diagnosis medis.',
               style: TextStyle(
+                fontFamily: 'Nunito',
                 fontSize: 12,
-                color:
-                    Color(0xFF332823),
+                color: bodyText,
               ),
             ),
           ),
@@ -875,8 +975,8 @@ class _ScreeningResultScreenState
   Widget _buildDoctorButton() {
     return Center(
       child: SizedBox(
-        width: 228,
-        height: 39,
+        width: 230,
+        height: 42,
 
         child: ElevatedButton(
           onPressed: () {
@@ -893,7 +993,7 @@ class _ScreeningResultScreenState
           style:
               ElevatedButton.styleFrom(
             backgroundColor:
-                accentBrown,
+                const Color(0xFFB65339),
             foregroundColor:
                 Colors.white,
             elevation: 4,
@@ -906,7 +1006,7 @@ class _ScreeningResultScreenState
                 RoundedRectangleBorder(
               borderRadius:
                   BorderRadius.circular(
-                22,
+                25,
               ),
             ),
           ),
@@ -915,7 +1015,7 @@ class _ScreeningResultScreenState
             'Konsultasi Dokter',
             style: TextStyle(
               fontFamily: 'Fredoka',
-              fontSize: 12,
+              fontSize: 13,
               fontWeight:
                   FontWeight.w700,
             ),

@@ -250,12 +250,11 @@ class _ScreeningHistoryScreenState
       data['date'],
     );
 
+    final bool isRisk = data['isRisk'] == true;
+
+    // Status ditampilkan dalam Bahasa Indonesia
     final String status =
-        data['status']?.toString().isNotEmpty == true
-            ? data['status'].toString()
-            : (data['isRisk'] == true
-                ? 'Berisiko GERD'
-                : 'Tidak Berisiko GERD');
+        isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
 
     final String complaint =
         data['complaint']?.toString().isNotEmpty == true
@@ -277,7 +276,20 @@ class _ScreeningHistoryScreenState
             ? data['symptom'].toString()
             : '0 Gejala utama';
 
-    final bool isRisk = data['isRisk'] == true;
+    // =============================================================
+    // Probabilitas + prediction diambil dari Firestore supaya
+    // halaman result yang dibuka dari riwayat menampilkan
+    // angka yang sama persis dengan hasil skrining aslinya.
+    // =============================================================
+    final double probability =
+        data['probability'] is num
+            ? (data['probability'] as num).toDouble()
+            : 0.0;
+
+    final String? prediction =
+        data['prediction']?.toString().isNotEmpty == true
+            ? data['prediction'].toString()
+            : null;
 
     final String image = isRisk
         ? 'assets/images/riwayat_berisiko_gerd.png'
@@ -292,6 +304,8 @@ class _ScreeningHistoryScreenState
       symptom: symptom,
       image: image,
       isRisk: isRisk,
+      probability: probability,
+      prediction: prediction,
       step2Answers: _convertStep2Answers(
         data['step2Answers'],
       ),
@@ -450,6 +464,8 @@ class _ScreeningHistoryScreenState
     required String symptom,
     required String image,
     required bool isRisk,
+    required double probability,
+    required String? prediction,
     required Map<String, bool?> step2Answers,
     required Map<String, String?> step3Answers,
   }) {
@@ -483,6 +499,8 @@ class _ScreeningHistoryScreenState
               symptom: symptom,
               image: image,
               isRisk: isRisk,
+              probability: probability,
+              prediction: prediction,
               step2Answers: step2Answers,
               step3Answers: step3Answers,
               saveToHistory: false,

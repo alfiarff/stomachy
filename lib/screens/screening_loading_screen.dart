@@ -311,6 +311,9 @@ class _ScreeningLoadingScreenState
         'STOMACHY MODEL ERROR: $e',
       );
 
+      // Hentikan progress bar saat error
+      timer?.cancel();
+
       if (!mounted) return;
 
       setState(() {
@@ -358,6 +361,25 @@ class _ScreeningLoadingScreenState
         }
       },
     );
+  }
+
+  // ===============================================================
+  // COBA LAGI (KALAU ANALISIS GAGAL)
+  // ===============================================================
+
+  void _retryAnalysis() {
+    timer?.cancel();
+
+    setState(() {
+      analysisError = null;
+      progress = 0.0;
+      modelFinished = false;
+      navigationStarted = false;
+      probability = null;
+      prediction = null;
+    });
+
+    _startAnalysis();
   }
 
   // ===============================================================
@@ -550,6 +572,75 @@ class _ScreeningLoadingScreenState
   }
 
   // ===============================================================
+  // KONTEN ERROR (SAAT ANALISIS GAGAL)
+  // ===============================================================
+
+  Widget _buildErrorContent() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 70,
+            color: Color(0xFFB05039),
+          ),
+
+          const SizedBox(height: 16),
+
+          const Text(
+            'Oops, terjadi kesalahan\nsaat menganalisis jawabanmu.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          const Text(
+            'Periksa koneksi internetmu lalu coba lagi.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+
+          const SizedBox(height: 22),
+
+          ElevatedButton(
+            onPressed: _retryAnalysis,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: brown,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 30,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+            child: const Text(
+              'Coba Lagi',
+              style: TextStyle(
+                fontFamily: 'Fredoka',
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===============================================================
   // BUILD
   // ===============================================================
 
@@ -617,218 +708,228 @@ class _ScreeningLoadingScreenState
                         ),
                       ],
                     ),
-                    child: Column(
-                      children: [
-                        const SizedBox(
-                          height: 5,
-                        ),
 
-                        Expanded(
-                          flex: 4,
-                          child: Image.asset(
-                            'assets/images/maskot_loading.png',
-                            fit: BoxFit.contain,
-                            errorBuilder:
-                                (
-                              context,
-                              error,
-                              stackTrace,
-                            ) {
-                              return const Icon(
-                                Icons
-                                    .psychology_rounded,
-                                size: 130,
-                                color:
-                                    Color(0xFFB05039),
-                              );
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 8,
-                        ),
-
-                        const Text(
-                          'AI sedang menganalisis\n'
-                          'jawabanmu...',
-                          textAlign:
-                              TextAlign.center,
-                          style: TextStyle(
-                            fontFamily:
-                                'Fredoka',
-                            fontSize: 22,
-                            height: 1.25,
-                            fontWeight:
-                                FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 16,
-                        ),
-
-                        const Text(
-                          'Mohon tunggu beberapa saat.\n'
-                          'Hasil akan segera ditampilkan.',
-                          textAlign:
-                              TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12,
-                            height: 1.4,
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 18,
-                        ),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                  20,
-                                ),
-                                child:
-                                    LinearProgressIndicator(
-                                  value:
-                                      progress,
-                                  minHeight:
-                                      15,
-                                  backgroundColor:
-                                      const Color(
-                                    0xFFF1E1D8,
-                                  ),
-                                  valueColor:
-                                      AlwaysStoppedAnimation<
-                                          Color>(
-                                    brown,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(
-                              width: 7,
-                            ),
-
-                            Text(
-                              '$percentage%',
-                              style:
-                                  const TextStyle(
-                                fontSize: 12,
-                                fontWeight:
-                                    FontWeight
-                                        .w600,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(
-                          height: 35,
-                        ),
-
-                        Container(
-                          width:
-                              double.infinity,
-                          padding:
-                              const EdgeInsets.all(
-                            12,
-                          ),
-                          decoration:
-                              BoxDecoration(
-                            color:
-                                const Color(
-                              0xFFFFEBDD,
-                            ),
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                              17,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors
-                                    .black
-                                    .withOpacity(
-                                  0.12,
-                                ),
-                                blurRadius: 3,
-                                offset:
-                                    const Offset(
-                                  0,
-                                  3,
-                                ),
-                              ),
-                            ],
-                          ),
-                          child: Row(
+                    // =====================================================
+                    // Jika error -> tampilkan konten error,
+                    // jika tidak -> tampilkan loading biasa
+                    // =====================================================
+                    child: analysisError != null
+                        ? _buildErrorContent()
+                        : Column(
                             children: [
-                              Image.asset(
-                                'assets/images/ikon_tips.png',
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit
-                                    .contain,
-                                errorBuilder:
-                                    (
-                                  context,
-                                  error,
-                                  stackTrace,
-                                ) {
-                                  return const Icon(
-                                    Icons
-                                        .lightbulb,
-                                    size: 45,
-                                    color:
-                                        Colors
-                                            .orange,
-                                  );
-                                },
+                              const SizedBox(
+                                height: 5,
+                              ),
+
+                              Expanded(
+                                flex: 4,
+                                child: Image.asset(
+                                  'assets/images/maskot_loading.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder:
+                                      (
+                                    context,
+                                    error,
+                                    stackTrace,
+                                  ) {
+                                    return const Icon(
+                                      Icons
+                                          .psychology_rounded,
+                                      size: 130,
+                                      color:
+                                          Color(0xFFB05039),
+                                    );
+                                  },
+                                ),
                               ),
 
                               const SizedBox(
-                                width: 8,
+                                height: 8,
                               ),
 
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment
-                                          .start,
-                                  children: [
-                                    Text(
-                                      'Tahukah kamu?',
-                                      style:
-                                          TextStyle(
-                                        fontFamily:
-                                            'Nunito',
-                                        fontSize:
-                                            12,
-                                        fontWeight:
-                                            FontWeight
-                                                .bold,
+                              const Text(
+                                'AI sedang menganalisis\n'
+                                'jawabanmu...',
+                                textAlign:
+                                    TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily:
+                                      'Fredoka',
+                                  fontSize: 22,
+                                  height: 1.25,
+                                  fontWeight:
+                                      FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+
+                              const SizedBox(
+                                height: 16,
+                              ),
+
+                              const Text(
+                                'Mohon tunggu beberapa saat.\n'
+                                'Hasil akan segera ditampilkan.',
+                                textAlign:
+                                    TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                ),
+                              ),
+
+                              const SizedBox(
+                                height: 18,
+                              ),
+
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius:
+                                          BorderRadius
+                                              .circular(
+                                        20,
+                                      ),
+                                      child:
+                                          LinearProgressIndicator(
+                                        value:
+                                            progress,
+                                        minHeight:
+                                            15,
+                                        backgroundColor:
+                                            const Color(
+                                          0xFFF1E1D8,
+                                        ),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<
+                                                Color>(
+                                          brown,
+                                        ),
                                       ),
                                     ),
+                                  ),
 
-                                    SizedBox(
-                                      height: 4,
+                                  const SizedBox(
+                                    width: 7,
+                                  ),
+
+                                  Text(
+                                    '$percentage%',
+                                    style:
+                                        const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight:
+                                          FontWeight
+                                              .w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(
+                                height: 35,
+                              ),
+
+                              Container(
+                                width:
+                                    double.infinity,
+                                padding:
+                                    const EdgeInsets.all(
+                                  12,
+                                ),
+                                decoration:
+                                    BoxDecoration(
+                                  color:
+                                      const Color(
+                                    0xFFFFEBDD,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                    17,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors
+                                          .black
+                                          .withOpacity(
+                                        0.12,
+                                      ),
+                                      blurRadius: 3,
+                                      offset:
+                                          const Offset(
+                                        0,
+                                        3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Image.asset(
+                                      'assets/images/ikon_tips.png',
+                                      width: 50,
+                                      height: 50,
+                                      fit: BoxFit
+                                          .contain,
+                                      errorBuilder:
+                                          (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        return const Icon(
+                                          Icons
+                                              .lightbulb,
+                                          size: 45,
+                                          color:
+                                              Colors
+                                                  .orange,
+                                        );
+                                      },
                                     ),
 
-                                    Text(
-                                      'Menjaga pola hidup sehat dapat membantu\n'
-                                      'mengurangi risiko GERD.',
-                                      style:
-                                          TextStyle(
-                                        fontSize:
-                                            10,
-                                        height:
-                                            1.3,
+                                    const SizedBox(
+                                      width: 8,
+                                    ),
+
+                                    const Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment
+                                                .start,
+                                        children: [
+                                          Text(
+                                            'Tahukah kamu?',
+                                            style:
+                                                TextStyle(
+                                              fontFamily:
+                                                  'Nunito',
+                                              fontSize:
+                                                  12,
+                                              fontWeight:
+                                                  FontWeight
+                                                      .bold,
+                                            ),
+                                          ),
+
+                                          SizedBox(
+                                            height: 4,
+                                          ),
+
+                                          Text(
+                                            'Menjaga pola hidup sehat dapat membantu\n'
+                                            'mengurangi risiko GERD.',
+                                            style:
+                                                TextStyle(
+                                              fontSize:
+                                                  10,
+                                              height:
+                                                  1.3,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
@@ -836,9 +937,6 @@ class _ScreeningLoadingScreenState
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),
