@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -160,6 +162,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return _buildProfileHeaderContent(
         name: 'Pengguna',
         email: '',
+        photoBase64: null,
+        googlePhotoUrl: '',
       );
     }
 
@@ -172,6 +176,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         String name = user.displayName ?? '';
         String email = user.email ?? '';
 
+        // Foto Google (fallback kalau belum upload foto sendiri)
+        String googlePhotoUrl = user.photoURL ?? '';
+
+        if (googlePhotoUrl.startsWith('data:')) {
+          googlePhotoUrl = '';
+        }
+
+        String? photoBase64;
+
         if (snapshot.hasData && snapshot.data!.exists) {
           final data =
               snapshot.data!.data() as Map<String, dynamic>?;
@@ -183,6 +196,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final firestoreEmail =
                 data['email']?.toString().trim();
 
+            final firestorePhoto =
+                data['photoBase64']?.toString().trim();
+
             if (firestoreName != null &&
                 firestoreName.isNotEmpty) {
               name = firestoreName;
@@ -191,6 +207,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (firestoreEmail != null &&
                 firestoreEmail.isNotEmpty) {
               email = firestoreEmail;
+            }
+
+            // Foto Base64 dari Firestore (prioritas utama)
+            if (firestorePhoto != null &&
+                firestorePhoto.isNotEmpty) {
+              photoBase64 = firestorePhoto;
             }
           }
         }
@@ -202,6 +224,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return _buildProfileHeaderContent(
           name: name,
           email: email,
+          photoBase64: photoBase64,
+          googlePhotoUrl: googlePhotoUrl,
         );
       },
     );
@@ -214,6 +238,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileHeaderContent({
     required String name,
     required String email,
+    required String? photoBase64,
+    required String googlePhotoUrl,
   }) {
     return Container(
       width: double.infinity,
@@ -251,20 +277,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Color(0xFFE8E8E8),
             ),
             child: ClipOval(
-              child: Image.asset(
-                'assets/images/profil_jerome.jpeg',
-                fit: BoxFit.cover,
-                errorBuilder: (
-                  context,
-                  error,
-                  stackTrace,
-                ) {
-                  return const Icon(
-                    Icons.person,
-                    size: 38,
-                    color: Color(0xFF777777),
-                  );
-                },
+              child: _buildHeaderPhoto(
+                photoBase64: photoBase64,
+                googlePhotoUrl: googlePhotoUrl,
               ),
             ),
           ),
@@ -313,6 +328,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ===============================================================
+  // GAMBAR FOTO HEADER
+  // ===============================================================
+
+  Widget _buildHeaderPhoto({
+    required String? photoBase64,
+    required String googlePhotoUrl,
+  }) {
+    // 1. Foto Base64 (upload pengguna)
+    if (photoBase64 != null && photoBase64.isNotEmpty) {
+      try {
+        return Image.memory(
+          base64Decode(photoBase64),
+          fit: BoxFit.cover,
+
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.person,
+              size: 38,
+              color: Color(0xFF777777),
+            );
+          },
+        );
+      } catch (e) {
+        return const Icon(
+          Icons.person,
+          size: 38,
+          color: Color(0xFF777777),
+        );
+      }
+    }
+
+    // 2. Foto Google
+    if (googlePhotoUrl.isNotEmpty) {
+      return Image.network(
+        googlePhotoUrl,
+        fit: BoxFit.cover,
+
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(
+            Icons.person,
+            size: 38,
+            color: Color(0xFF777777),
+          );
+        },
+      );
+    }
+
+    // 3. Default
+    return const Icon(
+      Icons.person,
+      size: 38,
+      color: Color(0xFF777777),
+    );
+  }
+
+  // ===============================================================
   // MENU PROFILE
   // ===============================================================
 
@@ -346,14 +417,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: Icons.person_outline_rounded,
             title: 'Informasi Pribadi',
             subtitle: 'Kelola informasi pribadi anda',
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
                       const PersonalInformationScreen(),
                 ),
               );
+
+              // StreamBuilder header otomatis refresh,
+              // tidak perlu reload manual.
             },
           ),
 
@@ -694,7 +768,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onPressed: () async {
                             await FirebaseAuth.instance.signOut();
 
-                            if (!mounted) return;
+                            if (!dialogContext.mounted) return;
 
                             Navigator.pop(dialogContext);
 

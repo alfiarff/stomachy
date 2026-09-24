@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
@@ -39,6 +43,18 @@ class _PersonalInformationScreenState
   bool _isSaving = false;
 
   // ===============================================================
+  // FOTO PROFIL
+  //
+  // Disimpan sebagai Base64 di Firestore (field: photoBase64)
+  // -> GRATIS, tidak butuh Firebase Storage (berbayar).
+  // ===============================================================
+
+  String? _photoBase64;
+  String? _googlePhotoUrl; // foto Google (kalau akunnya Google)
+
+  bool _isUploadingPhoto = false;
+
+  // ===============================================================
   // INIT
   // ===============================================================
 
@@ -69,6 +85,14 @@ class _PersonalInformationScreenState
       nameController.text = user.displayName ?? '';
       emailController.text = user.email ?? '';
 
+      // Foto Google (fallback kalau belum upload foto sendiri)
+      final String authPhoto = user.photoURL ?? '';
+
+      if (authPhoto.isNotEmpty &&
+          !authPhoto.startsWith('data:')) {
+        _googlePhotoUrl = authPhoto;
+      }
+
       // Data tambahan dari Firestore
       final doc = await FirebaseFirestore.instance
           .collection('users')
@@ -85,6 +109,7 @@ class _PersonalInformationScreenState
           final birth = data['birth'];
           final gender = data['gender'];
           final address = data['address'];
+          final photoBase64 = data['photoBase64'];
 
           if (name is String && name.trim().isNotEmpty) {
             nameController.text = name;
@@ -109,6 +134,12 @@ class _PersonalInformationScreenState
           if (address is String) {
             addressController.text = address;
           }
+
+          // Foto Base64 dari Firestore (prioritas utama)
+          if (photoBase64 is String &&
+              photoBase64.trim().isNotEmpty) {
+            _photoBase64 = photoBase64;
+          }
         }
       }
     } catch (e) {
@@ -125,6 +156,232 @@ class _PersonalInformationScreenState
       if (mounted) {
         setState(() {
           _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // ===============================================================
+  // PILIH SUMBER FOTO (KAMERA / GALERI)
+  // ===============================================================
+
+  void _showPhotoSourcePicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Ubah Foto Profil',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF5A392F),
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE3D1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.photo_camera_outlined,
+                      size: 22,
+                      color: Color(0xFFB65339),
+                    ),
+                  ),
+                  title: const Text(
+                    'Ambil dari Kamera',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF30221E),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndSavePhoto(
+                      ImageSource.camera,
+                    );
+                  },
+                ),
+
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE3D1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.photo_library_outlined,
+                      size: 22,
+                      color: Color(0xFFB65339),
+                    ),
+                  ),
+                  title: const Text(
+                    'Pilih dari Galeri',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF30221E),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndSavePhoto(
+                      ImageSource.gallery,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ===============================================================
+  // PILIH + SIMPAN FOTO SEBAGAI BASE64 DI FIRESTORE
+  //
+  // Foto dikompres kecil (512px, kualitas 55) supaya hasil
+  // Base64-nya jauh di bawah batas 1 MB dokumen Firestore.
+  // ===============================================================
+
+  Future<void> _pickAndSavePhoto(
+    ImageSource source,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan login terlebih dahulu.'),
+        ),
+      );
+      return;
+    }
+
+    if (_isUploadingPhoto) return;
+
+    try {
+      // ---------------------------------------------------------
+      // PILIH FOTO (dikompres biar ringan)
+      // ---------------------------------------------------------
+      final XFile? picked = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 55,
+      );
+
+      // User batal memilih
+      if (picked == null) return;
+
+      if (!mounted) return;
+
+      setState(() {
+        _isUploadingPhoto = true;
+      });
+
+      // ---------------------------------------------------------
+      // KONVERSI KE BASE64
+      // ---------------------------------------------------------
+      final File file = File(picked.path);
+
+      final List<int> bytes = await file.readAsBytes();
+
+      final String base64String = base64Encode(bytes);
+
+      // ---------------------------------------------------------
+      // PENJAGAAN: dokumen Firestore max 1 MB
+      // 900.000 karakter Base64 ~ 675 KB foto asli (sangat aman)
+      // ---------------------------------------------------------
+      if (base64String.length > 900000) {
+        if (!mounted) return;
+
+        setState(() {
+          _isUploadingPhoto = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Ukuran foto terlalu besar. Coba pilih foto lain.',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      // ---------------------------------------------------------
+      // SIMPAN KE FIRESTORE
+      // ---------------------------------------------------------
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+        {
+          'photoBase64': base64String,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _photoBase64 = base64String;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Foto profil berhasil diperbarui.',
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal menyimpan foto: $e',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingPhoto = false;
         });
       }
     }
@@ -461,6 +718,11 @@ class _PersonalInformationScreenState
 
   // ===============================================================
   // FOTO PROFIL
+  //
+  // Prioritas tampil:
+  // 1. Foto Base64 (hasil upload pengguna sendiri)
+  // 2. Foto Google (kalau akunnya Google dan belum upload)
+  // 3. Ikon person default (pengguna baru)
   // ===============================================================
 
   Widget _buildProfilePhoto() {
@@ -475,45 +737,122 @@ class _PersonalInformationScreenState
             color: Color(0xFFE8E8E8),
           ),
           child: ClipOval(
-            child: Image.asset(
-              'assets/images/profil_jerome.jpeg',
-              width: 100,
-              height: 100,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.person,
-                  size: 65,
-                  color: Color(0xFF777777),
-                );
-              },
-            ),
+            child: _buildPhotoImage(),
           ),
         ),
 
-        // ICON KAMERA
+        // LOADING SAAT PROSES SIMPAN FOTO
+        if (_isUploadingPhoto)
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0x66000000),
+              ),
+              child: const Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // ICON KAMERA (TAP UNTUK UBAH FOTO)
         Positioned(
           right: -2,
           bottom: -2,
-          child: Container(
-            width: 25,
-            height: 25,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFFE2E2E2),
-                width: 0.8,
+          child: GestureDetector(
+            onTap:
+                _isUploadingPhoto ? null : _showPhotoSourcePicker,
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFE2E2E2),
+                  width: 0.8,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
-            ),
-            child: const Icon(
-              Icons.camera_alt_outlined,
-              size: 16,
-              color: Color(0xFF3E3936),
+              child: const Icon(
+                Icons.camera_alt_outlined,
+                size: 17,
+                color: Color(0xFF3E3936),
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  // ===============================================================
+  // GAMBAR FOTO (BASE64 / GOOGLE URL / DEFAULT)
+  // ===============================================================
+
+  Widget _buildPhotoImage() {
+    // 1. Foto Base64 (upload pengguna)
+    final String? base64 = _photoBase64;
+
+    if (base64 != null && base64.trim().isNotEmpty) {
+      try {
+        return Image.memory(
+          base64Decode(base64),
+          width: 100,
+          height: 100,
+          fit: BoxFit.cover,
+
+          errorBuilder: (context, error, stackTrace) {
+            return _buildDefaultPhotoIcon();
+          },
+        );
+      } catch (e) {
+        return _buildDefaultPhotoIcon();
+      }
+    }
+
+    // 2. Foto Google
+    final String? googleUrl = _googlePhotoUrl;
+
+    if (googleUrl != null && googleUrl.trim().isNotEmpty) {
+      return Image.network(
+        googleUrl,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+
+        errorBuilder: (context, error, stackTrace) {
+          return _buildDefaultPhotoIcon();
+        },
+      );
+    }
+
+    // 3. Default
+    return _buildDefaultPhotoIcon();
+  }
+
+  Widget _buildDefaultPhotoIcon() {
+    return const SizedBox(
+      width: 100,
+      height: 100,
+      child: Icon(
+        Icons.person,
+        size: 65,
+        color: Color(0xFF777777),
+      ),
     );
   }
 
