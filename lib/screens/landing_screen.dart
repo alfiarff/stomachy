@@ -11,7 +11,7 @@ import 'register_screen.dart';
 // ganti path di bawah ini, contoh:
 // 'assets/images/maskot_stomachy.png'
 const String kMascotAsset =
-    'assets/images/mascot_happy.png';
+    'assets/images/mascot_happy_bayangan.png';
 
 // ===============================================================
 // PALET WARNA LANDING PAGE
