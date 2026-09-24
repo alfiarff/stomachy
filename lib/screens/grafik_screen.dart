@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
@@ -29,44 +31,6 @@ class ScreeningHistory {
     required this.complaints,
   });
 }
-
-// =====================================================================
-// DATA RIWAYAT
-// =====================================================================
-//
-// NANTI DATA INI BISA DIGANTI DENGAN DATA HASIL SKRINING ASLI.
-// Untuk sementara dibuat sesuai contoh riwayat yang kamu kirim.
-// =====================================================================
-
-final List<ScreeningHistory> screeningHistory = [
-  ScreeningHistory(
-    date: DateTime(2026, 7, 10, 10, 15),
-    atRisk: true,
-    complaints: [
-      'Asam naik',
-      'Nyeri dada',
-      'Perut terasa penuh',
-    ],
-  ),
-
-  ScreeningHistory(
-    date: DateTime(2026, 7, 26, 19, 30),
-    atRisk: false,
-    complaints: [
-      'Mual',
-    ],
-  ),
-
-  ScreeningHistory(
-    date: DateTime(2026, 8, 12, 10, 24),
-    atRisk: true,
-    complaints: [
-      'Panas di dada',
-      'Asam naik',
-      'Perut terasa penuh',
-    ],
-  ),
-];
 
 // =====================================================================
 // SCREEN
@@ -163,6 +127,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       backgroundColor: backgroundColor,
 
@@ -186,36 +152,15 @@ class _GrafikScreenState extends State<GrafikScreen> {
               const SizedBox(height: 18),
 
               // ======================================================
-              // GRAFIK PERKEMBANGAN
+              // KONTEN (DATA REAL DARI FIRESTORE)
               // ======================================================
 
-              _buildDevelopmentCard(),
-
-              const SizedBox(height: 12),
-
-              // ======================================================
-              // RINGKASAN HASIL SKRINING
-              // ======================================================
-
-              _buildSummaryCard(),
-
-              const SizedBox(height: 12),
-
-              // ======================================================
-              // KELUHAN YANG SERING DIPILIH
-              // ======================================================
-
-              _buildComplaintCard(),
-
-              const SizedBox(height: 12),
-
-              // ======================================================
-              // INFORMASI
-              // ======================================================
-
-              _buildInformationCard(),
-
-              const SizedBox(height: 20),
+              if (user == null)
+                _buildEmptyState(
+                  'Silakan login terlebih dahulu.',
+                )
+              else
+                _buildHistoryStream(user.uid),
             ],
           ),
         ),
@@ -228,6 +173,228 @@ class _GrafikScreenState extends State<GrafikScreen> {
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
+      ),
+    );
+  }
+
+  // ===================================================================
+  // STREAM RIWAYAT SKRINING DARI FIRESTORE
+  //
+  // Sumber data sama dengan halaman Riwayat Skrining:
+  // users/{uid}/screening_history
+  // Diurutkan lama -> baru (ascending) supaya grafik berjalan
+  // sesuai kronologi waktu.
+  // ===================================================================
+
+  Widget _buildHistoryStream(String uid) {
+    return StreamBuilder<
+        QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('screening_history')
+          .orderBy(
+            'createdAt',
+            descending: false,
+          )
+          .snapshots(),
+      builder: (context, snapshot) {
+        // ----------------------------------------------------------
+        // LOADING
+        // ----------------------------------------------------------
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.only(top: 60),
+            child: CircularProgressIndicator(
+              color: Color(0xFFB9543A),
+            ),
+          );
+        }
+
+        // ----------------------------------------------------------
+        // ERROR
+        // ----------------------------------------------------------
+        if (snapshot.hasError) {
+          return _buildEmptyState(
+            'Gagal memuat riwayat skrining. Coba lagi nanti.',
+          );
+        }
+
+        // ----------------------------------------------------------
+        // KONVERSI DOKUMEN FIRESTORE -> MODEL
+        // ----------------------------------------------------------
+        final List<ScreeningHistory> history =
+            _convertDocuments(
+          snapshot.data?.docs ?? [],
+        );
+
+        // ----------------------------------------------------------
+        // KOSONG
+        // ----------------------------------------------------------
+        if (history.isEmpty) {
+          return _buildEmptyState(
+            'Belum ada riwayat skrining. Lakukan skrining untuk melihat grafiknya di sini.',
+          );
+        }
+
+        // ----------------------------------------------------------
+        // ADA DATA -> TAMPILKAN SEMUA CARD
+        // ----------------------------------------------------------
+        return Column(
+          children: [
+            _buildDevelopmentCard(history),
+
+            const SizedBox(height: 12),
+
+            _buildSummaryCard(history),
+
+            const SizedBox(height: 12),
+
+            _buildComplaintCard(history),
+
+            const SizedBox(height: 12),
+
+            _buildInformationCard(),
+
+            const SizedBox(height: 20),
+          ],
+        );
+      },
+    );
+  }
+
+  // ===================================================================
+  // KONVERSI DOKUMEN FIRESTORE -> LIST MODEL
+  // ===================================================================
+
+  List<ScreeningHistory> _convertDocuments(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>>
+        docs,
+  ) {
+    final List<ScreeningHistory> result = [];
+
+    for (final doc in docs) {
+      final data = doc.data();
+
+      final DateTime date = _parseDate(
+        data['createdAt'],
+        data['date'],
+      );
+
+      final bool atRisk = data['isRisk'] == true;
+
+      final List<String> complaints =
+          _parseComplaints(data['complaint']);
+
+      result.add(
+        ScreeningHistory(
+          date: date,
+          atRisk: atRisk,
+          complaints: complaints,
+        ),
+      );
+    }
+
+    return result;
+  }
+
+  // ===================================================================
+  // PARSE TANGGAL
+  // Prioritas: createdAt (Timestamp) -> date (String ISO)
+  // ===================================================================
+
+  DateTime _parseDate(
+    dynamic createdAt,
+    dynamic oldDate,
+  ) {
+    if (createdAt is Timestamp) {
+      return createdAt.toDate();
+    }
+
+    if (oldDate is String && oldDate.isNotEmpty) {
+      final DateTime? parsed =
+          DateTime.tryParse(oldDate);
+
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    return DateTime.now();
+  }
+
+  // ===================================================================
+  // PARSE KELUHAN
+  //
+  // Di Firestore keluhan tersimpan sebagai satu string:
+  // "Panas di dada, asam lambung naik, perut terasa penuh"
+  // Dipecah menjadi list per koma.
+  // "Tidak ada keluhan" diabaikan karena bukan keluhan asli.
+  // ===================================================================
+
+  List<String> _parseComplaints(dynamic value) {
+    if (value == null) {
+      return [];
+    }
+
+    final String text = value.toString().trim();
+
+    if (text.isEmpty) {
+      return [];
+    }
+
+    if (text.toLowerCase() == 'tidak ada keluhan') {
+      return [];
+    }
+
+    return text
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  // ===================================================================
+  // EMPTY STATE / BELUM LOGIN
+  // ===================================================================
+
+  Widget _buildEmptyState(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        vertical: 35,
+        horizontal: 20,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFFF806A),
+          width: 0.8,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.bar_chart_rounded,
+            size: 45,
+            color: Color(0xFFB9543A),
+          ),
+
+          const SizedBox(height: 12),
+
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 13,
+              height: 1.4,
+              color: Color(0xFF493C37),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -288,7 +455,9 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // CARD GRAFIK
   // ===================================================================
 
-  Widget _buildDevelopmentCard() {
+  Widget _buildDevelopmentCard(
+    List<ScreeningHistory> history,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(
@@ -381,7 +550,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
             ),
             child: CustomPaint(
               painter: GERDChartPainter(
-                history: screeningHistory,
+                history: history,
               ),
               child: const SizedBox.expand(),
             ),
@@ -452,14 +621,16 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // SUMMARY CARD
   // ===================================================================
 
-  Widget _buildSummaryCard() {
-    final int total = screeningHistory.length;
+  Widget _buildSummaryCard(
+    List<ScreeningHistory> history,
+  ) {
+    final int total = history.length;
 
-    final int riskCount = screeningHistory
+    final int riskCount = history
         .where((item) => item.atRisk)
         .length;
 
-    final int safeCount = screeningHistory
+    final int safeCount = history
         .where((item) => !item.atRisk)
         .length;
 
@@ -652,17 +823,20 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // COMPLAINT CARD
   // ===================================================================
 
-  Widget _buildComplaintCard() {
+  Widget _buildComplaintCard(
+    List<ScreeningHistory> history,
+  ) {
     final Map<String, int> complaintCount = {};
 
-    for (final history in screeningHistory) {
-      for (final complaint in history.complaints) {
+    for (final historyItem in history) {
+      for (final complaint
+          in historyItem.complaints) {
         complaintCount[complaint] =
             (complaintCount[complaint] ?? 0) + 1;
       }
     }
 
-    final int totalHistory = screeningHistory.length;
+    final int totalHistory = history.length;
 
     final List<MapEntry<String, int>> sortedComplaints =
         complaintCount.entries.toList()
@@ -800,14 +974,15 @@ class _GrafikScreenState extends State<GrafikScreen> {
     return Row(
       children: [
         SizedBox(
-          width: 88,
+          width: 105,
           child: Text(
             label,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 14,
+              fontSize: 12,
+              height: 1.2,
               color: Color(0xFF493C37),
             ),
           ),
@@ -905,6 +1080,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
 
 // =====================================================================
 // CUSTOM PAINTER GRAFIK GERD
+// (Tidak berubah, sekarang menerima data real dari Firestore)
 // =====================================================================
 
 class GERDChartPainter extends CustomPainter {
