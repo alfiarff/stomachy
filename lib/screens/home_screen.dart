@@ -430,10 +430,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ===================================================================
-  // RISIKO GERD TERAKHIR
+  // RISIKO GERD TERAKHIR (DATA REAL DARI FIRESTORE)
+  //
+  // Mengambil 1 dokumen terbaru dari koleksi screening_history
+  // berdasarkan createdAt (terbaru dulu).
   // ===================================================================
 
   Widget _buildRiskCard() {
+    final user = FirebaseAuth.instance.currentUser;
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -459,90 +464,275 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Risiko GERD Terakhir',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF4D3129),
-                  ),
-                ),
 
-                const SizedBox(height: 5),
-
-                const Text(
-                  'Berisiko GERD',
-                  style: TextStyle(
-                    fontFamily: 'Fredoka',
-                    fontSize: 22,
-                    color: Color(0xFFE93636),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                const Text(
-                  'Keluhan: Panas di dada, asam naik,\nperut terasa penuh.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.3,
-                    color: Color(0xFF392B27),
-                  ),
-                ),
-
-                const Spacer(),
-
-                Row(
-                  children: const [
-                    Icon(
-                      Icons.calendar_month_outlined,
-                      color: Color(0xFF9A88E6),
-                      size: 17,
-                    ),
-
-                    SizedBox(width: 5),
-
-                    Text(
-                      '12 Agustus 2026 - 10:24',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF777777),
+        // ===========================================================
+        // Belum login -> tampilkan pesan kosong
+        // ===========================================================
+        child: user == null
+            ? _buildRiskEmptyContent()
+            : StreamBuilder<
+                QuerySnapshot<Map<String, dynamic>>>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('screening_history')
+                    .orderBy(
+                      'createdAt',
+                      descending: true,
+                    )
+                    .limit(1)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  // ---------------------------------------------
+                  // LOADING
+                  // ---------------------------------------------
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child: SizedBox(
+                        width: 26,
+                        height: 26,
+                        child:
+                            CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Color(0xFFB9543A),
+                        ),
                       ),
+                    );
+                  }
+
+                  final documents =
+                      snapshot.data?.docs ?? [];
+
+                  // ---------------------------------------------
+                  // KOSONG (belum pernah skrining)
+                  // ---------------------------------------------
+                  if (documents.isEmpty) {
+                    return _buildRiskEmptyContent();
+                  }
+
+                  // ---------------------------------------------
+                  // ADA DATA -> tampilkan hasil terbaru
+                  // ---------------------------------------------
+                  return _buildRiskDataContent(
+                    documents.first.data(),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
+  // ===================================================================
+  // KONTEN KARTU : BELUM ADA RIWAYAT
+  // ===================================================================
+
+  Widget _buildRiskEmptyContent() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            'Belum ada riwayat skrining',
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF4D3028),
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          Text(
+            'Lakukan skrining untuk melihat\nhasilnya di sini.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.3,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===================================================================
+  // KONTEN KARTU : ADA DATA RIWAYAT TERBARU
+  // ===================================================================
+
+  Widget _buildRiskDataContent(
+    Map<String, dynamic> data,
+  ) {
+    final bool isRisk = data['isRisk'] == true;
+
+    final String status =
+        isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
+
+    final Color statusColor = isRisk
+        ? const Color(0xFFE93636)
+        : const Color(0xFF18865A);
+
+    final String complaint =
+        data['complaint']?.toString().isNotEmpty == true
+            ? data['complaint'].toString()
+            : 'Tidak ada keluhan';
+
+    final String date =
+        _formatHistoryDate(data['createdAt']);
+
+    final String mascot = isRisk
+        ? 'assets/images/stomachy_worried.png'
+        : 'assets/images/mascot_happy.png';
+
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Risiko GERD Terakhir',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF4D3129),
+              ),
+            ),
+
+            const SizedBox(height: 5),
+
+            // FittedBox supaya teks "Tidak Berisiko GERD"
+            // yang panjang tidak overflow di layar kecil
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                status,
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
+                  color: statusColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 3),
+
+            Text(
+              'Keluhan: $complaint',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.3,
+                color: Color(0xFF392B27),
+              ),
+            ),
+
+            const Spacer(),
+
+            Row(
+              children: [
+                const Icon(
+                  Icons.calendar_month_outlined,
+                  color: Color(0xFF9A88E6),
+                  size: 17,
+                ),
+
+                const SizedBox(width: 5),
+
+                Expanded(
+                  child: Text(
+                    date,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF777777),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
-
-            Positioned(
-              right: -4,
-              top: 5,
-              child: Image.asset(
-                'assets/images/stomachy_worried.png',
-                width: 112,
-                height: 112,
-                fit: BoxFit.contain,
-              ),
-            ),
-
-            const Positioned(
-              right: 0,
-              top: -2,
-              child: Icon(
-                Icons.chevron_right_rounded,
-                size: 28,
-                color: Color(0xFF333333),
-              ),
-            ),
           ],
         ),
-      ),
+
+        Positioned(
+          right: -4,
+          top: 5,
+          child: Image.asset(
+            mascot,
+            width: 112,
+            height: 112,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const SizedBox(
+                width: 112,
+                child: Icon(
+                  Icons.personal_injury_rounded,
+                  size: 60,
+                  color: Color(0xFFB9543A),
+                ),
+              );
+            },
+          ),
+        ),
+
+        const Positioned(
+          right: 0,
+          top: -2,
+          child: Icon(
+            Icons.chevron_right_rounded,
+            size: 28,
+            color: Color(0xFF333333),
+          ),
+        ),
+      ],
     );
+  }
+
+  // ===================================================================
+  // FORMAT TANGGAL RIWAYAT -> "12 Agustus 2026 - 10:24"
+  // ===================================================================
+
+  String _formatHistoryDate(dynamic createdAt) {
+    if (createdAt is Timestamp) {
+      final date = createdAt.toDate();
+
+      final day = date.day.toString();
+      final month = _monthName(date.month);
+      final year = date.year.toString();
+
+      final hour =
+          date.hour.toString().padLeft(2, '0');
+      final minute =
+          date.minute.toString().padLeft(2, '0');
+
+      return '$day $month $year - $hour:$minute';
+    }
+
+    return '-';
+  }
+
+  String _monthName(int month) {
+    const months = [
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    return months[month];
   }
 
   // ===================================================================
