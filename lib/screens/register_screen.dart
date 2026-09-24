@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'home_screen.dart';
 import '../services/google_auth_service.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -530,7 +531,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             onTap: isLoading
                                 ? null
                                 : () {
-                                    Navigator.pop(context);
+                                    if (Navigator.canPop(
+                                        context)) {
+                                      // Register dibuka dari
+                                      // Login -> balik ke Login
+                                      // (alur lama, tetap sama)
+                                      Navigator.pop(context);
+                                    } else {
+                                      // Register dibuka dari
+                                      // Landing (root) ->
+                                      // pindah ke Login
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const LoginScreen(),
+                                        ),
+                                      );
+                                    }
                                   },
                             child: Text(
                               'Masuk sekarang',
