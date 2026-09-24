@@ -256,11 +256,6 @@ class _ScreeningHistoryScreenState
     final String status =
         isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
 
-    final String complaint =
-        data['complaint']?.toString().isNotEmpty == true
-            ? data['complaint'].toString()
-            : 'Tidak ada keluhan';
-
     final String age =
         data['age']?.toString().isNotEmpty == true
             ? data['age'].toString()
@@ -298,7 +293,6 @@ class _ScreeningHistoryScreenState
     return _buildHistoryCard(
       date: date,
       status: status,
-      complaint: complaint,
       age: age,
       gender: gender,
       symptom: symptom,
@@ -561,71 +555,35 @@ class _ScreeningHistoryScreenState
                 children: [
                   Text(
                     date,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF77716E),
-                    ),
+                    ...
                   ),
 
                   const SizedBox(height: 2),
 
                   Text(
                     status,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: statusColor,
-                    ),
+                    ...
                   ),
 
                   const SizedBox(height: 1),
 
                   RichText(
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    text: TextSpan(
-                      children: [
-                        const TextSpan(
-                          text: 'Keluhan: ',
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF30221E),
-                          ),
-                        ),
-                        TextSpan(
-                          text: complaint,
-                          style: const TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 12,
-                            height: 1.3,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF493C37),
-                          ),
-                        ),
-                      ],
-                    ),
+                    ...
                   ),
                 ],
               ),
             ),
 
             // CHEVRON
-            const Positioned(
-              right: 15,
-              top: 40,
-              child: Icon(
-                Icons.chevron_right_rounded,
-                size: 25,
-                color: Color(0xFF171310),
+              const Positioned(
+                right: 15,
+                top: 43,
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 25,
+                  color: Color(0xFF171310),
+                ),
               ),
-            ),
 
             // CHIPS
             Positioned(

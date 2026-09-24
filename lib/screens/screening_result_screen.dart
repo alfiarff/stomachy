@@ -16,10 +16,10 @@ import '../widgets/bottom_navigation.dart';
 // Kalau punya asset khusus sesuai Figma, ganti path di bawah.
 // ===============================================================
 const String kResultMascotRisk =
-    'assets/images/riwayat_tidak_berisiko_gerd.png';
+    'assets/images/riwayat_berisiko_gerd.png';
 
 const String kResultMascotSafe =
-    'assets/images/riwayat_berisiko_gerd.png';
+    'assets/images/riwayat_tidak_berisiko_gerd.png';
 
 // ===============================================================
 // TEMA WARNA HASIL
