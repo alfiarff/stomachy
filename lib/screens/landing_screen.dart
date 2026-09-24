@@ -119,10 +119,11 @@ class _LandingScreenState extends State<LandingScreen> {
                         active: _currentPage == 1,
                         pageController: _pageController,
                       ),
-                      _LandingPageThree(
+                        _LandingPageThree(
                         active: _currentPage == 2,
                         pageController: _pageController,
-                        onStartPressed: _goToRegister,
+                        onStartPressed: _goToLogin,
+                      ),
                       ),
                     ],
                   ),
