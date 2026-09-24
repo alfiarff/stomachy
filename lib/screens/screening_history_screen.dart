@@ -18,16 +18,11 @@ class ScreeningHistoryScreen extends StatefulWidget {
       _ScreeningHistoryScreenState();
 }
 
-class _ScreeningHistoryScreenState
-    extends State<ScreeningHistoryScreen> {
+class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
   int _selectedIndex = 4;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color primaryBrown = const Color(0xFF5A392F);
-
-  // ===============================================================
-  // NAVIGATION
-  // ===============================================================
 
   void _onNavigationTap(int index) {
     if (index == _selectedIndex) {
@@ -37,9 +32,7 @@ class _ScreeningHistoryScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -47,9 +40,7 @@ class _ScreeningHistoryScreenState
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -57,9 +48,7 @@ class _ScreeningHistoryScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -67,9 +56,7 @@ class _ScreeningHistoryScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -77,17 +64,10 @@ class _ScreeningHistoryScreenState
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
-      return;
     }
   }
-
-  // ===============================================================
-  // BUILD
-  // ===============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -95,40 +75,26 @@ class _ScreeningHistoryScreenState
 
     return Scaffold(
       backgroundColor: backgroundColor,
-
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            22,
-            12,
-            22,
-            105,
-          ),
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
           child: Column(
             children: [
               _buildHeader(),
-
               const SizedBox(height: 20),
-
               if (user == null)
-                _buildEmptyHistory(
-                  'Silakan login terlebih dahulu.',
-                )
+                _buildEmptyHistory('Silakan login terlebih dahulu.')
               else
                 StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: FirebaseFirestore.instance
                       .collection('users')
                       .doc(user.uid)
                       .collection('screening_history')
-                      .orderBy(
-                        'createdAt',
-                        descending: true,
-                      )
+                      .orderBy('createdAt', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Padding(
                         padding: EdgeInsets.only(top: 40),
                         child: CircularProgressIndicator(
@@ -143,8 +109,7 @@ class _ScreeningHistoryScreenState
                       );
                     }
 
-                    final documents =
-                        snapshot.data?.docs ?? [];
+                    final documents = snapshot.data?.docs ?? [];
 
                     if (documents.isEmpty) {
                       return _buildEmptyHistory(
@@ -154,13 +119,8 @@ class _ScreeningHistoryScreenState
 
                     return Column(
                       children: [
-                        for (int i = 0;
-                            i < documents.length;
-                            i++) ...[
-                          _buildHistoryCardFromFirestore(
-                            documents[i],
-                          ),
-
+                        for (int i = 0; i < documents.length; i++) ...[
+                          _buildHistoryCardFromFirestore(documents[i]),
                           if (i != documents.length - 1)
                             const SizedBox(height: 17),
                         ],
@@ -168,31 +128,21 @@ class _ScreeningHistoryScreenState
                     );
                   },
                 ),
-
               const SizedBox(height: 28),
-
               _buildPrivacyCard(),
-
               const SizedBox(height: 27),
-
               _buildConsultationButton(),
-
               const SizedBox(height: 20),
             ],
           ),
         ),
       ),
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
       ),
     );
   }
-
-  // ===============================================================
-  // EMPTY HISTORY
-  // ===============================================================
 
   Widget _buildEmptyHistory(String message) {
     return Container(
@@ -219,9 +169,7 @@ class _ScreeningHistoryScreenState
             size: 45,
             color: Color(0xFFB9543A),
           ),
-
           const SizedBox(height: 12),
-
           Text(
             message,
             textAlign: TextAlign.center,
@@ -236,10 +184,6 @@ class _ScreeningHistoryScreenState
     );
   }
 
-  // ===============================================================
-  // FIRESTORE HISTORY CARD
-  // ===============================================================
-
   Widget _buildHistoryCardFromFirestore(
     QueryDocumentSnapshot<Map<String, dynamic>> document,
   ) {
@@ -252,7 +196,6 @@ class _ScreeningHistoryScreenState
 
     final bool isRisk = data['isRisk'] == true;
 
-    // Status ditampilkan dalam Bahasa Indonesia
     final String status =
         isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
 
@@ -271,11 +214,11 @@ class _ScreeningHistoryScreenState
             ? data['symptom'].toString()
             : '0 Gejala utama';
 
-    // =============================================================
-    // Probabilitas + prediction diambil dari Firestore supaya
-    // halaman result yang dibuka dari riwayat menampilkan
-    // angka yang sama persis dengan hasil skrining aslinya.
-    // =============================================================
+    final String complaint =
+        data['complaint']?.toString().isNotEmpty == true
+            ? data['complaint'].toString()
+            : '';
+
     final double probability =
         data['probability'] is num
             ? (data['probability'] as num).toDouble()
@@ -293,6 +236,7 @@ class _ScreeningHistoryScreenState
     return _buildHistoryCard(
       date: date,
       status: status,
+      complaint: complaint,
       age: age,
       gender: gender,
       symptom: symptom,
@@ -300,38 +244,25 @@ class _ScreeningHistoryScreenState
       isRisk: isRisk,
       probability: probability,
       prediction: prediction,
-      step2Answers: _convertStep2Answers(
-        data['step2Answers'],
-      ),
-      step3Answers: _convertStep3Answers(
-        data['step3Answers'],
-      ),
+      step2Answers: _convertStep2Answers(data['step2Answers']),
+      step3Answers: _convertStep3Answers(data['step3Answers']),
     );
   }
 
-  // ===============================================================
-  // FORMAT DATE
-  // ===============================================================
-
-  String _formatDate(
-    dynamic createdAt,
-    dynamic oldDate,
-  ) {
+  String _formatDate(dynamic createdAt, dynamic oldDate) {
     if (createdAt is Timestamp) {
       final date = createdAt.toDate();
 
       final day = date.day.toString().padLeft(2, '0');
       final month = _monthName(date.month);
       final year = date.year.toString();
-
       final hour = date.hour.toString().padLeft(2, '0');
       final minute = date.minute.toString().padLeft(2, '0');
 
       return '$day $month $year - $hour:$minute';
     }
 
-    if (oldDate != null &&
-        oldDate.toString().isNotEmpty) {
+    if (oldDate != null && oldDate.toString().isNotEmpty) {
       return oldDate.toString();
     }
 
@@ -355,16 +286,14 @@ class _ScreeningHistoryScreenState
       'Desember',
     ];
 
+    if (month < 1 || month > 12) {
+      return '';
+    }
+
     return months[month];
   }
 
-  // ===============================================================
-  // CONVERT STEP 2 ANSWERS
-  // ===============================================================
-
-  Map<String, bool?> _convertStep2Answers(
-    dynamic value,
-  ) {
+  Map<String, bool?> _convertStep2Answers(dynamic value) {
     final result = <String, bool?>{};
 
     if (value is Map) {
@@ -378,13 +307,7 @@ class _ScreeningHistoryScreenState
     return result;
   }
 
-  // ===============================================================
-  // CONVERT STEP 3 ANSWERS
-  // ===============================================================
-
-  Map<String, String?> _convertStep3Answers(
-    dynamic value,
-  ) {
+  Map<String, String?> _convertStep3Answers(dynamic value) {
     final result = <String, String?>{};
 
     if (value is Map) {
@@ -397,10 +320,6 @@ class _ScreeningHistoryScreenState
 
     return result;
   }
-
-  // ===============================================================
-  // HEADER
-  // ===============================================================
 
   Widget _buildHeader() {
     return SizedBox(
@@ -424,7 +343,6 @@ class _ScreeningHistoryScreenState
               ),
             ),
           ),
-
           Expanded(
             child: Center(
               child: Text(
@@ -438,16 +356,11 @@ class _ScreeningHistoryScreenState
               ),
             ),
           ),
-
           const SizedBox(width: 45),
         ],
       ),
     );
   }
-
-  // ===============================================================
-  // HISTORY CARD
-  // ===============================================================
 
   Widget _buildHistoryCard({
     required String date,
@@ -505,7 +418,7 @@ class _ScreeningHistoryScreenState
       borderRadius: BorderRadius.circular(15),
       child: Container(
         width: double.infinity,
-        height: 150,
+        height: 130,
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(15),
@@ -519,21 +432,16 @@ class _ScreeningHistoryScreenState
         ),
         child: Stack(
           children: [
-            // MASCOT
             Positioned(
-              left: 10,
-              top: 7,
+              left: 3,
+              top: 0,
               child: SizedBox(
-                width: 105,
-                height: 78,
+                width: 125,
+                height: 98,
                 child: Image.asset(
                   image,
                   fit: BoxFit.contain,
-                  errorBuilder: (
-                    context,
-                    error,
-                    stackTrace,
-                  ) {
+                  errorBuilder: (context, error, stackTrace) {
                     return const Icon(
                       Icons.image_not_supported_outlined,
                       size: 40,
@@ -543,53 +451,53 @@ class _ScreeningHistoryScreenState
                 ),
               ),
             ),
-
-            // DATE + STATUS + COMPLAINT
             Positioned(
               left: 128,
-              right: 30,
-              top: 13,
+              right: 35,
+              top: 10,
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     date,
-                    ...
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF77716E),
+                    ),
                   ),
-
-                  const SizedBox(height: 2),
-
+                  const SizedBox(height: 5),
                   Text(
                     status,
-                    ...
-                  ),
-
-                  const SizedBox(height: 1),
-
-                  RichText(
-                    ...
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Fredoka',
+                      fontSize: 18,
+                      height: 1.0,
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                    ),
                   ),
                 ],
               ),
             ),
-
-            // CHEVRON
-              const Positioned(
-                right: 15,
-                top: 43,
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  size: 25,
-                  color: Color(0xFF171310),
-                ),
+            const Positioned(
+              right: 15,
+              top: 43,
+              child: Icon(
+                Icons.chevron_right_rounded,
+                size: 25,
+                color: Color(0xFF171310),
               ),
-
-            // CHIPS
+            ),
             Positioned(
               left: 14,
               right: 12,
-              bottom: 12,
+              bottom: 10,
               child: Row(
                 children: [
                   Expanded(
@@ -600,26 +508,13 @@ class _ScreeningHistoryScreenState
                       borderColor: chipBorder,
                     ),
                   ),
-
-                  const SizedBox(width: 8),
-
+                  const SizedBox(width: 10),
                   Expanded(
                     child: _buildInfoChip(
                       icon: gender == 'Perempuan'
                           ? Icons.female_rounded
                           : Icons.male_rounded,
                       text: gender,
-                      backgroundColor: chipColor,
-                      borderColor: chipBorder,
-                    ),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  Expanded(
-                    child: _buildInfoChip(
-                      icon: Icons.description_rounded,
-                      text: symptom,
                       backgroundColor: chipColor,
                       borderColor: chipBorder,
                     ),
@@ -633,10 +528,6 @@ class _ScreeningHistoryScreenState
     );
   }
 
-  // ===============================================================
-  // INFO CHIP
-  // ===============================================================
-
   Widget _buildInfoChip({
     required IconData icon,
     required String text,
@@ -645,9 +536,7 @@ class _ScreeningHistoryScreenState
   }) {
     return Container(
       height: 22,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
@@ -671,9 +560,7 @@ class _ScreeningHistoryScreenState
             size: 13,
             color: borderColor,
           ),
-
           const SizedBox(width: 4),
-
           Flexible(
             child: Text(
               text,
@@ -693,17 +580,11 @@ class _ScreeningHistoryScreenState
     );
   }
 
-  // ===============================================================
-  // PRIVACY CARD
-  // ===============================================================
-
   Widget _buildPrivacyCard() {
     return Container(
       width: double.infinity,
       height: 60,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFCF9),
         borderRadius: BorderRadius.circular(12),
@@ -722,9 +603,7 @@ class _ScreeningHistoryScreenState
             size: 18,
             color: Color(0xFFB9543A),
           ),
-
           const SizedBox(width: 13),
-
           const Expanded(
             child: Text(
               'Riwayatmu bersifat rahasia dan hanya dapat dilihat olehmu.',
@@ -741,10 +620,6 @@ class _ScreeningHistoryScreenState
       ),
     );
   }
-
-  // ===============================================================
-  // CONSULTATION BUTTON
-  // ===============================================================
 
   Widget _buildConsultationButton() {
     return SizedBox(

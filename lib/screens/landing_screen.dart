@@ -124,7 +124,6 @@ class _LandingScreenState extends State<LandingScreen> {
                         pageController: _pageController,
                         onStartPressed: _goToLogin,
                       ),
-                      ),
                     ],
                   ),
                 ),
