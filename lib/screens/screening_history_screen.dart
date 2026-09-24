@@ -18,11 +18,26 @@ class ScreeningHistoryScreen extends StatefulWidget {
       _ScreeningHistoryScreenState();
 }
 
-class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
+class _ScreeningHistoryScreenState
+    extends State<ScreeningHistoryScreen> {
   int _selectedIndex = 4;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color primaryBrown = const Color(0xFF5A392F);
+
+  // ===============================================================
+  // WARNA STATUS
+  // ===============================================================
+
+  static const Color statusRisk =
+      Color(0xFFE93636);
+
+  static const Color statusSafe =
+      Color(0xFF18865A);
+
+  // ===============================================================
+  // NAVIGATION
+  // ===============================================================
 
   void _onNavigationTap(int index) {
     if (index == _selectedIndex) {
@@ -32,7 +47,9 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
       );
       return;
     }
@@ -40,7 +57,9 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
+        MaterialPageRoute(
+          builder: (context) => const ScreeningScreen(),
+        ),
       );
       return;
     }
@@ -48,7 +67,9 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const DoctorScreen()),
+        MaterialPageRoute(
+          builder: (context) => const DoctorScreen(),
+        ),
       );
       return;
     }
@@ -56,7 +77,9 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
+        MaterialPageRoute(
+          builder: (context) => const EdukasiScreen(),
+        ),
       );
       return;
     }
@@ -64,10 +87,17 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+        MaterialPageRoute(
+          builder: (context) => const ProfileScreen(),
+        ),
       );
+      return;
     }
   }
+
+  // ===============================================================
+  // BUILD
+  // ===============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -75,26 +105,40 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
+
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
+          padding: const EdgeInsets.fromLTRB(
+            22,
+            12,
+            22,
+            105,
+          ),
           child: Column(
             children: [
               _buildHeader(),
+
               const SizedBox(height: 20),
+
               if (user == null)
-                _buildEmptyHistory('Silakan login terlebih dahulu.')
+                _buildEmptyHistory(
+                  'Silakan login terlebih dahulu.',
+                )
               else
                 StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: FirebaseFirestore.instance
                       .collection('users')
                       .doc(user.uid)
                       .collection('screening_history')
-                      .orderBy('createdAt', descending: true)
+                      .orderBy(
+                        'createdAt',
+                        descending: true,
+                      )
                       .snapshots(),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                    if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const Padding(
                         padding: EdgeInsets.only(top: 40),
                         child: CircularProgressIndicator(
@@ -109,7 +153,8 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
                       );
                     }
 
-                    final documents = snapshot.data?.docs ?? [];
+                    final documents =
+                        snapshot.data?.docs ?? [];
 
                     if (documents.isEmpty) {
                       return _buildEmptyHistory(
@@ -119,8 +164,13 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
 
                     return Column(
                       children: [
-                        for (int i = 0; i < documents.length; i++) ...[
-                          _buildHistoryCardFromFirestore(documents[i]),
+                        for (int i = 0;
+                            i < documents.length;
+                            i++) ...[
+                          _buildHistoryCardFromFirestore(
+                            documents[i],
+                          ),
+
                           if (i != documents.length - 1)
                             const SizedBox(height: 17),
                         ],
@@ -128,21 +178,31 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
                     );
                   },
                 ),
+
               const SizedBox(height: 28),
+
               _buildPrivacyCard(),
+
               const SizedBox(height: 27),
+
               _buildConsultationButton(),
+
               const SizedBox(height: 20),
             ],
           ),
         ),
       ),
+
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
       ),
     );
   }
+
+  // ===============================================================
+  // EMPTY HISTORY
+  // ===============================================================
 
   Widget _buildEmptyHistory(String message) {
     return Container(
@@ -169,7 +229,9 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
             size: 45,
             color: Color(0xFFB9543A),
           ),
+
           const SizedBox(height: 12),
+
           Text(
             message,
             textAlign: TextAlign.center,
@@ -184,6 +246,10 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     );
   }
 
+  // ===============================================================
+  // FIRESTORE HISTORY CARD
+  // ===============================================================
+
   Widget _buildHistoryCardFromFirestore(
     QueryDocumentSnapshot<Map<String, dynamic>> document,
   ) {
@@ -196,29 +262,32 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
 
     final bool isRisk = data['isRisk'] == true;
 
+    // Status ditampilkan dalam Bahasa Indonesia
     final String status =
         isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
 
-    final String age =
-        data['age']?.toString().isNotEmpty == true
-            ? data['age'].toString()
-            : '-';
+    // Umur ditambah "tahun" kalau belum ada
+    final String age = _formatAge(
+      data['age']?.toString() ?? '',
+    );
 
     final String gender =
         data['gender']?.toString().isNotEmpty == true
             ? data['gender'].toString()
             : '-';
 
-    final String symptom =
-        data['symptom']?.toString().isNotEmpty == true
-            ? data['symptom'].toString()
-            : '0 Gejala utama';
-
+    // Keluhan tidak ditampilkan di kartu (sesuai desain Figma),
+    // tapi tetap diambil untuk dikirim ke halaman result.
     final String complaint =
         data['complaint']?.toString().isNotEmpty == true
             ? data['complaint'].toString()
-            : '';
+            : 'Tidak ada keluhan';
 
+    // =============================================================
+    // Probabilitas + prediction diambil dari Firestore supaya
+    // halaman result yang dibuka dari riwayat menampilkan
+    // angka yang sama persis dengan hasil skrining aslinya.
+    // =============================================================
     final double probability =
         data['probability'] is num
             ? (data['probability'] as num).toDouble()
@@ -239,30 +308,60 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
       complaint: complaint,
       age: age,
       gender: gender,
-      symptom: symptom,
       image: image,
       isRisk: isRisk,
       probability: probability,
       prediction: prediction,
-      step2Answers: _convertStep2Answers(data['step2Answers']),
-      step3Answers: _convertStep3Answers(data['step3Answers']),
+      step2Answers: _convertStep2Answers(
+        data['step2Answers'],
+      ),
+      step3Answers: _convertStep3Answers(
+        data['step3Answers'],
+      ),
     );
   }
 
-  String _formatDate(dynamic createdAt, dynamic oldDate) {
+  // ===============================================================
+  // FORMAT UMUR -> "20 tahun"
+  // ===============================================================
+
+  String _formatAge(String rawAge) {
+    final trimmed = rawAge.trim();
+
+    if (trimmed.isEmpty || trimmed == '-') {
+      return '-';
+    }
+
+    if (trimmed.toLowerCase().contains('tahun')) {
+      return trimmed;
+    }
+
+    return '$trimmed tahun';
+  }
+
+  // ===============================================================
+  // FORMAT DATE
+  // ===============================================================
+
+  String _formatDate(
+    dynamic createdAt,
+    dynamic oldDate,
+  ) {
     if (createdAt is Timestamp) {
       final date = createdAt.toDate();
 
       final day = date.day.toString().padLeft(2, '0');
       final month = _monthName(date.month);
       final year = date.year.toString();
+
       final hour = date.hour.toString().padLeft(2, '0');
       final minute = date.minute.toString().padLeft(2, '0');
 
       return '$day $month $year - $hour:$minute';
     }
 
-    if (oldDate != null && oldDate.toString().isNotEmpty) {
+    if (oldDate != null &&
+        oldDate.toString().isNotEmpty) {
       return oldDate.toString();
     }
 
@@ -286,14 +385,16 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
       'Desember',
     ];
 
-    if (month < 1 || month > 12) {
-      return '';
-    }
-
     return months[month];
   }
 
-  Map<String, bool?> _convertStep2Answers(dynamic value) {
+  // ===============================================================
+  // CONVERT STEP 2 ANSWERS
+  // ===============================================================
+
+  Map<String, bool?> _convertStep2Answers(
+    dynamic value,
+  ) {
     final result = <String, bool?>{};
 
     if (value is Map) {
@@ -307,7 +408,13 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     return result;
   }
 
-  Map<String, String?> _convertStep3Answers(dynamic value) {
+  // ===============================================================
+  // CONVERT STEP 3 ANSWERS
+  // ===============================================================
+
+  Map<String, String?> _convertStep3Answers(
+    dynamic value,
+  ) {
     final result = <String, String?>{};
 
     if (value is Map) {
@@ -320,6 +427,10 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
 
     return result;
   }
+
+  // ===============================================================
+  // HEADER
+  // ===============================================================
 
   Widget _buildHeader() {
     return SizedBox(
@@ -343,10 +454,11 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
               ),
             ),
           ),
+
           Expanded(
             child: Center(
               child: Text(
-                'Riwayat Skrining',
+                'Riwayat',
                 style: TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
@@ -356,11 +468,21 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
               ),
             ),
           ),
+
           const SizedBox(width: 45),
         ],
       ),
     );
   }
+
+  // ===============================================================
+  // HISTORY CARD
+  //
+  // Layout sesuai desain Figma:
+  // [maskot]  [tanggal          ]        [ > ]
+  //           [STATUS BESAR     ]
+  // [chip umur] [chip gender]
+  // ===============================================================
 
   Widget _buildHistoryCard({
     required String date,
@@ -368,7 +490,6 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     required String complaint,
     required String age,
     required String gender,
-    required String symptom,
     required String image,
     required bool isRisk,
     required double probability,
@@ -378,11 +499,10 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
   }) {
     final Color cardColor = isRisk
         ? const Color(0xFFFFFCF9)
-        : const Color(0xFFF4FBF4);
+        : const Color(0xFFF2FAF2);
 
-    final Color statusColor = isRisk
-        ? const Color(0xFFE93636)
-        : const Color(0xFF18865A);
+    final Color statusColor =
+        isRisk ? statusRisk : statusSafe;
 
     final Color chipColor = isRisk
         ? const Color(0xFFFFF0E9)
@@ -403,7 +523,6 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
               complaint: complaint,
               age: age,
               gender: gender,
-              symptom: symptom,
               image: image,
               isRisk: isRisk,
               probability: probability,
@@ -415,118 +534,150 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
-        height: 130,
+        padding: const EdgeInsets.fromLTRB(
+          14,
+          12,
+          10,
+          14,
+        ),
         decoration: BoxDecoration(
           color: cardColor,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.14),
-              blurRadius: 5,
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 6,
               offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: Stack(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned(
-              left: 3,
-              top: 0,
-              child: SizedBox(
-                width: 125,
-                height: 98,
-                child: Image.asset(
-                  image,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.image_not_supported_outlined,
-                      size: 40,
-                      color: Color(0xFFB9543A),
-                    );
-                  },
+            // =======================================================
+            // BARIS ATAS : MASKOT + TANGGAL/STATUS + CHEVRON
+            // =======================================================
+            Row(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                // MASKOT
+                SizedBox(
+                  width: 95,
+                  height: 78,
+                  child: Image.asset(
+                    image,
+                    fit: BoxFit.contain,
+                    errorBuilder: (
+                      context,
+                      error,
+                      stackTrace,
+                    ) {
+                      return const Icon(
+                        Icons
+                            .image_not_supported_outlined,
+                        size: 40,
+                        color: Color(0xFFB9543A),
+                      );
+                    },
+                  ),
                 ),
-              ),
+
+                const SizedBox(width: 10),
+
+                // TANGGAL + STATUS
+                Expanded(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.only(top: 8),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          date,
+                          maxLines: 1,
+                          overflow:
+                              TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF77716E),
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Text(
+                          status,
+                          maxLines: 1,
+                          overflow:
+                              TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Fredoka',
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // CHEVRON
+                const Padding(
+                  padding: EdgeInsets.only(
+                    top: 22,
+                  ),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    size: 26,
+                    color: Color(0xFF171310),
+                  ),
+                ),
+              ],
             ),
-            Positioned(
-              left: 128,
-              right: 35,
-              top: 10,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    date,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF77716E),
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    status,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      fontSize: 18,
-                      height: 1.0,
-                      fontWeight: FontWeight.w700,
-                      color: statusColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Positioned(
-              right: 15,
-              top: 43,
-              child: Icon(
-                Icons.chevron_right_rounded,
-                size: 25,
-                color: Color(0xFF171310),
-              ),
-            ),
-            Positioned(
-              left: 14,
-              right: 12,
-              bottom: 10,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildInfoChip(
-                      icon: Icons.person_rounded,
-                      text: age,
-                      backgroundColor: chipColor,
-                      borderColor: chipBorder,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildInfoChip(
-                      icon: gender == 'Perempuan'
-                          ? Icons.female_rounded
-                          : Icons.male_rounded,
-                      text: gender,
-                      backgroundColor: chipColor,
-                      borderColor: chipBorder,
-                    ),
-                  ),
-                ],
-              ),
+
+            const SizedBox(height: 10),
+
+            // =======================================================
+            // BARIS BAWAH : CHIP UMUR + CHIP GENDER
+            // =======================================================
+            Row(
+              children: [
+                _buildInfoChip(
+                  icon: Icons.person_rounded,
+                  text: age,
+                  backgroundColor: chipColor,
+                  borderColor: chipBorder,
+                ),
+
+                const SizedBox(width: 10),
+
+                _buildInfoChip(
+                  icon: gender == 'Perempuan'
+                      ? Icons.female_rounded
+                      : Icons.male_rounded,
+                  text: gender,
+                  backgroundColor: chipColor,
+                  borderColor: chipBorder,
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
+
+  // ===============================================================
+  // INFO CHIP
+  // ===============================================================
 
   Widget _buildInfoChip({
     required IconData icon,
@@ -535,44 +686,43 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     required Color borderColor,
   }) {
     return Container(
-      height: 22,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      height: 27,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: borderColor,
-          width: 0.8,
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 2,
             offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            size: 13,
+            size: 14,
             color: borderColor,
           ),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: borderColor,
-              ),
+
+          const SizedBox(width: 6),
+
+          Text(
+            text,
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: borderColor,
             ),
           ),
         ],
@@ -580,11 +730,17 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     );
   }
 
+  // ===============================================================
+  // PRIVACY CARD
+  // ===============================================================
+
   Widget _buildPrivacyCard() {
     return Container(
       width: double.infinity,
       height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFCF9),
         borderRadius: BorderRadius.circular(12),
@@ -603,7 +759,9 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
             size: 18,
             color: Color(0xFFB9543A),
           ),
+
           const SizedBox(width: 13),
+
           const Expanded(
             child: Text(
               'Riwayatmu bersifat rahasia dan hanya dapat dilihat olehmu.',
@@ -620,6 +778,10 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
       ),
     );
   }
+
+  // ===============================================================
+  // CONSULTATION BUTTON
+  // ===============================================================
 
   Widget _buildConsultationButton() {
     return SizedBox(
