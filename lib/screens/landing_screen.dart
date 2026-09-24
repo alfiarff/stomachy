@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'register_screen.dart';
+import 'login_screen.dart';
 
 // ===============================================================
 // ASSET MASKOT
@@ -52,11 +52,11 @@ class _LandingScreenState extends State<LandingScreen> {
   // =============================================================
   // PINDAH KE HALAMAN REGISTRASI
   // =============================================================
-  void _goToRegister() {
+  void _goToLogin() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const RegisterScreen(),
+        builder: (context) => const LoginScreen(),
       ),
     );
   }
