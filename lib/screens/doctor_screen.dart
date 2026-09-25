@@ -140,7 +140,6 @@ class _DoctorScreenState extends State<DoctorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-
       body: SafeArea(
         child: Column(
           children: [
@@ -181,6 +180,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
                       ),
                     ),
 
+                    // EMPTY STATE
                     if (filteredDoctors.isEmpty)
                       _buildEmptyState(),
                   ],
@@ -402,19 +402,24 @@ class _DoctorScreenState extends State<DoctorScreen> {
   // ================================================================
 
   Widget _buildDoctorCard(DoctorData doctor) {
-      return GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  DoctorDetailScreen(
-                doctor: doctor,
-              ),
-            ),
-          );
-        },
-        child: Container(
+    final bool isOnline = doctor.status == 'Online';
+
+    return GestureDetector(
+      // HANYA DOKTER ONLINE YANG BISA MASUK DETAIL
+      onTap: isOnline
+          ? () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DoctorDetailScreen(
+                    doctor: doctor,
+                  ),
+                ),
+              );
+            }
+          : null,
+
+      child: Container(
         width: double.infinity,
         height: 172,
         padding: const EdgeInsets.fromLTRB(
@@ -438,29 +443,29 @@ class _DoctorScreenState extends State<DoctorScreen> {
             ),
           ],
         ),
+
         child: Column(
           children: [
             Expanded(
               child: Row(
-                crossAxisAlignment:
-                    CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // FOTO DOKTER
                   _buildDoctorImage(doctor.image),
 
                   const SizedBox(width: 14),
 
+                  // INFORMASI DOKTER
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // NAMA
                         Text(
                           doctor.name,
                           maxLines: 1,
-                          overflow:
-                              TextOverflow.ellipsis,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -470,6 +475,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
 
                         const SizedBox(height: 2),
 
+                        // SPESIALIS
                         Text(
                           doctor.specialty,
                           style: const TextStyle(
@@ -480,25 +486,21 @@ class _DoctorScreenState extends State<DoctorScreen> {
 
                         const SizedBox(height: 2),
 
+                        // STATUS ONLINE / OFFLINE
                         Text(
                           doctor.status,
                           style: TextStyle(
                             fontSize: 12,
-                            color:
-                                doctor.status == 'Online'
-                                    ? const Color(
-                                        0xFF18C85A,
-                                      )
-                                    : const Color(
-                                        0xFFFF3F3F,
-                                      ),
-                            fontWeight:
-                                FontWeight.w500,
+                            color: isOnline
+                                ? const Color(0xFF18C85A)
+                                : const Color(0xFFFF3F3F),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
 
                         const SizedBox(height: 2),
 
+                        // RATING
                         Row(
                           children: [
                             const Icon(
@@ -511,11 +513,9 @@ class _DoctorScreenState extends State<DoctorScreen> {
 
                             Expanded(
                               child: Text(
-                                '${doctor.rating} '
-                                '(${doctor.reviews} ulasan)',
+                                '${doctor.rating} (${doctor.reviews} ulasan)',
                                 maxLines: 1,
-                                overflow:
-                                    TextOverflow.ellipsis,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: Colors.black,
@@ -527,22 +527,17 @@ class _DoctorScreenState extends State<DoctorScreen> {
 
                         const SizedBox(height: 2),
 
+                        // KETERSEDIAAN
                         Text(
-                          doctor.status == 'Online'
+                          isOnline
                               ? 'Tersedia Hari Ini'
                               : 'Tidak Tersedia Hari Ini',
                           style: TextStyle(
                             fontSize: 12,
-                            color:
-                                doctor.status == 'Online'
-                                    ? const Color(
-                                        0xFF18C85A,
-                                      )
-                                    : const Color(
-                                        0xFFFF3F3F,
-                                      ),
-                            fontWeight:
-                                FontWeight.w500,
+                            color: isOnline
+                                ? const Color(0xFF18C85A)
+                                : const Color(0xFFFF3F3F),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -554,16 +549,19 @@ class _DoctorScreenState extends State<DoctorScreen> {
 
             const SizedBox(height: 4),
 
+            // JADWAL
             Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: doctor.schedules.map(
                 (time) {
                   return Padding(
                     padding: const EdgeInsets.only(
                       left: 8,
                     ),
-                    child: _buildScheduleButton(time),
+                    child: _buildScheduleButton(
+                      time,
+                      isOnline,
+                    ),
                   );
                 },
               ).toList(),
@@ -573,73 +571,88 @@ class _DoctorScreenState extends State<DoctorScreen> {
       ),
     );
   }
+
   // ================================================================
   // FOTO DOKTER
   // ================================================================
 
-    Widget _buildDoctorImage(String imagePath) {
+  Widget _buildDoctorImage(String imagePath) {
     return Container(
-        width: 62,
-        height: 62,
-        decoration: const BoxDecoration(
+      width: 62,
+      height: 62,
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
         color: Color(0xFFEDE5DF),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Image.asset(
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
         imagePath,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-            return const Icon(
+          return const Icon(
             Icons.person_rounded,
             size: 42,
             color: Color(0xFFB65339),
-            );
+          );
         },
-        ),
+      ),
     );
-    }
+  }
 
   // ================================================================
   // SCHEDULE BUTTON
   // ================================================================
 
-    Widget _buildScheduleButton(String time) {
+  Widget _buildScheduleButton(
+    String time,
+    bool isOnline,
+  ) {
     return GestureDetector(
-        onTap: () {
-        _showScheduleDialog(time);
-        },
-        child: Container(
+      // HANYA JADWAL DOKTER ONLINE YANG BISA DIPENCET
+      onTap: isOnline
+          ? () {
+              _showScheduleDialog(time);
+            }
+          : null,
+
+      child: Container(
         width: 54,
         height: 30,
         decoration: BoxDecoration(
-            color: const Color(0xFFFFFCFA),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-            color: borderBrown,
+          color: isOnline
+              ? const Color(0xFFFFFCFA)
+              : const Color(0xFFF0EAE6),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isOnline
+                ? borderBrown
+                : const Color(0xFFD5CCC7),
             width: 0.8,
-            ),
-            boxShadow: [
-            BoxShadow(
+          ),
+          boxShadow: [
+            if (isOnline)
+              BoxShadow(
                 color: Colors.black.withOpacity(0.13),
                 blurRadius: 3,
                 offset: const Offset(0, 2),
-            ),
-            ],
+              ),
+          ],
         ),
         child: Center(
-            child: Text(
+          child: Text(
             time,
-            style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isOnline
+                  ? Colors.black
+                  : const Color(0xFF99918D),
             ),
-            ),
+          ),
         ),
-        ),
+      ),
     );
-    }
+  }
 
   // ================================================================
   // DIALOG PILIH JADWAL
@@ -668,6 +681,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
             ),
           ),
           actions: [
+            // BATAL
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -681,6 +695,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
               ),
             ),
 
+            // PILIH
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
