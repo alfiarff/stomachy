@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
@@ -15,7 +16,8 @@ class ChangePasswordScreen extends StatefulWidget {
       _ChangePasswordScreenState();
 }
 
-class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
+class _ChangePasswordScreenState
+    extends State<ChangePasswordScreen> {
   // ===============================================================
   // NAVIGATION
   // ===============================================================
@@ -44,6 +46,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _obscureConfirmPassword = true;
 
   bool _passwordChanged = false;
+  bool _isLoading = false;
 
   // ===============================================================
   // COLOR
@@ -614,7 +617,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   Widget _buildSaveButton() {
     return GestureDetector(
-      onTap: _changePassword,
+      onTap: _isLoading ? null : _changePassword,
 
       child: Container(
         width: double.infinity,
@@ -635,17 +638,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           ],
         ),
 
-        child: const Center(
-          child: Text(
-            'Simpan Kata Sandi',
+        child: Center(
+          child: _isLoading
+              ? const SizedBox(
+                  width: 21,
+                  height: 21,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text(
+                  'Simpan Kata Sandi',
 
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
         ),
       ),
     );
@@ -700,7 +712,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   // CHANGE PASSWORD
   // ===============================================================
 
-  void _changePassword() {
+  Future<void> _changePassword() async {
     final currentPassword =
         _currentPasswordController.text.trim();
 
@@ -711,30 +723,186 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         _confirmPasswordController.text.trim();
 
     // =============================================================
-    // VALIDASI
+    // VALIDASI KOSONG
     // =============================================================
 
     if (currentPassword.isEmpty ||
         newPassword.isEmpty ||
         confirmPassword.isEmpty) {
+      _showMessage(
+        'Semua kolom kata sandi wajib diisi.',
+      );
       return;
     }
+
+    // =============================================================
+    // VALIDASI PASSWORD BARU
+    // =============================================================
+
+    if (newPassword.length < 8) {
+      _showMessage(
+        'Kata sandi baru minimal 8 karakter.',
+      );
+      return;
+    }
+
+    // =============================================================
+    // VALIDASI PASSWORD SAMA
+    // =============================================================
 
     if (newPassword != confirmPassword) {
+      _showMessage(
+        'Konfirmasi kata sandi tidak sama.',
+      );
       return;
     }
 
     // =============================================================
-    // BERHASIL
+    // CEK USER LOGIN
     // =============================================================
 
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      _showMessage(
+        'Sesi login tidak ditemukan. Silakan login kembali.',
+      );
+      return;
+    }
+
+    final email = user.email;
+
+    if (email == null || email.isEmpty) {
+      _showMessage(
+        'Email akun tidak ditemukan.',
+      );
+      return;
+    }
+
     setState(() {
-      _passwordChanged = true;
+      _isLoading = true;
+      _passwordChanged = false;
     });
 
-    // Kosongkan field setelah berhasil
-    _currentPasswordController.clear();
-    _newPasswordController.clear();
-    _confirmPasswordController.clear();
+    try {
+      // ===========================================================
+      // RE-AUTHENTICATION
+      // Memastikan kata sandi lama benar
+      // ===========================================================
+
+      final credential =
+          EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+
+      await user.reauthenticateWithCredential(
+        credential,
+      );
+
+      // ===========================================================
+      // UPDATE PASSWORD FIREBASE
+      // ===========================================================
+
+      await user.updatePassword(
+        newPassword,
+      );
+
+      // ===========================================================
+      // BERHASIL
+      // ===========================================================
+
+      if (!mounted) return;
+
+      setState(() {
+        _passwordChanged = true;
+      });
+
+      _currentPasswordController.clear();
+      _newPasswordController.clear();
+      _confirmPasswordController.clear();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Kata sandi berhasil diperbarui di Firebase.',
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      String message;
+
+      switch (e.code) {
+        case 'wrong-password':
+        case 'invalid-credential':
+          message =
+              'Kata sandi saat ini salah.';
+          break;
+
+        case 'requires-recent-login':
+          message =
+              'Sesi login sudah terlalu lama. Silakan login kembali.';
+          break;
+
+        case 'weak-password':
+          message =
+              'Kata sandi baru terlalu lemah.';
+          break;
+
+        case 'user-disabled':
+          message =
+              'Akun ini sedang dinonaktifkan.';
+          break;
+
+        case 'network-request-failed':
+          message =
+              'Tidak dapat terhubung ke internet.';
+          break;
+
+        default:
+          message =
+              'Gagal mengubah kata sandi. Silakan coba lagi.';
+      }
+
+      _showMessage(message);
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Terjadi kesalahan. Silakan coba lagi.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // ===============================================================
+  // MESSAGE
+  // ===============================================================
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+          ),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 }

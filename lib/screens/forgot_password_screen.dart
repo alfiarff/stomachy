@@ -1,5 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'otp_verification_screen.dart';
+import 'check_email_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -19,6 +20,12 @@ class _ForgotPasswordScreenState
       TextEditingController();
 
   // ===============================================================
+  // STATE
+  // ===============================================================
+
+  bool _isLoading = false;
+
+  // ===============================================================
   // WARNA
   // ===============================================================
 
@@ -27,9 +34,6 @@ class _ForgotPasswordScreenState
 
   final Color brown =
       const Color(0xFFB05039);
-
-  final Color darkText =
-      const Color(0xFF493C37);
 
   final Color borderColor =
       const Color(0xFFFF7775);
@@ -40,45 +44,124 @@ class _ForgotPasswordScreenState
     super.dispose();
   }
 
-    // ===============================================================
-    // KIRIM KODE VERIFIKASI
-    // ===============================================================
+  // ===============================================================
+  // KIRIM LINK RESET PASSWORD
+  // ===============================================================
 
-    void _sendVerificationCode() {
-    final value = emailController.text.trim();
+  Future<void> _sendResetLink() async {
+    final email = emailController.text.trim();
 
-    // ===============================================================
-    // CEK INPUT KOSONG
-    // ===============================================================
+    // =============================================================
+    // CEK KOSONG
+    // =============================================================
 
-    if (value.isEmpty) {
-        _showMessage(
-        'Silakan masukkan email atau nomor HP terlebih dahulu.',
-        );
-        return;
+    if (email.isEmpty) {
+      _showMessage(
+        'Silakan masukkan email terlebih dahulu.',
+      );
+      return;
     }
 
-    // ===============================================================
-    // PINDAH KE HALAMAN OTP
-    // ===============================================================
+    // =============================================================
+    // CEK FORMAT EMAIL
+    // =============================================================
 
-    Navigator.push(
+    if (!email.contains('@') ||
+        !email.contains('.')) {
+      _showMessage(
+        'Silakan masukkan email yang valid.',
+      );
+      return;
+    }
+
+    // =============================================================
+    // LOADING
+    // =============================================================
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // ===========================================================
+      // FIREBASE AUTHENTICATION
+      // ===========================================================
+
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(
+        email: email,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      // ===========================================================
+      // PINDAH KE HALAMAN CEK EMAIL
+      // ===========================================================
+
+      Navigator.push(
         context,
         MaterialPageRoute(
-        builder: (context) =>
-            OtpVerificationScreen(
-            emailOrPhone: value,
+          builder: (context) => CheckEmailScreen(
+            email: email,
+          ),
         ),
-        ),
-    );
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      String message;
+
+      switch (e.code) {
+        case 'invalid-email':
+          message = 'Format email tidak valid.';
+          break;
+
+        case 'user-not-found':
+          message =
+              'Email tersebut belum terdaftar.';
+          break;
+
+        case 'too-many-requests':
+          message =
+              'Terlalu banyak permintaan. '
+              'Silakan coba lagi nanti.';
+          break;
+
+        default:
+          message =
+              'Gagal mengirim link reset password. '
+              'Silakan coba lagi.';
+      }
+
+      _showMessage(message);
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        'Terjadi kesalahan. Silakan coba lagi.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
 
   // ===============================================================
   // SNACKBAR
   // ===============================================================
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context)
+        .hideCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -120,9 +203,10 @@ class _ForgotPasswordScreenState
             ),
 
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
 
+              children: [
                 // ===================================================
                 // BACK BUTTON
                 // ===================================================
@@ -153,6 +237,7 @@ class _ForgotPasswordScreenState
 
                 Text(
                   'Lupa Kata Sandi?',
+
                   style: TextStyle(
                     fontFamily: 'Fredoka',
                     fontSize: size.width * 0.060,
@@ -168,7 +253,7 @@ class _ForgotPasswordScreenState
                 // ===================================================
 
                 Text(
-                  'Masukkan email atau nomor HP yang\n'
+                  'Masukkan email yang\n'
                   'terdaftar pada akun anda.',
 
                   style: TextStyle(
@@ -184,7 +269,7 @@ class _ForgotPasswordScreenState
                 ),
 
                 // ===================================================
-                // INPUT EMAIL / NOMOR HP
+                // EMAIL
                 // ===================================================
 
                 _buildInputField(size),
@@ -194,7 +279,7 @@ class _ForgotPasswordScreenState
                 ),
 
                 // ===================================================
-                // BUTTON KIRIM KODE
+                // BUTTON
                 // ===================================================
 
                 SizedBox(
@@ -202,32 +287,47 @@ class _ForgotPasswordScreenState
                   height: 48,
 
                   child: ElevatedButton(
-                    onPressed: _sendVerificationCode,
+                    onPressed:
+                        _isLoading
+                            ? null
+                            : _sendResetLink,
 
                     style: ElevatedButton.styleFrom(
                       backgroundColor: brown,
                       foregroundColor: Colors.white,
-
+                      disabledBackgroundColor:
+                          brown.withOpacity(0.6),
                       elevation: 3,
-
                       shadowColor:
                           Colors.black.withOpacity(0.25),
 
-                      shape: RoundedRectangleBorder(
+                      shape:
+                          RoundedRectangleBorder(
                         borderRadius:
                             BorderRadius.circular(13),
                       ),
                     ),
 
-                    child: Text(
-                      'Kirim Kode Verifikasi',
-
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: size.width * 0.035,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 21,
+                            height: 21,
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Kirim Link Reset',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize:
+                                  size.width * 0.035,
+                              fontWeight:
+                                  FontWeight.w800,
+                            ),
+                          ),
                   ),
                 ),
 
@@ -243,7 +343,7 @@ class _ForgotPasswordScreenState
   }
 
   // ===============================================================
-  // INPUT FIELD
+  // INPUT EMAIL
   // ===============================================================
 
   Widget _buildInputField(Size size) {
@@ -277,15 +377,23 @@ class _ForgotPasswordScreenState
         keyboardType:
             TextInputType.emailAddress,
 
+        textInputAction:
+            TextInputAction.done,
+
         style: TextStyle(
           fontFamily: 'Nunito',
           fontSize: size.width * 0.030,
           color: Colors.black,
         ),
 
+        onSubmitted: (_) {
+          if (!_isLoading) {
+            _sendResetLink();
+          }
+        },
+
         decoration: InputDecoration(
-          hintText:
-              'Email atau Nomor HP',
+          hintText: 'Email',
 
           hintStyle: TextStyle(
             fontFamily: 'Nunito',
@@ -296,7 +404,7 @@ class _ForgotPasswordScreenState
           prefixIcon: Icon(
             Icons.mail_outline_rounded,
             size: size.width * 0.060,
-            color: const Color(0xFFB05039),
+            color: brown,
           ),
 
           border: InputBorder.none,
