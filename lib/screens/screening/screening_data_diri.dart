@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stomachy/widgets/stomachy_card.dart';
 
 class ScreeningDataDiri extends StatelessWidget {
   final String age;
@@ -36,95 +37,86 @@ class ScreeningDataDiri extends StatelessWidget {
   // ============================================================
 
   Widget _buildAgeCard() {
-    return Container(
-      width: double.infinity,
-      height: 95,
+    return StomachyCard(
+      color: cardColor,
+      radius: 17,
       padding: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: const Color(0xFFFF775C),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.13),
-            blurRadius: 3,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 55,
-            child: Icon(
-              Icons.person_rounded,
-              size: 42,
-              color: Color(0xFFB05039),
+      child: SizedBox(
+        height: 95,
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 55,
+              child: Icon(
+                Icons.person_rounded,
+                size: 42,
+                color: Color(0xFFB05039),
+              ),
             ),
-          ),
 
-          const SizedBox(width: 10),
+            const SizedBox(width: 10),
 
-          const Text(
-            'Usia',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+            const Text(
+              'Usia',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
-          ),
 
-          const SizedBox(width: 15),
+            const SizedBox(width: 15),
 
-          Expanded(
-            child: SizedBox(
-              height: 38,
-              child: TextField(
-                keyboardType: TextInputType.number,
-                onChanged: onAgeChanged,
-                decoration: InputDecoration(
-                  hintText: 'Isi usia anda',
-                  hintStyle: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF99918E),
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 12,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF8B817D),
+            Expanded(
+              child: SizedBox(
+                height: 38,
+                child: TextField(
+                  keyboardType: TextInputType.number,
+                  onChanged: onAgeChanged,
+                  decoration: InputDecoration(
+                    hintText: 'Isi usia anda',
+                    hintStyle: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF99918E),
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFB05039),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                    ),
+
+                    // BORDER INPUT TETAP
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF8B817D),
+                      ),
+                    ),
+
+                    // BORDER INPUT TETAP
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFB05039),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          const SizedBox(width: 15),
+            const SizedBox(width: 15),
 
-          const Text(
-            'Tahun',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
+            const Text(
+              'Tahun',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -134,70 +126,56 @@ class ScreeningDataDiri extends StatelessWidget {
   // ============================================================
 
   Widget _buildGenderCard() {
-    return Container(
-      width: double.infinity,
-      height: 95,
+    return StomachyCard(
+      color: cardColor,
+      radius: 17,
       padding: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: const Color(0xFFFF775C),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.13),
-            blurRadius: 3,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 55,
-            child: Icon(
-              Icons.wc_rounded,
-              size: 44,
-              color: Color(0xFFB05039),
+      child: SizedBox(
+        height: 95,
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 55,
+              child: Icon(
+                Icons.wc_rounded,
+                size: 44,
+                color: Color(0xFFB05039),
+              ),
             ),
-          ),
 
-          const SizedBox(width: 10),
+            const SizedBox(width: 10),
 
-          Expanded(
-            child: Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.center,
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Jenis Kelamin',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Jenis Kelamin',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                Row(
-                  children: [
-                    _buildGenderButton('Perempuan'),
+                  Row(
+                    children: [
+                      _buildGenderButton('Perempuan'),
 
-                    const SizedBox(width: 8),
+                      const SizedBox(width: 8),
 
-                    _buildGenderButton('Laki - laki'),
-                  ],
-                ),
-              ],
+                      _buildGenderButton('Laki - laki'),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -222,6 +200,8 @@ class ScreeningDataDiri extends StatelessWidget {
               ? const Color(0xFFFFE3D9)
               : const Color(0xFFFFFCF9),
           borderRadius: BorderRadius.circular(10),
+
+          // BORDER TOMBOL TETAP
           border: Border.all(
             color: selected
                 ? brown
@@ -231,7 +211,7 @@ class ScreeningDataDiri extends StatelessWidget {
         child: Text(
           value,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             color: selected
                 ? brown
                 : const Color(0xFF827A76),

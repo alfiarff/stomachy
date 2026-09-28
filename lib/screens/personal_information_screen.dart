@@ -12,6 +12,7 @@ import 'doctor_screen.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 class PersonalInformationScreen extends StatefulWidget {
   const PersonalInformationScreen({super.key});
@@ -46,11 +47,10 @@ class _PersonalInformationScreenState
   // FOTO PROFIL
   //
   // Disimpan sebagai Base64 di Firestore (field: photoBase64)
-  // -> GRATIS, tidak butuh Firebase Storage (berbayar).
   // ===============================================================
 
   String? _photoBase64;
-  String? _googlePhotoUrl; // foto Google (kalau akunnya Google)
+  String? _googlePhotoUrl;
 
   bool _isUploadingPhoto = false;
 
@@ -85,7 +85,7 @@ class _PersonalInformationScreenState
       nameController.text = user.displayName ?? '';
       emailController.text = user.email ?? '';
 
-      // Foto Google (fallback kalau belum upload foto sendiri)
+      // Foto Google sebagai fallback
       final String authPhoto = user.photoURL ?? '';
 
       if (authPhoto.isNotEmpty &&
@@ -135,7 +135,7 @@ class _PersonalInformationScreenState
             addressController.text = address;
           }
 
-          // Foto Base64 dari Firestore (prioritas utama)
+          // Foto Base64 dari Firestore
           if (photoBase64 is String &&
               photoBase64.trim().isNotEmpty) {
             _photoBase64 = photoBase64;
@@ -148,6 +148,10 @@ class _PersonalInformationScreenState
           SnackBar(
             content: Text(
               'Gagal mengambil informasi pengguna: $e',
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 11,
+              ),
             ),
           ),
         );
@@ -162,7 +166,7 @@ class _PersonalInformationScreenState
   }
 
   // ===============================================================
-  // PILIH SUMBER FOTO (KAMERA / GALERI)
+  // PILIH SUMBER FOTO
   // ===============================================================
 
   void _showPhotoSourcePicker() {
@@ -187,7 +191,7 @@ class _PersonalInformationScreenState
                   'Ubah Foto Profil',
                   style: TextStyle(
                     fontFamily: 'Fredoka',
-                    fontSize: 16,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF5A392F),
                   ),
@@ -213,7 +217,7 @@ class _PersonalInformationScreenState
                     'Ambil dari Kamera',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 14,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF30221E),
                     ),
@@ -244,7 +248,7 @@ class _PersonalInformationScreenState
                     'Pilih dari Galeri',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 14,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF30221E),
                     ),
@@ -265,10 +269,7 @@ class _PersonalInformationScreenState
   }
 
   // ===============================================================
-  // PILIH + SIMPAN FOTO SEBAGAI BASE64 DI FIRESTORE
-  //
-  // Foto dikompres kecil (512px, kualitas 55) supaya hasil
-  // Base64-nya jauh di bawah batas 1 MB dokumen Firestore.
+  // PILIH + SIMPAN FOTO SEBAGAI BASE64
   // ===============================================================
 
   Future<void> _pickAndSavePhoto(
@@ -279,7 +280,13 @@ class _PersonalInformationScreenState
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Silakan login terlebih dahulu.'),
+          content: Text(
+            'Silakan login terlebih dahulu.',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
+          ),
         ),
       );
       return;
@@ -289,8 +296,9 @@ class _PersonalInformationScreenState
 
     try {
       // ---------------------------------------------------------
-      // PILIH FOTO (dikompres biar ringan)
+      // PILIH FOTO
       // ---------------------------------------------------------
+
       final XFile? picked = await ImagePicker().pickImage(
         source: source,
         maxWidth: 512,
@@ -298,7 +306,6 @@ class _PersonalInformationScreenState
         imageQuality: 55,
       );
 
-      // User batal memilih
       if (picked == null) return;
 
       if (!mounted) return;
@@ -310,6 +317,7 @@ class _PersonalInformationScreenState
       // ---------------------------------------------------------
       // KONVERSI KE BASE64
       // ---------------------------------------------------------
+
       final File file = File(picked.path);
 
       final List<int> bytes = await file.readAsBytes();
@@ -317,9 +325,9 @@ class _PersonalInformationScreenState
       final String base64String = base64Encode(bytes);
 
       // ---------------------------------------------------------
-      // PENJAGAAN: dokumen Firestore max 1 MB
-      // 900.000 karakter Base64 ~ 675 KB foto asli (sangat aman)
+      // PENJAGAAN UKURAN
       // ---------------------------------------------------------
+
       if (base64String.length > 900000) {
         if (!mounted) return;
 
@@ -331,6 +339,10 @@ class _PersonalInformationScreenState
           const SnackBar(
             content: Text(
               'Ukuran foto terlalu besar. Coba pilih foto lain.',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 11,
+              ),
             ),
             behavior: SnackBarBehavior.floating,
           ),
@@ -341,6 +353,7 @@ class _PersonalInformationScreenState
       // ---------------------------------------------------------
       // SIMPAN KE FIRESTORE
       // ---------------------------------------------------------
+
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -362,6 +375,10 @@ class _PersonalInformationScreenState
         const SnackBar(
           content: Text(
             'Foto profil berhasil diperbarui.',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
           ),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
@@ -374,6 +391,10 @@ class _PersonalInformationScreenState
         SnackBar(
           content: Text(
             'Gagal menyimpan foto: $e',
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -397,7 +418,13 @@ class _PersonalInformationScreenState
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Silakan login terlebih dahulu.'),
+          content: Text(
+            'Silakan login terlebih dahulu.',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
+          ),
         ),
       );
       return;
@@ -439,6 +466,10 @@ class _PersonalInformationScreenState
         const SnackBar(
           content: Text(
             'Informasi pribadi berhasil diperbarui.',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
           ),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
@@ -451,6 +482,10 @@ class _PersonalInformationScreenState
         SnackBar(
           content: Text(
             'Gagal menyimpan informasi: $e',
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -552,7 +587,6 @@ class _PersonalInformationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-
       body: SafeArea(
         child: _isLoading
             ? const Center(
@@ -570,25 +604,25 @@ class _PersonalInformationScreenState
                 ),
                 child: Column(
                   children: [
-                    // ===================================================
+                    // =================================================
                     // HEADER
-                    // ===================================================
+                    // =================================================
 
                     _buildHeader(),
 
                     const SizedBox(height: 28),
 
-                    // ===================================================
+                    // =================================================
                     // FOTO PROFIL
-                    // ===================================================
+                    // =================================================
 
                     _buildProfilePhoto(),
 
                     const SizedBox(height: 42),
 
-                    // ===================================================
+                    // =================================================
                     // INFORMASI PRIBADI
-                    // ===================================================
+                    // =================================================
 
                     _buildInformationField(
                       label: 'Nama Lengkap',
@@ -619,7 +653,8 @@ class _PersonalInformationScreenState
                     _buildInformationField(
                       label: 'Tempat, Tanggal Lahir',
                       controller: birthController,
-                      hintText: 'Masukkan tempat, tanggal lahir anda',
+                      hintText:
+                          'Masukkan tempat, tanggal lahir anda',
                     ),
 
                     const SizedBox(height: 13),
@@ -627,7 +662,8 @@ class _PersonalInformationScreenState
                     _buildInformationField(
                       label: 'Jenis Kelamin',
                       controller: genderController,
-                      hintText: 'Masukkan jenis kelamin anda',
+                      hintText:
+                          'Masukkan jenis kelamin anda',
                     ),
 
                     const SizedBox(height: 13),
@@ -641,9 +677,9 @@ class _PersonalInformationScreenState
 
                     const SizedBox(height: 34),
 
-                    // ===================================================
+                    // =================================================
                     // TOMBOL UBAH INFORMASI
-                    // ===================================================
+                    // =================================================
 
                     _buildEditButton(),
 
@@ -653,9 +689,9 @@ class _PersonalInformationScreenState
               ),
       ),
 
-      // =========================================================
+      // =============================================================
       // BOTTOM NAVIGATION
-      // =========================================================
+      // =============================================================
 
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
@@ -673,7 +709,6 @@ class _PersonalInformationScreenState
       height: 42,
       child: Row(
         children: [
-          // TOMBOL KEMBALI
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
@@ -692,7 +727,6 @@ class _PersonalInformationScreenState
             ),
           ),
 
-          // JUDUL
           Expanded(
             child: Center(
               child: Text(
@@ -707,7 +741,6 @@ class _PersonalInformationScreenState
             ),
           ),
 
-          // PENYEIMBANG HEADER
           const SizedBox(
             width: 45,
           ),
@@ -718,11 +751,6 @@ class _PersonalInformationScreenState
 
   // ===============================================================
   // FOTO PROFIL
-  //
-  // Prioritas tampil:
-  // 1. Foto Base64 (hasil upload pengguna sendiri)
-  // 2. Foto Google (kalau akunnya Google dan belum upload)
-  // 3. Ikon person default (pengguna baru)
   // ===============================================================
 
   Widget _buildProfilePhoto() {
@@ -741,7 +769,7 @@ class _PersonalInformationScreenState
           ),
         ),
 
-        // LOADING SAAT PROSES SIMPAN FOTO
+        // LOADING
         if (_isUploadingPhoto)
           Positioned.fill(
             child: Container(
@@ -762,13 +790,14 @@ class _PersonalInformationScreenState
             ),
           ),
 
-        // ICON KAMERA (TAP UNTUK UBAH FOTO)
+        // ICON KAMERA
         Positioned(
           right: -2,
           bottom: -2,
           child: GestureDetector(
-            onTap:
-                _isUploadingPhoto ? null : _showPhotoSourcePicker,
+            onTap: _isUploadingPhoto
+                ? null
+                : _showPhotoSourcePicker,
             child: Container(
               width: 30,
               height: 30,
@@ -800,11 +829,11 @@ class _PersonalInformationScreenState
   }
 
   // ===============================================================
-  // GAMBAR FOTO (BASE64 / GOOGLE URL / DEFAULT)
+  // GAMBAR FOTO
   // ===============================================================
 
   Widget _buildPhotoImage() {
-    // 1. Foto Base64 (upload pengguna)
+    // 1. Foto Base64
     final String? base64 = _photoBase64;
 
     if (base64 != null && base64.trim().isNotEmpty) {
@@ -814,7 +843,6 @@ class _PersonalInformationScreenState
           width: 100,
           height: 100,
           fit: BoxFit.cover,
-
           errorBuilder: (context, error, stackTrace) {
             return _buildDefaultPhotoIcon();
           },
@@ -833,7 +861,6 @@ class _PersonalInformationScreenState
         width: 100,
         height: 100,
         fit: BoxFit.cover,
-
         errorBuilder: (context, error, stackTrace) {
           return _buildDefaultPhotoIcon();
         },
@@ -868,24 +895,14 @@ class _PersonalInformationScreenState
     int maxLines = 1,
     TextInputType? keyboardType,
   }) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(
-        minHeight: 48,
-      ),
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 15,
       padding: const EdgeInsets.fromLTRB(
-        25,
+        18,
         8,
         15,
         7,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -894,6 +911,7 @@ class _PersonalInformationScreenState
           Text(
             label,
             style: const TextStyle(
+              fontFamily: 'Nunito',
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Color(0xFF30221E),
@@ -909,7 +927,8 @@ class _PersonalInformationScreenState
             maxLines: maxLines,
             keyboardType: keyboardType,
             style: const TextStyle(
-              fontSize: 12,
+              fontFamily: 'Nunito',
+              fontSize: 11,
               fontWeight: FontWeight.w400,
               color: Color(0xFF493C37),
             ),
@@ -917,7 +936,8 @@ class _PersonalInformationScreenState
               isDense: true,
               hintText: hintText,
               hintStyle: const TextStyle(
-                fontSize: 12,
+                fontFamily: 'Nunito',
+                fontSize: 11,
                 fontWeight: FontWeight.w400,
                 color: Color(0xFF999999),
               ),
@@ -963,6 +983,7 @@ class _PersonalInformationScreenState
             : const Text(
                 'Ubah Informasi',
                 style: TextStyle(
+                  fontFamily: 'Nunito',
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),

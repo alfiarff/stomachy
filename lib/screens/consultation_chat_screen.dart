@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/stomachy_card.dart';
 import 'consultation_complete_screen.dart';
 
 class ConsultationChatScreen extends StatefulWidget {
@@ -176,7 +177,7 @@ class _ConsultationChatScreenState
             'Apakah kamu yakin ingin mengakhiri konsultasi dengan dokter?',
             style: TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 13,
+              fontSize: 11,
               height: 1.4,
               color: Color(0xFF493C37),
             ),
@@ -196,13 +197,12 @@ class _ConsultationChatScreenState
                 'Batal',
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF77716E),
                 ),
               ),
             ),
-
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -261,7 +261,6 @@ class _ConsultationChatScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF5EF),
-
       body: SafeArea(
         child: Column(
           children: [
@@ -379,7 +378,7 @@ class _ConsultationChatScreenState
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontFamily: 'Fredoka',
-                  fontSize: 17,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF171310),
                 ),
@@ -422,7 +421,7 @@ class _ConsultationChatScreenState
   // ===============================================================
 
   Widget _buildDoctorCard() {
-    return Container(
+    return StomachyCard(
       margin: const EdgeInsets.symmetric(
         horizontal: 27,
       ),
@@ -432,14 +431,9 @@ class _ConsultationChatScreenState
         12,
         10,
       ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCFA),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFE76F51),
-          width: 0.9,
-        ),
-      ),
+      color: const Color(0xFFFFFCFA),
+      radius: 20,
+      useBorder: false,
       child: Row(
         children: [
           // FOTO DOKTER
@@ -481,8 +475,9 @@ class _ConsultationChatScreenState
                 Text(
                   widget.doctorName,
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                     color: Color(0xFF211914),
                   ),
                 ),
@@ -492,7 +487,8 @@ class _ConsultationChatScreenState
                 Text(
                   widget.specialty,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
                     color: Colors.black,
                   ),
                 ),
@@ -502,7 +498,8 @@ class _ConsultationChatScreenState
                 const Text(
                   'Online',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
                     color: Color(0xFF18C85A),
                   ),
                 ),
@@ -513,7 +510,7 @@ class _ConsultationChatScreenState
                   children: [
                     const Icon(
                       Icons.star_rounded,
-                      size: 16,
+                      size: 15,
                       color: Color(0xFFFFC107),
                     ),
 
@@ -522,7 +519,8 @@ class _ConsultationChatScreenState
                     Text(
                       '${widget.rating} (${widget.reviews} ulasan)',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -566,7 +564,8 @@ class _ConsultationChatScreenState
             child: Text(
               'Jangan bagikan informasi pribadi atau kode OTP kepada siapapun.',
               style: TextStyle(
-                fontSize: 9.5,
+                fontFamily: 'Nunito',
+                fontSize: 10,
                 height: 1.3,
                 color: Colors.grey[800],
               ),
@@ -601,6 +600,7 @@ class _ConsultationChatScreenState
       child: const Text(
         'Hari Ini',
         style: TextStyle(
+          fontFamily: 'Nunito',
           fontSize: 10,
           fontWeight: FontWeight.w700,
           color: Color(0xFF493028),
@@ -628,7 +628,6 @@ class _ConsultationChatScreenState
         children: [
           if (message.isDoctor) ...[
             _buildSmallDoctorImage(),
-
             const SizedBox(width: 8),
           ],
 
@@ -657,6 +656,8 @@ class _ConsultationChatScreenState
                     message.isDoctor ? 18 : 4,
                   ),
                 ),
+                // Border bubble dokter tetap dipertahankan
+                // karena berfungsi membedakan bubble chat.
                 border: message.isDoctor
                     ? Border.all(
                         color: const Color(0xFFE76F51),
@@ -682,7 +683,8 @@ class _ConsultationChatScreenState
                     child: Text(
                       message.text,
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
                         height: 1.35,
                         color: Color(0xFF211914),
                       ),
@@ -697,6 +699,7 @@ class _ConsultationChatScreenState
                       Text(
                         message.time,
                         style: TextStyle(
+                          fontFamily: 'Nunito',
                           fontSize: 8,
                           color: Colors.grey[600],
                         ),
@@ -809,6 +812,7 @@ class _ConsultationChatScreenState
               decoration: InputDecoration(
                 hintText: 'Ketik pesan...',
                 hintStyle: TextStyle(
+                  fontFamily: 'Nunito',
                   fontSize: 11,
                   color: Colors.grey[500],
                 ),
@@ -826,7 +830,8 @@ class _ConsultationChatScreenState
                 ),
               ),
               style: const TextStyle(
-                fontSize: 12,
+                fontFamily: 'Nunito',
+                fontSize: 11,
               ),
             ),
           ),
@@ -890,7 +895,8 @@ class _ConsultationChatScreenState
               'Catatan: Saran ini bukan pengganti pemeriksaan langsung. '
               'Segera periksa ke fasilitas kesehatan terdekat jika keluhan memburuk.',
               style: TextStyle(
-                fontSize: 8.5,
+                fontFamily: 'Nunito',
+                fontSize: 9,
                 height: 1.35,
                 color: Colors.grey[800],
               ),

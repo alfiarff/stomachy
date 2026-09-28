@@ -11,6 +11,7 @@ import 'edukasi_screen.dart';
 import 'landing_screen.dart';
 
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 import 'personal_information_screen.dart';
 import 'about_stomachy_screen.dart';
@@ -19,7 +20,6 @@ import 'food_recommendation_screen.dart';
 import 'sport_recommendation_screen.dart';
 import 'settings_screen.dart';
 import 'grafik_screen.dart';
-import 'change_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -70,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // MENU PROFILE
               // =====================================================
 
-              _buildMenuCard(),
+              _buildProfileMenuList(),
 
               const SizedBox(height: 43),
 
@@ -176,7 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         String name = user.displayName ?? '';
         String email = user.email ?? '';
 
-        // Foto Google (fallback kalau belum upload foto sendiri)
+        // Foto Google sebagai fallback
         String googlePhotoUrl = user.photoURL ?? '';
 
         if (googlePhotoUrl.startsWith('data:')) {
@@ -209,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               email = firestoreEmail;
             }
 
-            // Foto Base64 dari Firestore (prioritas utama)
+            // Foto Base64 dari Firestore
             if (firestorePhoto != null &&
                 firestorePhoto.isNotEmpty) {
               photoBase64 = firestorePhoto;
@@ -241,88 +241,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String? photoBase64,
     required String googlePhotoUrl,
   }) {
-    return Container(
-      width: double.infinity,
-      height: 86,
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 16,
       padding: const EdgeInsets.symmetric(
         horizontal: 15,
         vertical: 10,
       ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // =========================================================
-          // FOTO PROFIL
-          // =========================================================
+      child: SizedBox(
+        height: 64,
+        child: Row(
+          children: [
+            // =======================================================
+            // FOTO PROFIL
+            // =======================================================
 
-          Container(
-            width: 58,
-            height: 58,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFE8E8E8),
-            ),
-            child: ClipOval(
-              child: _buildHeaderPhoto(
-                photoBase64: photoBase64,
-                googlePhotoUrl: googlePhotoUrl,
+            Container(
+              width: 58,
+              height: 58,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFE8E8E8),
+              ),
+              child: ClipOval(
+                child: _buildHeaderPhoto(
+                  photoBase64: photoBase64,
+                  googlePhotoUrl: googlePhotoUrl,
+                ),
               ),
             ),
-          ),
 
-          const SizedBox(width: 14),
+            const SizedBox(width: 14),
 
-          // =========================================================
-          // NAMA DAN EMAIL
-          // =========================================================
+            // =======================================================
+            // NAMA DAN EMAIL
+            // =======================================================
 
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF30221E),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF30221E),
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 5),
+                  const SizedBox(height: 5),
 
-                Text(
-                  email,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    color: Color(0xFF493C37),
+                  Text(
+                    email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
+                      color: Color(0xFF493C37),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -335,13 +323,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String? photoBase64,
     required String googlePhotoUrl,
   }) {
-    // 1. Foto Base64 (upload pengguna)
+    // 1. Foto Base64
     if (photoBase64 != null && photoBase64.isNotEmpty) {
       try {
         return Image.memory(
           base64Decode(photoBase64),
           fit: BoxFit.cover,
-
           errorBuilder: (context, error, stackTrace) {
             return const Icon(
               Icons.person,
@@ -364,7 +351,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return Image.network(
         googlePhotoUrl,
         fit: BoxFit.cover,
-
         errorBuilder: (context, error, stackTrace) {
           return const Icon(
             Icons.person,
@@ -387,185 +373,199 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // MENU PROFILE
   // ===============================================================
 
-  Widget _buildMenuCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        24,
-        12,
-        14,
-        8,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
+  Widget _buildProfileMenuList() {
+    return Column(
+      children: [
+        // ===========================================================
+        // INFORMASI PRIBADI
+        // ===========================================================
+
+        _buildProfileMenuCard(
+          icon: Icons.person_outline_rounded,
+          title: 'Informasi Pribadi',
+          subtitle: 'Kelola informasi pribadi anda',
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    const PersonalInformationScreen(),
+              ),
+            );
+          },
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildProfileMenuItem(
-            icon: Icons.person_outline_rounded,
-            title: 'Informasi Pribadi',
-            subtitle: 'Kelola informasi pribadi anda',
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const PersonalInformationScreen(),
-                ),
-              );
 
-              // StreamBuilder header otomatis refresh,
-              // tidak perlu reload manual.
-            },
-          ),
+        const SizedBox(height: 14),
 
-          _buildDivider(),
+        // ===========================================================
+        // RIWAYAT
+        // ===========================================================
 
-          _buildProfileMenuItem(
-            icon: Icons.access_time_rounded,
-            title: 'Riwayat',
-            subtitle: 'Lihat riwayat cek AI dan konsultasi anda',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HistoryScreen(),
-                ),
-              );
-            },
-          ),
+        _buildProfileMenuCard(
+          icon: Icons.access_time_rounded,
+          title: 'Riwayat',
+          subtitle: 'Lihat riwayat cek AI dan konsultasi anda',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HistoryScreen(),
+              ),
+            );
+          },
+        ),
 
-          _buildDivider(),
+        const SizedBox(height: 14),
 
-          _buildProfileMenuItem(
-            icon: Icons.directions_bike_outlined,
-            title: 'Rekomendasi Olahraga',
-            subtitle: 'Pilihan olahraga untukmu',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const RecommendationSportScreen(),
-                ),
-              );
-            },
-          ),
+        // ===========================================================
+        // REKOMENDASI OLAHRAGA
+        // ===========================================================
 
-          _buildDivider(),
+        _buildProfileMenuCard(
+          icon: Icons.directions_bike_outlined,
+          title: 'Rekomendasi Olahraga',
+          subtitle: 'Pilihan olahraga untukmu',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    const RecommendationSportScreen(),
+              ),
+            );
+          },
+        ),
 
-          _buildProfileMenuItem(
-            icon: Icons.local_drink_outlined,
-            title: 'Rekomendasi Makanan',
-            subtitle: 'Pilihan makanan untuk lambungmu',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const FoodRecommendationScreen(),
-                ),
-              );
-            },
-          ),
+        const SizedBox(height: 14),
 
-          _buildDivider(),
+        // ===========================================================
+        // REKOMENDASI MAKANAN
+        // ===========================================================
 
-          _buildProfileMenuItem(
-            icon: Icons.show_chart_rounded,
-            title: 'Grafik',
-            subtitle: 'Lihat perkembangan hasil skrining GERD',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const GrafikScreen(),
-                ),
-              );
-            },
-          ),
+        _buildProfileMenuCard(
+          icon: Icons.local_drink_outlined,
+          title: 'Rekomendasi Makanan',
+          subtitle: 'Pilihan makanan untuk lambungmu',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    const FoodRecommendationScreen(),
+              ),
+            );
+          },
+        ),
 
-          _buildDivider(),
+        const SizedBox(height: 14),
 
-          _buildProfileMenuItem(
-            icon: Icons.settings_outlined,
-            title: 'Pengaturan',
-            subtitle: 'Kelola preferensi dan pengaturan aplikasi',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
-          ),
+        // ===========================================================
+        // GRAFIK
+        // ===========================================================
 
-          _buildDivider(),
+        _buildProfileMenuCard(
+          icon: Icons.show_chart_rounded,
+          title: 'Grafik',
+          subtitle: 'Lihat perkembangan hasil skrining GERD',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const GrafikScreen(),
+              ),
+            );
+          },
+        ),
 
-          _buildProfileMenuItem(
-            icon: Icons.info_outline_rounded,
-            title: 'Tentang Stomachy',
-            subtitle: 'Informasi versi dan kebijakan aplikasi',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const AboutStomachyScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+        const SizedBox(height: 14),
+
+        // ===========================================================
+        // PENGATURAN
+        // ===========================================================
+
+        _buildProfileMenuCard(
+          icon: Icons.settings_outlined,
+          title: 'Pengaturan',
+          subtitle: 'Kelola preferensi dan pengaturan aplikasi',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsScreen(),
+              ),
+            );
+          },
+        ),
+
+        const SizedBox(height: 14),
+
+        // ===========================================================
+        // TENTANG STOMACHY
+        // ===========================================================
+
+        _buildProfileMenuCard(
+          icon: Icons.info_outline_rounded,
+          title: 'Tentang Stomachy',
+          subtitle: 'Informasi versi dan kebijakan aplikasi',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    const AboutStomachyScreen(),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
   // ===============================================================
-  // PROFILE MENU ITEM
+  // PROFILE MENU CARD
   // ===============================================================
 
-  Widget _buildProfileMenuItem({
+  Widget _buildProfileMenuCard({
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 16,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 10,
+      ),
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
       child: SizedBox(
-        height: 70,
+        height: 50,
         child: Row(
           children: [
+            // =======================================================
+            // ICON
+            // =======================================================
+
             Container(
               width: 35,
               height: 35,
               decoration: BoxDecoration(
                 color: softOrange,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                size: 22,
+                size: 21,
                 color: const Color(0xFF705044),
               ),
             ),
 
-            const SizedBox(width: 9),
+            const SizedBox(width: 12),
+
+            // =======================================================
+            // TITLE + SUBTITLE
+            // =======================================================
 
             Expanded(
               child: Column(
@@ -578,13 +578,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 15,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: primaryBrown,
                     ),
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
 
                   Text(
                     subtitle,
@@ -592,7 +592,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Color(0xFF776C67),
                     ),
                   ),
@@ -602,25 +602,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(width: 5),
 
+            // =======================================================
+            // ARROW
+            // =======================================================
+
             const Icon(
               Icons.chevron_right_rounded,
-              size: 25,
+              size: 23,
               color: Color(0xFF222222),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  // ===============================================================
-  // DIVIDER
-  // ===============================================================
-
-  Widget _buildDivider() {
-    return Container(
-      height: 1,
-      color: const Color(0xFFF3C8B8),
     );
   }
 
@@ -659,7 +652,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Keluar',
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 15,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFFB9543A),
               ),
@@ -706,7 +699,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 22,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFFB9543A),
                   ),
@@ -719,7 +712,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Color(0xFF493C37),
                   ),
                 ),
@@ -750,7 +743,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             'Batal',
                             style: TextStyle(
                               fontFamily: 'Nunito',
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.w500,
                               color: Color(0xFFB9543A),
                             ),
@@ -796,7 +789,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             'Ya, Keluar',
                             style: TextStyle(
                               fontFamily: 'Nunito',
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

@@ -7,6 +7,7 @@ import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import 'consultation_chat_screen.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 class ConsultationHistoryScreen extends StatefulWidget {
   const ConsultationHistoryScreen({super.key});
@@ -22,7 +23,6 @@ class _ConsultationHistoryScreenState
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color primaryBrown = const Color(0xFF5A392F);
-  final Color borderBrown = const Color(0xFFFF806A);
 
   // ===============================================================
   // DATA RIWAYAT CHAT
@@ -162,6 +162,10 @@ class _ConsultationHistoryScreenState
       height: 42,
       child: Row(
         children: [
+          // =========================================================
+          // BACK BUTTON
+          // =========================================================
+
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
@@ -179,6 +183,10 @@ class _ConsultationHistoryScreenState
               ),
             ),
           ),
+
+          // =========================================================
+          // TITLE
+          // =========================================================
 
           Expanded(
             child: Center(
@@ -207,7 +215,10 @@ class _ConsultationHistoryScreenState
   Widget _buildConsultationCard(
     ConsultationHistoryData history,
   ) {
-    return InkWell(
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 18,
+      padding: const EdgeInsets.all(14),
       onTap: () {
         Navigator.push(
           context,
@@ -223,123 +234,125 @@ class _ConsultationHistoryScreenState
           ),
         );
       },
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFCF9),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: borderBrown,
-            width: 0.9,
+
+      child: Row(
+        children: [
+          // =========================================================
+          // FOTO DOKTER
+          // =========================================================
+
+          Container(
+            width: 60,
+            height: 60,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFEDE5DF),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Image.asset(
+              history.doctorImage,
+              fit: BoxFit.cover,
+              errorBuilder: (
+                context,
+                error,
+                stackTrace,
+              ) {
+                return const Icon(
+                  Icons.person_rounded,
+                  size: 38,
+                  color: Color(0xFFB65339),
+                );
+              },
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // FOTO DOKTER
-            Container(
-              width: 60,
-              height: 60,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFFEDE5DF),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.asset(
-                history.doctorImage,
-                fit: BoxFit.cover,
-                errorBuilder: (
-                  context,
-                  error,
-                  stackTrace,
-                ) {
-                  return const Icon(
-                    Icons.person_rounded,
-                    size: 38,
-                    color: Color(0xFFB65339),
-                  );
-                },
-              ),
-            ),
 
-            const SizedBox(width: 13),
+          const SizedBox(width: 13),
 
-            // DATA DOKTER
-            Expanded(
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    history.doctorName,
+          // =========================================================
+          // DATA DOKTER
+          // =========================================================
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  history.doctorName,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: primaryBrown,
+                  ),
+                ),
+
+                const SizedBox(height: 3),
+
+                Text(
+                  history.specialty,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+
+                Text(
+                  '${history.date} • ${history.time} WIB',
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF77716E),
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+
+                // ===================================================
+                // STATUS
+                // ===================================================
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDFF3DD),
+                    borderRadius:
+                        BorderRadius.circular(15),
+                  ),
+                  child: const Text(
+                    'Selesai',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 15,
+                      fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: primaryBrown,
+                      color: Color(0xFF188447),
                     ),
                   ),
-
-                  const SizedBox(height: 3),
-
-                  Text(
-                    history.specialty,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.black,
-                    ),
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  Text(
-                    '${history.date} • ${history.time} WIB',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF77716E),
-                    ),
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDFF3DD),
-                      borderRadius:
-                          BorderRadius.circular(15),
-                    ),
-                    child: const Text(
-                      'Selesai',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF188447),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 28,
-              color: Colors.black,
-            ),
-          ],
-        ),
+          const SizedBox(width: 4),
+
+          // =========================================================
+          // CHEVRON
+          // =========================================================
+
+          const Icon(
+            Icons.chevron_right_rounded,
+            size: 28,
+            color: Colors.black,
+          ),
+        ],
       ),
     );
   }

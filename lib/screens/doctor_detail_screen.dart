@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/stomachy_card.dart';
 import 'home_screen.dart';
 import 'screening_screen.dart';
 import 'doctor_screen.dart';
@@ -40,6 +41,8 @@ class _DoctorDetailScreenState
   final Color darkBrown =
       const Color(0xFF2F211D);
 
+  // Border tetap digunakan untuk tombol jadwal
+  // karena merupakan elemen pilihan/interaktif.
   final Color borderBrown =
       const Color(0xFFE76F51);
 
@@ -211,6 +214,7 @@ class _DoctorDetailScreenState
                     const Text(
                       'Waktu yang dipilih adalah waktu mulai sesi konsultasi.',
                       style: TextStyle(
+                        fontFamily: 'Nunito',
                         fontSize: 11,
                         color: Colors.black,
                       ),
@@ -283,7 +287,7 @@ class _DoctorDetailScreenState
                 'Detail Dokter',
                 style: TextStyle(
                   fontFamily: 'Fredoka',
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: darkBrown,
                 ),
@@ -343,7 +347,8 @@ class _DoctorDetailScreenState
               Text(
                 widget.doctor.name,
                 style: const TextStyle(
-                  fontSize: 15,
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
                   fontWeight: FontWeight.w800,
                   color: Colors.black,
                 ),
@@ -354,7 +359,8 @@ class _DoctorDetailScreenState
               Text(
                 widget.doctor.specialty,
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
                   color: Colors.black,
                 ),
               ),
@@ -385,7 +391,8 @@ class _DoctorDetailScreenState
                   Text(
                     widget.doctor.status,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
                       color:
                           widget.doctor.status ==
                                   'Online'
@@ -417,7 +424,8 @@ class _DoctorDetailScreenState
                     '${widget.doctor.rating} '
                     '(${widget.doctor.reviews} ulasan)',
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
                       color: Colors.black,
                     ),
                   ),
@@ -435,19 +443,13 @@ class _DoctorDetailScreenState
   // ===============================================================
 
   Widget _buildDoctorInformation() {
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCFA),
+      radius: 20,
+      useBorder: false,
       padding: const EdgeInsets.symmetric(
         vertical: 15,
         horizontal: 8,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCFA),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: borderBrown,
-          width: 1,
-        ),
       ),
       child: Row(
         children: [
@@ -504,6 +506,7 @@ class _DoctorDetailScreenState
           title,
           textAlign: TextAlign.center,
           style: TextStyle(
+            fontFamily: 'Nunito',
             fontSize: 11,
             fontWeight: FontWeight.w600,
             color: primaryBrown,
@@ -516,6 +519,7 @@ class _DoctorDetailScreenState
           value,
           textAlign: TextAlign.center,
           style: const TextStyle(
+            fontFamily: 'Nunito',
             fontSize: 11,
             color: Colors.black,
           ),
@@ -532,8 +536,9 @@ class _DoctorDetailScreenState
     return Text(
       title,
       style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w800,
+        fontFamily: 'Fredoka',
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
         color: Colors.black,
       ),
     );
@@ -549,6 +554,7 @@ class _DoctorDetailScreenState
       'berbagai keluhan kesehatan sehari - hari dengan pendekatan '
       'yang ramah dan komunikatif.',
       style: TextStyle(
+        fontFamily: 'Nunito',
         fontSize: 11,
         height: 1.45,
         color: Colors.black,
@@ -561,19 +567,13 @@ class _DoctorDetailScreenState
   // ===============================================================
 
   Widget _buildServiceCard() {
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCFA),
+      radius: 20,
+      useBorder: false,
       padding: const EdgeInsets.symmetric(
         horizontal: 15,
         vertical: 13,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCFA),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: borderBrown,
-          width: 1,
-        ),
       ),
       child: Row(
         children: [
@@ -601,7 +601,8 @@ class _DoctorDetailScreenState
                 Text(
                   'Chat Konsultasi',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
                     fontWeight: FontWeight.w800,
                     color: Colors.black,
                   ),
@@ -613,6 +614,7 @@ class _DoctorDetailScreenState
                   'Konsultasi melalui chat dengan dokter secara '
                   'aman dan nyaman.',
                   style: TextStyle(
+                    fontFamily: 'Nunito',
                     fontSize: 11,
                     height: 1.35,
                     color: Colors.black,
@@ -665,16 +667,20 @@ class _DoctorDetailScreenState
                   : const Color(0xFFFFFCFA),
               borderRadius:
                   BorderRadius.circular(10),
+
+              // Border tetap dipertahankan karena
+              // jadwal merupakan tombol pilihan.
               border: Border.all(
                 color: borderBrown,
                 width: 1,
               ),
+
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(
-                    0.10,
+                    0.08,
                   ),
-                  blurRadius: 3,
+                  blurRadius: 4,
                   offset:
                       const Offset(0, 2),
                 ),
@@ -684,6 +690,7 @@ class _DoctorDetailScreenState
               child: Text(
                 time,
                 style: TextStyle(
+                  fontFamily: 'Nunito',
                   fontSize: 11,
                   fontWeight:
                       FontWeight.w600,
@@ -750,7 +757,7 @@ class _DoctorDetailScreenState
                 'Lanjutkan',
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight:
                       FontWeight.w700,
                 ),

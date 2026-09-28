@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'home_screen.dart';
 import 'screening_screen.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import 'doctor_detail_screen.dart';
@@ -262,8 +264,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 4,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 6,
             offset: const Offset(0, 3),
           ),
         ],
@@ -276,7 +278,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
         },
         textAlignVertical: TextAlignVertical.center,
         style: const TextStyle(
-          fontSize: 14,
+          fontFamily: 'Nunito',
+          fontSize: 11,
           color: Colors.black,
         ),
         decoration: const InputDecoration(
@@ -288,7 +291,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
           ),
           hintText: 'Cari dokter atau spesialis',
           hintStyle: TextStyle(
-            fontSize: 14,
+            fontFamily: 'Nunito',
+            fontSize: 11,
             color: Color(0xFF8C8582),
           ),
           contentPadding: EdgeInsets.symmetric(
@@ -327,7 +331,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 boxShadow: [
                   if (!_showAvailableOnly)
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.10),
+                      color: Colors.black.withOpacity(0.08),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -337,7 +341,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 child: Text(
                   'Semua',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: !_showAvailableOnly
                         ? Colors.white
@@ -372,7 +377,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 boxShadow: [
                   if (_showAvailableOnly)
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.10),
+                      color: Colors.black.withOpacity(0.08),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -382,7 +387,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 child: Text(
                   'Tersedia Hari Ini',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: _showAvailableOnly
                         ? Colors.white
@@ -404,8 +410,15 @@ class _DoctorScreenState extends State<DoctorScreen> {
   Widget _buildDoctorCard(DoctorData doctor) {
     final bool isOnline = doctor.status == 'Online';
 
-    return GestureDetector(
-      // HANYA DOKTER ONLINE YANG BISA MASUK DETAIL
+    return StomachyCard(
+      color: const Color(0xFFFFFCFA),
+      radius: 20,
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        12,
+        16,
+        10,
+      ),
       onTap: isOnline
           ? () {
               Navigator.push(
@@ -418,32 +431,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
               );
             }
           : null,
-
-      child: Container(
-        width: double.infinity,
-        height: 172,
-        padding: const EdgeInsets.fromLTRB(
-          16,
-          12,
-          16,
-          10,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFCFA),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: borderBrown,
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.13),
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-
+      child: SizedBox(
+        height: 150,
         child: Column(
           children: [
             Expanded(
@@ -467,7 +456,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 15,
+                            fontFamily: 'Nunito',
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: darkBrown,
                           ),
@@ -479,7 +469,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
                         Text(
                           doctor.specialty,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontFamily: 'Nunito',
+                            fontSize: 11,
                             color: Colors.black,
                           ),
                         ),
@@ -490,7 +481,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
                         Text(
                           doctor.status,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontFamily: 'Nunito',
+                            fontSize: 11,
                             color: isOnline
                                 ? const Color(0xFF18C85A)
                                 : const Color(0xFFFF3F3F),
@@ -517,7 +509,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontFamily: 'Nunito',
+                                  fontSize: 11,
                                   color: Colors.black,
                                 ),
                               ),
@@ -533,7 +526,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
                               ? 'Tersedia Hari Ini'
                               : 'Tidak Tersedia Hari Ini',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontFamily: 'Nunito',
+                            fontSize: 11,
                             color: isOnline
                                 ? const Color(0xFF18C85A)
                                 : const Color(0xFFFF3F3F),
@@ -632,7 +626,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
           boxShadow: [
             if (isOnline)
               BoxShadow(
-                color: Colors.black.withOpacity(0.13),
+                color: Colors.black.withOpacity(0.08),
                 blurRadius: 3,
                 offset: const Offset(0, 2),
               ),
@@ -642,7 +636,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
           child: Text(
             time,
             style: TextStyle(
-              fontSize: 12,
+              fontFamily: 'Nunito',
+              fontSize: 11,
               fontWeight: FontWeight.w500,
               color: isOnline
                   ? Colors.black
@@ -670,14 +665,16 @@ class _DoctorScreenState extends State<DoctorScreen> {
           title: const Text(
             'Pilih Jadwal Konsultasi',
             style: TextStyle(
-              fontSize: 19,
+              fontFamily: 'Nunito',
+              fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             'Apakah kamu ingin memilih jadwal pukul $time?',
             style: const TextStyle(
-              fontSize: 12,
+              fontFamily: 'Nunito',
+              fontSize: 11,
             ),
           ),
           actions: [
@@ -689,7 +686,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
               child: const Text(
                 'Batal',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
                   color: Color(0xFF777777),
                 ),
               ),
@@ -705,7 +703,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
                     content: Text(
                       'Jadwal pukul $time dipilih.',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
                       ),
                     ),
                     behavior: SnackBarBehavior.floating,
@@ -719,7 +718,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
               child: const Text(
                 'Pilih',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -735,21 +735,15 @@ class _DoctorScreenState extends State<DoctorScreen> {
   // ================================================================
 
   Widget _buildEmptyState() {
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCFA),
+      radius: 20,
       margin: const EdgeInsets.only(
         top: 20,
       ),
       padding: const EdgeInsets.symmetric(
         vertical: 30,
         horizontal: 20,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCFA),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: borderBrown,
-        ),
       ),
       child: Column(
         children: [
@@ -764,7 +758,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
           const Text(
             'Dokter tidak ditemukan',
             style: TextStyle(
-              fontSize: 15,
+              fontFamily: 'Nunito',
+              fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -775,7 +770,8 @@ class _DoctorScreenState extends State<DoctorScreen> {
             'Coba cari dengan nama dokter atau spesialis.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12,
+              fontFamily: 'Nunito',
+              fontSize: 11,
               color: Color(0xFF777777),
             ),
           ),
