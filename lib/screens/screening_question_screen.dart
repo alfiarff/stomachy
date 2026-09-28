@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 import 'screening/screening_data_diri.dart';
 import 'screening/screening_kondisi.dart';
@@ -527,7 +528,7 @@ class _ScreeningQuestionScreenState
           title,
           style: const TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 15,
+            fontSize: 12,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
@@ -538,7 +539,8 @@ class _ScreeningQuestionScreenState
         Text(
           subtitle,
           style: const TextStyle(
-            fontSize: 12,
+            fontFamily: 'Nunito',
+            fontSize: 11,
             color: Color(0xFF5C514C),
           ),
         ),
@@ -649,21 +651,14 @@ class _ScreeningQuestionScreenState
     required String title,
     required List<Widget> children,
   }) {
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: cardColor,
+      radius: 12,
       padding: const EdgeInsets.fromLTRB(
         12,
         9,
         12,
         10,
-      ),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFFF775C),
-          width: 1,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -672,7 +667,7 @@ class _ScreeningQuestionScreenState
             title,
             style: const TextStyle(
               fontFamily: 'Fredoka',
-              fontSize: 15,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Color(0xFFB05039),
             ),
@@ -704,6 +699,7 @@ class _ScreeningQuestionScreenState
             child: Text(
               label,
               style: const TextStyle(
+                fontFamily: 'Nunito',
                 fontSize: 11,
                 color: Colors.black,
               ),
@@ -715,6 +711,7 @@ class _ScreeningQuestionScreenState
             child: Text(
               value ?? '-',
               style: const TextStyle(
+                fontFamily: 'Nunito',
                 fontSize: 11,
                 color: Colors.black,
               ),

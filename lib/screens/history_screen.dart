@@ -8,6 +8,7 @@ import 'profile_screen.dart';
 import 'screening_history_screen.dart';
 import 'consultation_history_screen.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -21,7 +22,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color primaryBrown = const Color(0xFF5A392F);
-  final Color borderBrown = const Color(0xFFFF806A);
 
   // ===============================================================
   // NAVIGATION
@@ -110,8 +110,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               _buildHistoryMenu(
                 icon: Icons.health_and_safety_outlined,
                 title: 'Riwayat Skrining',
-                subtitle:
-                    'Lihat hasil skrining GERD sebelumnya',
+                subtitle: 'Lihat hasil skrining GERD sebelumnya',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -128,8 +127,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               _buildHistoryMenu(
                 icon: Icons.chat_bubble_outline_rounded,
                 title: 'Riwayat Chat',
-                subtitle:
-                    'Lihat riwayat konsultasi dengan dokter',
+                subtitle: 'Lihat riwayat konsultasi dengan dokter',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -209,33 +207,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 18,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ),
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: double.infinity,
-        height: 100,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFCF9),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: borderBrown,
-            width: 0.9,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
+      child: SizedBox(
+        height: 76,
         child: Row(
           children: [
+            // =====================================================
+            // ICON
+            // =====================================================
+
             Container(
               width: 55,
               height: 55,
@@ -252,17 +239,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
             const SizedBox(width: 14),
 
+            // =====================================================
+            // TITLE + SUBTITLE
+            // =====================================================
+
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 15,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: primaryBrown,
                     ),
@@ -276,13 +266,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 14,
+                      fontSize: 11,
                       color: Color(0xFF776C67),
+                      height: 1.25,
                     ),
                   ),
                 ],
               ),
             ),
+
+            // =====================================================
+            // ARROW
+            // =====================================================
 
             const Icon(
               Icons.chevron_right_rounded,

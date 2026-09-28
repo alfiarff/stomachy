@@ -6,6 +6,7 @@ import 'doctor_screen.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 class AboutStomachyScreen extends StatefulWidget {
   const AboutStomachyScreen({super.key});
@@ -145,7 +146,10 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
       height: 42,
       child: Row(
         children: [
+          // =======================================================
           // TOMBOL KEMBALI
+          // =======================================================
+
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
@@ -164,8 +168,11 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
             ),
           ),
 
+          // =======================================================
           // JUDUL
-          Expanded(
+          // =======================================================
+
+          const Expanded(
             child: Center(
               child: Text(
                 'Tentang Stomachy',
@@ -179,7 +186,10 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
             ),
           ),
 
+          // =======================================================
           // PENYEIMBANG
+          // =======================================================
+
           const SizedBox(
             width: 45,
           ),
@@ -193,21 +203,14 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
   // ===============================================================
 
   Widget _buildAboutCard() {
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 16,
       padding: const EdgeInsets.fromLTRB(
         18,
         12,
         18,
         18,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
       ),
       child: Column(
         children: [
@@ -243,7 +246,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
             'Versi 1.0.0',
             style: TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 14,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
               color: Color(0xFF30221E),
             ),
@@ -276,7 +279,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 15,
+                fontSize: 11,
                 height: 1.45,
                 fontWeight: FontWeight.w400,
                 color: Color(0xFF30221E),
@@ -301,7 +304,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           const SizedBox(height: 14),
 
           // =======================================================
-          // FITUR SKOR
+          // FITUR GRAFIK
           // =======================================================
 
           _buildFeatureItem(
@@ -353,7 +356,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 15,
+                fontSize: 11,
                 height: 1.45,
                 fontWeight: FontWeight.w400,
                 color: Color(0xFF30221E),
@@ -377,7 +380,10 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        // =========================================================
         // ICON
+        // =========================================================
+
         Container(
           width: 36,
           height: 36,
@@ -394,7 +400,10 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
 
         const SizedBox(width: 10),
 
+        // =========================================================
         // TEXT
+        // =========================================================
+
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,7 +412,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                 title,
                 style: const TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 15,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF30221E),
                 ),
@@ -415,7 +424,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                 description,
                 style: const TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 14,
+                  fontSize: 11,
                   height: 1.35,
                   fontWeight: FontWeight.w400,
                   color: Color(0xFF493C37),

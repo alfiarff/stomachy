@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:bootstrap_icons/bootstrap_icons.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
@@ -28,14 +31,136 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color primaryBrown = const Color(0xFF5A392F);
+  final Color accentBrown = const Color(0xFFB9543A);
 
   // ===============================================================
   // STATUS TOGGLE
+  //
+  // notificationApp = master toggle.
+  // Kalau master OFF, 4 sub-notifikasi di bawahnya
+  // menjadi redup dan tidak bisa diubah.
   // ===============================================================
 
-  bool notificationApp = false;
-  bool reminderGerd = false;
-  bool reminderConsultation = false;
+  bool notificationApp = true;
+  bool notifArtikel = true;
+  bool notifEdukasi = true;
+  bool notifOlahraga = true;
+  bool notifMakanan = true;
+
+  bool notifBalasanDokter = false;
+  bool notifPengingatSkrining = false;
+
+  bool _isLoading = true;
+
+  // ===============================================================
+  // INIT
+  // ===============================================================
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  // ===============================================================
+  // LOAD PENGATURAN DARI FIRESTORE
+  // ===============================================================
+
+  Future<void> _loadSettings() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (doc.exists) {
+          final data = doc.data();
+
+          if (data != null) {
+            final settings = data['settings'];
+
+            if (settings is Map) {
+              setState(() {
+                notificationApp =
+                    settings['notificationApp'] as bool? ??
+                        notificationApp;
+
+                notifArtikel =
+                    settings['notifArtikel'] as bool? ??
+                        notifArtikel;
+
+                notifEdukasi =
+                    settings['notifEdukasi'] as bool? ??
+                        notifEdukasi;
+
+                notifOlahraga =
+                    settings['notifOlahraga'] as bool? ??
+                        notifOlahraga;
+
+                notifMakanan =
+                    settings['notifMakanan'] as bool? ??
+                        notifMakanan;
+
+                notifBalasanDokter =
+                    settings['notifBalasanDokter'] as bool? ??
+                        notifBalasanDokter;
+
+                notifPengingatSkrining =
+                    settings['notifPengingatSkrining'] as bool? ??
+                        notifPengingatSkrining;
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('SETTINGS LOAD ERROR: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // ===============================================================
+  // SIMPAN PENGATURAN KE FIRESTORE
+  // ===============================================================
+
+  Future<void> _saveSettings() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        return;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+        {
+          'settings': {
+            'notificationApp': notificationApp,
+            'notifArtikel': notifArtikel,
+            'notifEdukasi': notifEdukasi,
+            'notifOlahraga': notifOlahraga,
+            'notifMakanan': notifMakanan,
+            'notifBalasanDokter': notifBalasanDokter,
+            'notifPengingatSkrining': notifPengingatSkrining,
+          },
+          'settingsUpdatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('SETTINGS SAVE ERROR: $e');
+    }
+  }
 
   // ===============================================================
   // NAVIGATION
@@ -110,94 +235,95 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            22,
-            12,
-            22,
-            105,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // =====================================================
-              // HEADER
-              // =====================================================
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFB9543A),
+                ),
+              )
+            : SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  22,
+                  12,
+                  22,
+                  105,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // =============================================
+                    // HEADER
+                    // =============================================
 
-              _buildHeader(),
+                    _buildHeader(),
 
-              const SizedBox(height: 27),
+                    const SizedBox(height: 27),
 
-              // =====================================================
-              // BAGIAN AKUN
-              // =====================================================
+                    // =============================================
+                    // BAGIAN AKUN
+                    // =============================================
 
-              _buildSectionTitle('Akun'),
+                    _buildSectionTitle('Akun'),
 
-              const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-              _buildAccountCard(),
+                    _buildAccountCard(),
 
-              const SizedBox(height: 23),
+                    const SizedBox(height: 23),
 
-              // =====================================================
-              // BAGIAN NOTIFIKASI
-              // =====================================================
+                    // =============================================
+                    // BAGIAN NOTIFIKASI
+                    // =============================================
 
-              _buildSectionTitle('Notifikasi'),
+                    _buildSectionTitle('Notifikasi'),
 
-              const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-              // NOTIFIKASI APLIKASI
-              _buildNotificationCard(
-                icon: Icons.notifications_none_rounded,
-                title: 'Notifikasi Aplikasi',
-                description: 'Atur pemberitahuan dari Stomachy',
-                value: notificationApp,
-                onChanged: (value) {
-                  setState(() {
-                    notificationApp = value;
-                  });
-                },
+                    // NOTIFIKASI APLIKASI + SUB-ITEM
+                    _buildNotificationAppCard(),
+
+                    const SizedBox(height: 10),
+
+                    // BALASAN DOKTER
+                    _buildSimpleNotificationCard(
+                      icon: BootstrapIcons.chat_dots,
+                      title: 'Balasan Dokter',
+                      description:
+                          'Balasan chat konsultasi dari dokter',
+                      value: notifBalasanDokter,
+                      onChanged: (value) {
+                        setState(() {
+                          notifBalasanDokter = value;
+                        });
+
+                        _saveSettings();
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // PENGINGAT SKRINING MINGGUAN
+                    _buildSimpleNotificationCard(
+                      icon: BootstrapIcons.alarm,
+                      title: 'Pengingat Skrining Mingguan',
+                      description:
+                          'Setiap Senin - 09.00 (jadwal tetap)',
+                      value: notifPengingatSkrining,
+                      onChanged: (value) {
+                        setState(() {
+                          notifPengingatSkrining = value;
+                        });
+
+                        _saveSettings();
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
-
-              const SizedBox(height: 9),
-
-              // PENGINGAT CEK GERD
-              _buildNotificationCard(
-                icon: Icons.access_time_rounded,
-                title: 'Pengingat Cek GERD',
-                description: 'Atur pengingat untuk melakukan cek GERD',
-                value: reminderGerd,
-                onChanged: (value) {
-                  setState(() {
-                    reminderGerd = value;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 9),
-
-              // PENGINGAT KONSULTASI
-              _buildNotificationCard(
-                icon: Icons.calendar_month_outlined,
-                title: 'Pengingat Konsultasi',
-                description: 'Atur pengingat jadwal konsultasi',
-                value: reminderConsultation,
-                onChanged: (value) {
-                  setState(() {
-                    reminderConsultation = value;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
       ),
 
       // ===========================================================
@@ -246,11 +372,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // JUDUL
           // =======================================================
 
-          Expanded(
+          const Expanded(
             child: Center(
               child: Text(
                 'Pengaturan',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -281,7 +407,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       title,
       style: const TextStyle(
         fontFamily: 'Nunito',
-        fontSize: 15,
+        fontSize: 12,
         fontWeight: FontWeight.w700,
         color: Color(0xFF30221E),
       ),
@@ -310,12 +436,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           vertical: 7,
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFCF9),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: const Color(0xFFFF806A),
-            width: 0.8,
-          ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(17),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -330,10 +459,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: Color(0xFFFFE8D8),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.lock_outline_rounded,
-                size: 20,
-                color: Color(0xFFB9543A),
+              child: const Center(
+                child: Icon(
+                  BootstrapIcons.lock,
+                  size: 19,
+                  color: Color(0xFFB9543A),
+                ),
               ),
             ),
 
@@ -343,16 +474,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // TEXT
             // =====================================================
 
-            Expanded(
+            const Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Ubah Kata Sandi',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 15,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF30221E),
                     ),
@@ -364,7 +495,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Ganti kata sandi akun anda',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 14,
+                      fontSize: 11,
                       height: 1.2,
                       fontWeight: FontWeight.w400,
                       color: Color(0xFF493C37),
@@ -390,10 +521,271 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // ===============================================================
-  // NOTIFICATION CARD
+  // KARTU NOTIFIKASI APLIKASI
   // ===============================================================
 
-  Widget _buildNotificationCard({
+  Widget _buildNotificationAppCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        12,
+        12,
+        12,
+        16,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(17),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // ======================================================
+          // BARIS UTAMA : MASTER TOGGLE
+          // ======================================================
+
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFE8D8),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Icon(
+                    BootstrapIcons.bell,
+                    size: 19,
+                    color: Color(0xFFB9543A),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Notifikasi Aplikasi',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF30221E),
+                      ),
+                    ),
+
+                    SizedBox(height: 1),
+
+                    Text(
+                      'Pemberitahuan konten baru dari STOMACHY',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
+                        height: 1.2,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF493C37),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              _buildCustomSwitch(
+                value: notificationApp,
+                onChanged: (value) {
+                  setState(() {
+                    notificationApp = value;
+                  });
+
+                  _saveSettings();
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          // ======================================================
+          // SUB-ITEM NOTIFIKASI
+          // ======================================================
+
+          Opacity(
+            opacity: notificationApp ? 1.0 : 0.45,
+            child: Column(
+              children: [
+                _buildSubNotificationItem(
+                  icon: BootstrapIcons.newspaper,
+                  title: 'Artikel Mingguan',
+                  description:
+                      'Saat ada artikel mingguan baru',
+                  value: notifArtikel,
+                  onChanged: (value) {
+                    setState(() {
+                      notifArtikel = value;
+                    });
+
+                    _saveSettings();
+                  },
+                ),
+
+                const SizedBox(height: 12),
+
+                _buildSubNotificationItem(
+                  icon: BootstrapIcons.book,
+                  title: 'Edukasi',
+                  description: 'Saat ada edukasi baru',
+                  value: notifEdukasi,
+                  onChanged: (value) {
+                    setState(() {
+                      notifEdukasi = value;
+                    });
+
+                    _saveSettings();
+                  },
+                ),
+
+                const SizedBox(height: 12),
+
+                _buildSubNotificationItem(
+                  icon: BootstrapIcons.bicycle,
+                  title: 'Rekomendasi Olahraga',
+                  description:
+                      'Saat rekomendasi olahraga baru',
+                  value: notifOlahraga,
+                  onChanged: (value) {
+                    setState(() {
+                      notifOlahraga = value;
+                    });
+
+                    _saveSettings();
+                  },
+                ),
+
+                const SizedBox(height: 12),
+
+                _buildSubNotificationItem(
+                  icon: BootstrapIcons.egg_fried,
+                  title: 'Rekomendasi Makanan',
+                  description:
+                      'Saat rekomendasi makanan baru',
+                  value: notifMakanan,
+                  onChanged: (value) {
+                    setState(() {
+                      notifMakanan = value;
+                    });
+
+                    _saveSettings();
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===============================================================
+  // SUB-ITEM NOTIFIKASI
+  // ===============================================================
+
+  Widget _buildSubNotificationItem({
+    required IconData icon,
+    required String title,
+    required String description,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Row(
+      children: [
+        // =====================================================
+        // SPASI + GARIS PUTUS-PUTUS
+        // =====================================================
+
+        const SizedBox(width: 20),
+
+        _buildDashSegment(),
+
+        const SizedBox(width: 19),
+
+        // =====================================================
+        // ICON
+        // =====================================================
+
+        SizedBox(
+          width: 22,
+          child: Icon(
+            icon,
+            size: 17,
+            color: accentBrown,
+          ),
+        ),
+
+        const SizedBox(width: 9),
+
+        // =====================================================
+        // TEKS
+        // =====================================================
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF30221E),
+                ),
+              ),
+
+              const SizedBox(height: 1),
+
+              Text(
+                description,
+                style: const TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 10,
+                  height: 1.2,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF776C67),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        // =====================================================
+        // SWITCH
+        // =====================================================
+
+        _buildCustomSwitch(
+          value: value,
+          onChanged: notificationApp ? onChanged : null,
+        ),
+      ],
+    );
+  }
+
+  // ===============================================================
+  // KARTU NOTIFIKASI SEDERHANA
+  // ===============================================================
+
+  Widget _buildSimpleNotificationCard({
     required IconData icon,
     required String title,
     required String description,
@@ -408,12 +800,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         vertical: 7,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(17),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -428,10 +823,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: Color(0xFFFFE8D8),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: const Color(0xFFB9543A),
+            child: Center(
+              child: Icon(
+                icon,
+                size: 19,
+                color: accentBrown,
+              ),
             ),
           ),
 
@@ -450,7 +847,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title,
                   style: const TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 15,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF30221E),
                   ),
@@ -462,7 +859,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   description,
                   style: const TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 14,
+                    fontSize: 11,
                     height: 1.2,
                     fontWeight: FontWeight.w400,
                     color: Color(0xFF493C37),
@@ -473,7 +870,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           // =======================================================
-          // SWITCH ON / OFF
+          // SWITCH
           // =======================================================
 
           _buildCustomSwitch(
@@ -487,43 +884,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // ===============================================================
   // CUSTOM SWITCH
+  //
+  // ON  -> track coklat, thumb putih
+  // OFF -> track abu terang, thumb putih
   // ===============================================================
 
   Widget _buildCustomSwitch({
     required bool value,
-    required ValueChanged<bool> onChanged,
+    required ValueChanged<bool>? onChanged,
   }) {
-    return Switch(
-      value: value,
-      onChanged: onChanged,
+    final bool enabled = onChanged != null;
 
-      // ===========================================================
-      // WARNA SAAT ON
-      // ===========================================================
-
-      activeColor: Colors.white,
-
-      activeTrackColor: const Color(0xFFB9543A),
-
-      // ===========================================================
-      // WARNA SAAT OFF / MATI
-      // ===========================================================
-
-      inactiveThumbColor: const Color(0xFFB8B0AC),
-
-      inactiveTrackColor: const Color(0xFFE5DDD8),
-
-      // ===========================================================
-      // UKURAN / BENTUK
-      // ===========================================================
-
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-
-      thumbIcon: MaterialStateProperty.resolveWith<Icon?>(
-        (states) {
-          return null;
-        },
+    return GestureDetector(
+      onTap: enabled
+          ? () {
+              onChanged!(!value);
+            }
+          : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        width: 44,
+        height: 25,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: value
+              ? accentBrown
+              : const Color(0xFFE5DDD8),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          alignment: value
+              ? Alignment.centerRight
+              : Alignment.centerLeft,
+          child: Container(
+            width: 19,
+            height: 19,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
       ),
+    );
+  }
+
+  // ===============================================================
+  // SEGMENT GARIS PUTUS-PUTUS VERTIKAL
+  // ===============================================================
+
+  Widget _buildDashSegment() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (int i = 0; i < 3; i++) ...[
+          Container(
+            width: 2,
+            height: 7,
+            decoration: BoxDecoration(
+              color: const Color(0xFFD9A08F),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          if (i != 2)
+            const SizedBox(height: 5),
+        ],
+      ],
     );
   }
 }

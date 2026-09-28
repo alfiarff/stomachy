@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -8,6 +9,7 @@ import '../widgets/bottom_navigation.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import 'artikel_tidur_screen.dart';
+import 'notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -48,10 +50,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      // Ambil nama dari Firebase Authentication terlebih dahulu
       String name = user.displayName ?? '';
 
-      // Ambil nama dari Firestore jika tersedia
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -93,7 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // ===============================================================
 
   void _onNavigationTap(int index) {
-    // Skrining
     if (index == 1) {
       Navigator.push(
         context,
@@ -104,7 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // Dokter
     if (index == 2) {
       Navigator.push(
         context,
@@ -115,7 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // Edukasi
     if (index == 3) {
       Navigator.push(
         context,
@@ -126,7 +123,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // Profil
     if (index == 4) {
       Navigator.push(
         context,
@@ -163,33 +159,17 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // =====================================================
-              // HEADER
-              // =====================================================
-
               _buildHeader(),
 
               const SizedBox(height: 18),
-
-              // =====================================================
-              // GREETING
-              // =====================================================
 
               _buildGreeting(),
 
               const SizedBox(height: 18),
 
-              // =====================================================
-              // SCREENING HERO
-              // =====================================================
-
               _buildScreeningCard(),
 
               const SizedBox(height: 27),
-
-              // =====================================================
-              // QUICK ACTION TITLE
-              // =====================================================
 
               const Text(
                 'Apa yang ingin kamu lakukan saat ini?',
@@ -203,17 +183,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 17),
 
-              // =====================================================
-              // QUICK ACTION
-              // =====================================================
-
               _buildQuickActions(),
 
               const SizedBox(height: 30),
-
-              // =====================================================
-              // ARTIKEL
-              // =====================================================
 
               _buildArticleSection(),
 
@@ -223,10 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
-      // =============================================================
-      // BOTTOM NAVIGATION
-      // =============================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -235,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ===============================================================
-  // HEADER
+  // HEADER (LOGO + LONCENG + PROFIL)
   // ===============================================================
 
   Widget _buildHeader() {
@@ -258,6 +226,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+
+          // =========================================================
+          // TOMBOL LONCENG NOTIFIKASI
+          // =========================================================
+
+          const _NotificationBell(),
+
+          const SizedBox(width: 10),
 
           // =========================================================
           // PROFILE BUTTON
@@ -340,10 +316,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Stack(
         children: [
-          // =========================================================
-          // TEXT
-          // =========================================================
-
           Padding(
             padding: const EdgeInsets.fromLTRB(
               18,
@@ -378,10 +350,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 const Spacer(),
-
-                // ===================================================
-                // BUTTON
-                // ===================================================
 
                 SizedBox(
                   height: 35,
@@ -432,10 +400,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // =========================================================
-          // SCREENING ILLUSTRATION
-          // =========================================================
-
           Positioned(
             right: 2,
             top: 8,
@@ -459,10 +423,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        // ===========================================================
-        // SKRINING
-        // ===========================================================
-
         _buildQuickAction(
           icon: Icons.search_rounded,
           title: 'Skrining',
@@ -477,10 +437,6 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
 
-        // ===========================================================
-        // KONSULTASI
-        // ===========================================================
-
         _buildQuickAction(
           icon: Icons.medical_services_outlined,
           title: 'Konsultasi',
@@ -494,10 +450,6 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           },
         ),
-
-        // ===========================================================
-        // EDUKASI
-        // ===========================================================
 
         _buildQuickAction(
           icon: Icons.menu_book_rounded,
@@ -515,10 +467,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
-  // ===============================================================
-  // SINGLE QUICK ACTION
-  // ===============================================================
 
   Widget _buildQuickAction({
     required IconData icon,
@@ -572,10 +520,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ===========================================================
-        // TITLE
-        // ===========================================================
-
         const Text(
           'Artikel Minggu Ini',
           style: TextStyle(
@@ -587,10 +531,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
 
         const SizedBox(height: 12),
-
-        // ===========================================================
-        // ARTICLE CARD
-        // ===========================================================
 
         InkWell(
           onTap: () {
@@ -619,10 +559,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Row(
               children: [
-                // ===================================================
-                // ARTICLE IMAGE
-                // ===================================================
-
                 SizedBox(
                   width: 105,
                   height: 105,
@@ -636,10 +572,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 const SizedBox(width: 12),
-
-                // ===================================================
-                // ARTICLE TEXT
-                // ===================================================
 
                 Expanded(
                   child: Column(
@@ -675,10 +607,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       const SizedBox(height: 7),
 
-                      // =================================================
-                      // BACA SELENGKAPNYA
-                      // =================================================
-
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
@@ -709,6 +637,146 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ===============================================================
+// TOMBOL LONCENG NOTIFIKASI
+//
+// Class ini berada DI LUAR class _HomeScreenState (top-level).
+// - Tidak ada yang belum dibaca -> lonceng outline biasa
+// - Ada yang belum dibaca -> lonceng fill + badge merah angka
+// - Data dari penyimpanan lokal, di-refresh otomatis
+//   setiap kali kembali dari halaman notifikasi
+// ===============================================================
+
+class _NotificationBell extends StatefulWidget {
+  const _NotificationBell();
+
+  @override
+  State<_NotificationBell> createState() =>
+      _NotificationBellState();
+}
+
+class _NotificationBellState
+    extends State<_NotificationBell> {
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshCount();
+  }
+
+  Future<void> _refreshCount() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      if (mounted) {
+        setState(() {
+          _unreadCount = 0;
+        });
+      }
+      return;
+    }
+
+    final int count =
+        await AppNotification.getRecentUnreadCount(
+      user.uid,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _unreadCount = count;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasUnread = _unreadCount > 0;
+
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const NotificationScreen(),
+          ),
+        );
+
+        // Kembali dari halaman notifikasi ->
+        // hitung ulang badge
+        _refreshCount();
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF5EF),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Icon(
+                hasUnread
+                    ? BootstrapIcons.bell_fill
+                    : BootstrapIcons.bell,
+                size: 24,
+                color: const Color(0xFFB9543A),
+              ),
+            ),
+          ),
+
+          if (hasUnread)
+            Positioned(
+              right: -3,
+              top: -3,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 5,
+                  vertical: 2,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 17,
+                  minHeight: 17,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE93636),
+                  shape: _unreadCount > 9
+                      ? BoxShape.rectangle
+                      : BoxShape.circle,
+                  borderRadius: _unreadCount > 9
+                      ? BorderRadius.circular(9)
+                      : null,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 1.2,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    _unreadCount > 9
+                        ? '9+'
+                        : '$_unreadCount',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 9,
+                      height: 1.0,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -8,6 +8,7 @@ import 'doctor_screen.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 class GrafikScreen extends StatefulWidget {
   const GrafikScreen({super.key});
@@ -152,7 +153,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
               const SizedBox(height: 18),
 
               // ======================================================
-              // KONTEN (DATA REAL DARI FIRESTORE)
+              // KONTEN
               // ======================================================
 
               if (user == null)
@@ -179,16 +180,10 @@ class _GrafikScreenState extends State<GrafikScreen> {
 
   // ===================================================================
   // STREAM RIWAYAT SKRINING DARI FIRESTORE
-  //
-  // Sumber data sama dengan halaman Riwayat Skrining:
-  // users/{uid}/screening_history
-  // Diurutkan lama -> baru (ascending) supaya grafik berjalan
-  // sesuai kronologi waktu.
   // ===================================================================
 
   Widget _buildHistoryStream(String uid) {
-    return StreamBuilder<
-        QuerySnapshot<Map<String, dynamic>>>(
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
@@ -202,8 +197,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
         // ----------------------------------------------------------
         // LOADING
         // ----------------------------------------------------------
-        if (snapshot.connectionState ==
-            ConnectionState.waiting) {
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
             padding: EdgeInsets.only(top: 60),
             child: CircularProgressIndicator(
@@ -215,6 +210,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
         // ----------------------------------------------------------
         // ERROR
         // ----------------------------------------------------------
+
         if (snapshot.hasError) {
           return _buildEmptyState(
             'Gagal memuat riwayat skrining. Coba lagi nanti.',
@@ -224,14 +220,15 @@ class _GrafikScreenState extends State<GrafikScreen> {
         // ----------------------------------------------------------
         // KONVERSI DOKUMEN FIRESTORE -> MODEL
         // ----------------------------------------------------------
-        final List<ScreeningHistory> history =
-            _convertDocuments(
+
+        final List<ScreeningHistory> history = _convertDocuments(
           snapshot.data?.docs ?? [],
         );
 
         // ----------------------------------------------------------
         // KOSONG
         // ----------------------------------------------------------
+
         if (history.isEmpty) {
           return _buildEmptyState(
             'Belum ada riwayat skrining. Lakukan skrining untuk melihat grafiknya di sini.',
@@ -239,8 +236,9 @@ class _GrafikScreenState extends State<GrafikScreen> {
         }
 
         // ----------------------------------------------------------
-        // ADA DATA -> TAMPILKAN SEMUA CARD
+        // ADA DATA
         // ----------------------------------------------------------
+
         return Column(
           children: [
             _buildDevelopmentCard(history),
@@ -269,8 +267,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // ===================================================================
 
   List<ScreeningHistory> _convertDocuments(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>>
-        docs,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
   ) {
     final List<ScreeningHistory> result = [];
 
@@ -284,8 +281,9 @@ class _GrafikScreenState extends State<GrafikScreen> {
 
       final bool atRisk = data['isRisk'] == true;
 
-      final List<String> complaints =
-          _parseComplaints(data['complaint']);
+      final List<String> complaints = _parseComplaints(
+        data['complaint'],
+      );
 
       result.add(
         ScreeningHistory(
@@ -301,7 +299,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
 
   // ===================================================================
   // PARSE TANGGAL
-  // Prioritas: createdAt (Timestamp) -> date (String ISO)
   // ===================================================================
 
   DateTime _parseDate(
@@ -313,8 +310,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
     }
 
     if (oldDate is String && oldDate.isNotEmpty) {
-      final DateTime? parsed =
-          DateTime.tryParse(oldDate);
+      final DateTime? parsed = DateTime.tryParse(oldDate);
 
       if (parsed != null) {
         return parsed;
@@ -326,11 +322,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
 
   // ===================================================================
   // PARSE KELUHAN
-  //
-  // Di Firestore keluhan tersimpan sebagai satu string:
-  // "Panas di dada, asam lambung naik, perut terasa penuh"
-  // Dipecah menjadi list per koma.
-  // "Tidak ada keluhan" diabaikan karena bukan keluhan asli.
   // ===================================================================
 
   List<String> _parseComplaints(dynamic value) {
@@ -360,19 +351,12 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // ===================================================================
 
   Widget _buildEmptyState(String message) {
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 16,
       padding: const EdgeInsets.symmetric(
         vertical: 35,
         horizontal: 20,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
       ),
       child: Column(
         children: [
@@ -389,7 +373,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 13,
+              fontSize: 11,
               height: 1.4,
               color: Color(0xFF493C37),
             ),
@@ -458,21 +442,14 @@ class _GrafikScreenState extends State<GrafikScreen> {
   Widget _buildDevelopmentCard(
     List<ScreeningHistory> history,
   ) {
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 16,
       padding: const EdgeInsets.fromLTRB(
         10,
         10,
         10,
         12,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,7 +484,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                       'Perkembangan Skrining GERD',
                       style: TextStyle(
                         fontFamily: 'Nunito',
-                        fontSize: 15,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFFB9543A),
                       ),
@@ -519,7 +496,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                       'Lihat perubahan hasil skrining kamu dari waktu ke waktu.',
                       style: TextStyle(
                         fontFamily: 'Nunito',
-                        fontSize: 14,
+                        fontSize: 11,
                         color: Color(0xFF493C37),
                       ),
                     ),
@@ -609,7 +586,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
           text,
           style: const TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 14,
+            fontSize: 11,
             color: Color(0xFF6C5A54),
           ),
         ),
@@ -634,21 +611,14 @@ class _GrafikScreenState extends State<GrafikScreen> {
         .where((item) => !item.atRisk)
         .length;
 
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 16,
       padding: const EdgeInsets.fromLTRB(
         12,
         11,
         12,
         15,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -682,7 +652,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                     'Ringkasan Hasil Skrining',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 15,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFFB9543A),
                     ),
@@ -694,7 +664,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                     'Ringkasan riwayat skrining anda',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 14,
+                      fontSize: 11,
                       color: Color(0xFF493C37),
                     ),
                   ),
@@ -776,7 +746,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 14,
+            fontSize: 11,
             fontWeight: FontWeight.w600,
             color: Color(0xFFB9543A),
           ),
@@ -798,7 +768,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
           suffix,
           style: TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 14,
+            fontSize: 11,
             fontWeight: FontWeight.w700,
             color: valueColor,
           ),
@@ -829,8 +799,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
     final Map<String, int> complaintCount = {};
 
     for (final historyItem in history) {
-      for (final complaint
-          in historyItem.complaints) {
+      for (final complaint in historyItem.complaints) {
         complaintCount[complaint] =
             (complaintCount[complaint] ?? 0) + 1;
       }
@@ -844,21 +813,14 @@ class _GrafikScreenState extends State<GrafikScreen> {
             (a, b) => b.value.compareTo(a.value),
           );
 
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 16,
       padding: const EdgeInsets.fromLTRB(
         12,
         11,
         12,
         15,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -892,7 +854,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                     'Keluhan yang sering dipilih',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 15,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFFB9543A),
                     ),
@@ -904,7 +866,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                     'Berdasarkan seluruh riwayat skrining anda',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 14,
+                      fontSize: 11,
                       color: Color(0xFF493C37),
                     ),
                   ),
@@ -927,7 +889,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                   'Belum ada data keluhan.',
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 14,
+                    fontSize: 11,
                     color: Color(0xFF777777),
                   ),
                 ),
@@ -951,8 +913,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                   child: _buildComplaintRow(
                     label: entry.key,
                     percentage: percentage,
-                    percentageText:
-                        '$percentageValue%',
+                    percentageText: '$percentageValue%',
                   ),
                 );
               },
@@ -981,7 +942,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 12,
+              fontSize: 11,
               height: 1.2,
               color: Color(0xFF493C37),
             ),
@@ -1014,7 +975,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
             textAlign: TextAlign.right,
             style: const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 14,
+              fontSize: 11,
               color: Color(0xFF493C37),
             ),
           ),
@@ -1028,19 +989,12 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // ===================================================================
 
   Widget _buildInformationCard() {
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 16,
       padding: const EdgeInsets.symmetric(
         horizontal: 14,
         vertical: 12,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1066,7 +1020,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
               'Grafik membantu melihat perubahan hasil skrining dari waktu ke waktu.',
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 15,
+                fontSize: 11,
                 height: 1.35,
                 color: Color(0xFF493C37),
               ),
@@ -1080,7 +1034,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
 
 // =====================================================================
 // CUSTOM PAINTER GRAFIK GERD
-// (Tidak berubah, sekarang menerima data real dari Firestore)
 // =====================================================================
 
 class GERDChartPainter extends CustomPainter {
@@ -1145,7 +1098,6 @@ class GERDChartPainter extends CustomPainter {
     // BACKGROUND GRID
     // ================================================================
 
-    // Garis horizontal
     canvas.drawLine(
       Offset(chartLeft, chartTop),
       Offset(chartRight, chartTop),
@@ -1158,7 +1110,6 @@ class GERDChartPainter extends CustomPainter {
       gridPaint,
     );
 
-    // Garis tengah
     final double middleY =
         chartTop + chartHeight / 2;
 
@@ -1168,7 +1119,6 @@ class GERDChartPainter extends CustomPainter {
       gridPaint,
     );
 
-    // Garis vertikal
     final int count = history.length;
 
     if (count > 1) {
@@ -1209,9 +1159,6 @@ class GERDChartPainter extends CustomPainter {
             (chartWidth * i / (history.length - 1));
       }
 
-      // Berisiko = atas
-      // Tidak berisiko = bawah
-
       final double y = item.atRisk
           ? chartTop + chartHeight * 0.18
           : chartBottom - chartHeight * 0.18;
@@ -1243,8 +1190,6 @@ class GERDChartPainter extends CustomPainter {
         } else if (!firstRisk && !secondRisk) {
           linePaint = safeLinePaint;
         } else {
-          // Kalau status berubah,
-          // gunakan warna sesuai titik berikutnya.
           linePaint =
               secondRisk ? riskLinePaint : safeLinePaint;
         }
@@ -1276,7 +1221,6 @@ class GERDChartPainter extends CustomPainter {
         pointPaint,
       );
 
-      // Lingkaran putih kecil di tengah
       final Paint innerPaint = Paint()
         ..color = Colors.white;
 
@@ -1415,7 +1359,6 @@ class GERDChartPainter extends CustomPainter {
         ),
       );
 
-      // Label status
       _drawCenteredText(
         canvas,
         history[i].atRisk

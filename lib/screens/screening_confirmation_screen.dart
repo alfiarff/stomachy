@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screening_loading_screen.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 class ScreeningConfirmationScreen extends StatelessWidget {
   final String age;
@@ -52,7 +53,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
                       'Periksa kembali jawabanmu',
                       style: TextStyle(
                         fontFamily: 'Nunito',
-                        fontSize: 15,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
@@ -63,7 +64,8 @@ class ScreeningConfirmationScreen extends StatelessWidget {
                     const Text(
                       'Pastikan semua informasi sudah sesuai',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
                         color: Color(0xFF5C514C),
                       ),
                     ),
@@ -305,21 +307,14 @@ class ScreeningConfirmationScreen extends StatelessWidget {
     required String title,
     required List<Widget> children,
   }) {
-    return Container(
-      width: double.infinity,
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 12,
       padding: const EdgeInsets.fromLTRB(
         12,
         9,
         12,
         10,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFFF775C),
-          width: 1,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -328,7 +323,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
             title,
             style: const TextStyle(
               fontFamily: 'Fredoka',
-              fontSize: 15,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Color(0xFFB05039),
             ),
@@ -356,6 +351,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
+                fontFamily: 'Nunito',
                 fontSize: 11,
                 color: Colors.black,
               ),
@@ -367,6 +363,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
             child: Text(
               value ?? '-',
               style: const TextStyle(
+                fontFamily: 'Nunito',
                 fontSize: 11,
                 color: Colors.black,
               ),

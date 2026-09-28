@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stomachy/widgets/stomachy_card.dart';
 
 class ScreeningKondisi extends StatelessWidget {
   final Map<String, bool?> answers;
@@ -78,104 +79,95 @@ class ScreeningKondisi extends StatelessWidget {
     required String title,
     required String question,
   }) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(
-        minHeight: 110,
-      ),
+    return StomachyCard(
+      color: cardColor,
+      radius: 17,
       padding: const EdgeInsets.symmetric(
         horizontal: 12,
         vertical: 9,
       ),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: const Color(0xFFFF775C),
-          width: 1,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minHeight: 110,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 3,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 62,
-            height: 62,
-            alignment: Alignment.center,
-            child: Image.asset(
-              symptomImages[title]!,
-              width: 57,
-              height: 57,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.image_not_supported_outlined,
-                  color: Color(0xFFB05039),
-                  size: 35,
-                );
-              },
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 62,
+              height: 62,
+              alignment: Alignment.center,
+              child: Image.asset(
+                symptomImages[title]!,
+                width: 57,
+                height: 57,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.image_not_supported_outlined,
+                    color: Color(0xFFB05039),
+                    size: 35,
+                  );
+                },
+              ),
             ),
-          ),
 
-          const SizedBox(width: 10),
+            const SizedBox(width: 10),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                Text(
-                  question,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    height: 1.15,
-                    color: Color(0xFF766D68),
-                  ),
-                ),
-
-                const SizedBox(height: 7),
-
-                Row(
-                  children: [
-                    _buildYesNoButton(
-                      title: title,
-                      value: true,
-                      label: 'Ya',
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // JUDUL CARD
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
+                  ),
 
-                    const SizedBox(width: 18),
+                  const SizedBox(height: 3),
 
-                    _buildYesNoButton(
-                      title: title,
-                      value: false,
-                      label: 'Tidak',
+                  // ISI / PENJELASAN
+                  Text(
+                    question,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
+                      height: 1.15,
+                      color: Color(0xFF766D68),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+
+                  const SizedBox(height: 7),
+
+                  Row(
+                    children: [
+                      _buildYesNoButton(
+                        title: title,
+                        value: true,
+                        label: 'Ya',
+                      ),
+
+                      const SizedBox(width: 18),
+
+                      _buildYesNoButton(
+                        title: title,
+                        value: false,
+                        label: 'Tidak',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -206,12 +198,15 @@ class ScreeningKondisi extends StatelessWidget {
               ? const Color(0xFFFFE0D5)
               : Colors.white,
           borderRadius: BorderRadius.circular(15),
+
+          // BORDER TOMBOL TETAP
           border: Border.all(
             color: selected
                 ? brown
                 : const Color(0xFFFF765B),
             width: 1,
           ),
+
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
@@ -223,6 +218,7 @@ class ScreeningKondisi extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
+            fontFamily: 'Nunito',
             fontSize: 10,
             fontWeight: selected
                 ? FontWeight.w600

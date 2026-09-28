@@ -6,6 +6,7 @@ import 'doctor_screen.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 class FoodRecommendationScreen extends StatefulWidget {
   const FoodRecommendationScreen({super.key});
@@ -104,6 +105,7 @@ class _FoodRecommendationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -276,98 +278,96 @@ class _FoodRecommendationScreenState
   // ===============================================================
 
   Widget _buildHeroCard() {
-    return Container(
-      width: double.infinity,
-      height: 135,
+    return StomachyCard(
+      color: const Color(0xFFFFE3D6),
+      radius: 14,
       padding: const EdgeInsets.symmetric(
         horizontal: 10,
         vertical: 8,
       ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFE3D6),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // GAMBAR
-          SizedBox(
-            width: 125,
-            height: 115,
-            child: Image.asset(
-              'assets/images/gerd_food_banner.png',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const Center(
-                  child: Icon(
-                    Icons.restaurant_rounded,
-                    size: 55,
-                    color: Color(0xFFB9543A),
-                  ),
-                );
-              },
-            ),
-          ),
+      child: SizedBox(
+        height: 119,
+        child: Row(
+          children: [
+            // =====================================================
+            // GAMBAR
+            // =====================================================
 
-          const SizedBox(width: 3),
-
-          // TEXT
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(
-                right: 5,
-                top: 5,
-                bottom: 5,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Makanan Sehat Untuk',
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
+            SizedBox(
+              width: 125,
+              height: 115,
+              child: Image.asset(
+                'assets/images/gerd_food_banner.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(
+                      Icons.restaurant_rounded,
+                      size: 55,
                       color: Color(0xFFB9543A),
                     ),
-                  ),
-
-                  const Text(
-                    'Penderita GERD',
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFB9543A),
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  const Text(
-                    'Pilih makanan yang lembut di '
-                    'lambung dan bantu mengurangi '
-                    'gejala GERD.',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      height: 1.5,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
-          ),
-        ],
+
+            const SizedBox(width: 3),
+
+            // =====================================================
+            // TEXT
+            // =====================================================
+
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  right: 5,
+                  top: 5,
+                  bottom: 5,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Makanan Sehat Untuk',
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFB9543A),
+                      ),
+                    ),
+
+                    const Text(
+                      'Penderita GERD',
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFB9543A),
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    const Text(
+                      'Pilih makanan yang lembut di '
+                      'lambung dan bantu mengurangi '
+                      'gejala GERD.',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
+                        height: 1.5,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -382,22 +382,12 @@ class _FoodRecommendationScreenState
     required String category,
     required String description,
   }) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(
-        minHeight: 94,
-      ),
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 13,
       padding: const EdgeInsets.symmetric(
         horizontal: 10,
         vertical: 7,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -446,13 +436,13 @@ class _FoodRecommendationScreenState
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFFB9543A),
                   ),
                 ),
 
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
 
                 // CATEGORY
                 Container(
@@ -475,7 +465,7 @@ class _FoodRecommendationScreenState
                   ),
                 ),
 
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
 
                 // DESCRIPTION
                 Text(
@@ -516,7 +506,10 @@ class _FoodRecommendationScreenState
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // =====================================================
           // ICON
+          // =====================================================
+
           SizedBox(
             width: 38,
             child: Icon(
@@ -528,7 +521,10 @@ class _FoodRecommendationScreenState
 
           const SizedBox(width: 10),
 
+          // =====================================================
           // TEXT
+          // =====================================================
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -537,7 +533,7 @@ class _FoodRecommendationScreenState
                   'Tips Tambahan',
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 15,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: Colors.black,
                   ),
@@ -550,7 +546,7 @@ class _FoodRecommendationScreenState
                   'hindari makan terlalu malam, dan banyak minum air putih.',
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 12,
+                    fontSize: 11,
                     height: 1.5,
                     fontWeight: FontWeight.w400,
                     color: Colors.black,

@@ -7,6 +7,7 @@ import 'doctor_screen.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_card.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -316,14 +317,14 @@ class _ChangePasswordScreenState
           // TITLE
           // =========================================================
 
-          Expanded(
+          const Expanded(
             child: Center(
               child: Text(
                 'Ubah Kata Sandi',
 
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Fredoka',
-                  fontSize: 15,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF171310),
                 ),
@@ -348,101 +349,89 @@ class _ChangePasswordScreenState
   // ===============================================================
 
   Widget _buildSecurityCard() {
-    return Container(
-      width: double.infinity,
-
-      height: 132,
-
+    return StomachyCard(
+      color: cardColor,
+      radius: 20,
       padding: const EdgeInsets.symmetric(
         horizontal: 14,
         vertical: 10,
       ),
 
-      decoration: BoxDecoration(
-        color: cardColor,
+      child: SizedBox(
+        height: 132,
 
-        borderRadius: BorderRadius.circular(20),
+        child: Row(
+          children: [
+            // =======================================================
+            // PASSWORD IMAGE
+            // =======================================================
 
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 3,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
+            SizedBox(
+              width: 105,
+              height: 105,
 
-      child: Row(
-        children: [
-          // =========================================================
-          // PASSWORD IMAGE
-          // =========================================================
+              child: Image.asset(
+                'assets/images/password_lock.png',
 
-          SizedBox(
-            width: 105,
-            height: 105,
+                fit: BoxFit.contain,
 
-            child: Image.asset(
-              'assets/images/password_lock.png',
-
-              fit: BoxFit.contain,
-
-              errorBuilder: (
-                context,
-                error,
-                stackTrace,
-              ) {
-                return const Icon(
-                  Icons.lock_outline_rounded,
-                  size: 70,
-                  color: Color(0xFFFFA04D),
-                );
-              },
+                errorBuilder: (
+                  context,
+                  error,
+                  stackTrace,
+                ) {
+                  return const Icon(
+                    Icons.lock_outline_rounded,
+                    size: 70,
+                    color: Color(0xFFFFA04D),
+                  );
+                },
+              ),
             ),
-          ),
 
-          const SizedBox(width: 6),
+            const SizedBox(width: 6),
 
-          // =========================================================
-          // TEXT
-          // =========================================================
+            // =======================================================
+            // TEXT
+            // =======================================================
 
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
 
-              children: [
-                Text(
-                  'Jaga keamanan akunmu',
+                children: [
+                  Text(
+                    'Jaga keamanan akunmu',
 
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF171310),
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF171310),
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 5),
+                  SizedBox(height: 5),
 
-                Text(
-                  'Gunakan kata sandi yang kuat '
-                  'dan jangan bagikan dengan '
-                  'siapa pun.',
+                  Text(
+                    'Gunakan kata sandi yang kuat '
+                    'dan jangan bagikan dengan '
+                    'siapa pun.',
 
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    height: 1.35,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF30221E),
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
+                      height: 1.35,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF30221E),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -471,7 +460,7 @@ class _ChangePasswordScreenState
 
         style: TextStyle(
           fontFamily: 'Nunito',
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w400,
           color: Color(0xFF253B22),
         ),
@@ -557,7 +546,7 @@ class _ChangePasswordScreenState
 
                   style: const TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w400,
                     color: Color(0xFF30221E),
                   ),
@@ -569,7 +558,7 @@ class _ChangePasswordScreenState
 
                     hintStyle: const TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w400,
                       color: Color(0xFF8A7B75),
                     ),
@@ -653,7 +642,7 @@ class _ChangePasswordScreenState
 
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 15,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
@@ -698,7 +687,7 @@ class _ChangePasswordScreenState
 
             style: TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 15,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: Color(0xFFB3543A),
             ),
