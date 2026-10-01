@@ -592,7 +592,7 @@ class _ScreeningLoadingScreenState
             'Oops, terjadi kesalahan\nsaat menganalisis jawabanmu.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: 'Fredoka',
+              fontFamily: 'Nunito',
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -629,7 +629,7 @@ class _ScreeningLoadingScreenState
             child: const Text(
               'Coba Lagi',
               style: TextStyle(
-                fontFamily: 'Fredoka',
+                fontFamily: 'Nunito',
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
               ),

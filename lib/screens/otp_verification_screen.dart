@@ -364,7 +364,7 @@ class _OtpVerificationScreenState
                   'Kode Verifikasi',
 
                   style: TextStyle(
-                    fontFamily: 'Fredoka',
+                    fontFamily: 'Nunito',
                     fontSize:
                         size.width * 0.060,
                     fontWeight:

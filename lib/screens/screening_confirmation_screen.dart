@@ -117,7 +117,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
                           child: const Text(
                             'Analisis Data Saya',
                             style: TextStyle(
-                              fontFamily: 'Fredoka',
+                              fontFamily: 'Nunito',
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
@@ -322,7 +322,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              fontFamily: 'Fredoka',
+              fontFamily: 'Nunito',
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Color(0xFFB05039),

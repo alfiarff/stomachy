@@ -584,7 +584,7 @@ class _NotificationScreenState
               child: Text(
                 'Notifikasi',
                 style: TextStyle(
-                  fontFamily: 'Fredoka',
+                  fontFamily: 'Nunito',
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: Colors.black,
@@ -742,7 +742,7 @@ class _NotificationScreenState
               'Belum Ada Notifikasi',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Fredoka',
+                fontFamily: 'Nunito',
                 fontSize: 19,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF171310),

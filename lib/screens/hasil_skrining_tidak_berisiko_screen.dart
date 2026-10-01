@@ -169,7 +169,7 @@ class _HasilSkriningTidakBerisikoScreenState
               child: Text(
                 'Hasil Skrining',
                 style: const TextStyle(
-                  fontFamily: 'Fredoka',
+                  fontFamily: 'Nunito',
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   color: primaryBrown,
@@ -223,7 +223,7 @@ class _HasilSkriningTidakBerisikoScreenState
             textAlign: TextAlign.center,
             text: const TextSpan(
               style: TextStyle(
-                fontFamily: 'Fredoka',
+                fontFamily: 'Nunito',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: primaryBrown,
@@ -250,7 +250,7 @@ class _HasilSkriningTidakBerisikoScreenState
           const Text(
             'GERD',
             style: TextStyle(
-              fontFamily: 'Fredoka',
+              fontFamily: 'Nunito',
               fontSize: 25,
               fontWeight: FontWeight.w500,
               color: greenColor,
@@ -295,7 +295,7 @@ class _HasilSkriningTidakBerisikoScreenState
           child: Text(
             'Saran untuk tetap sehat',
             style: TextStyle(
-              fontFamily: 'Fredoka',
+              fontFamily: 'Nunito',
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: primaryBrown,
@@ -357,7 +357,7 @@ class _HasilSkriningTidakBerisikoScreenState
             child: Text(
               text,
               style: const TextStyle(
-                fontFamily: 'Fredoka',
+                fontFamily: 'Nunito',
                 fontSize: 8.5,
                 fontWeight: FontWeight.w500,
                 color: Color(0xFF332823),

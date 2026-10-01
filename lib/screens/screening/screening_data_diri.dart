@@ -56,12 +56,13 @@ class ScreeningDataDiri extends StatelessWidget {
 
             const SizedBox(width: 10),
 
+            // JUDUL CARD
             const Text(
               'Usia',
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 12,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
                 color: Colors.black,
               ),
             ),
@@ -74,10 +75,18 @@ class ScreeningDataDiri extends StatelessWidget {
                 child: TextField(
                   keyboardType: TextInputType.number,
                   onChanged: onAgeChanged,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Isi usia anda',
                     hintStyle: const TextStyle(
+                      fontFamily: 'Nunito',
                       fontSize: 11,
+                      fontWeight: FontWeight.w400,
                       color: Color(0xFF99918E),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -106,12 +115,13 @@ class ScreeningDataDiri extends StatelessWidget {
 
             const SizedBox(width: 15),
 
+            // LABEL
             const Text(
               'Tahun',
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: Colors.black,
               ),
             ),
@@ -150,12 +160,13 @@ class ScreeningDataDiri extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // JUDUL CARD
                   const Text(
                     'Jenis Kelamin',
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       color: Colors.black,
                     ),
                   ),
@@ -211,12 +222,13 @@ class ScreeningDataDiri extends StatelessWidget {
         child: Text(
           value,
           style: TextStyle(
+            fontFamily: 'Nunito',
             fontSize: 11,
             color: selected
                 ? brown
                 : const Color(0xFF827A76),
             fontWeight: selected
-                ? FontWeight.w600
+                ? FontWeight.w700
                 : FontWeight.w400,
           ),
         ),

@@ -266,7 +266,7 @@ class _ScreeningQuestionScreenState
         content: Text(
           message,
           style: const TextStyle(
-            fontFamily: 'Fredoka',
+            fontFamily: 'Nunito',
           ),
         ),
         backgroundColor: brown,
@@ -666,7 +666,7 @@ class _ScreeningQuestionScreenState
           Text(
             title,
             style: const TextStyle(
-              fontFamily: 'Fredoka',
+              fontFamily: 'Nunito',
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Color(0xFFB05039),
@@ -766,7 +766,7 @@ class _ScreeningQuestionScreenState
                 ? 'Analisis Data Saya'
                 : 'Lanjutkan',
             style: const TextStyle(
-              fontFamily: 'Fredoka',
+              fontFamily: 'Nunito',
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),

@@ -247,7 +247,7 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
                           child: const Text(
                             'Mulai Sekarang',
                             style: TextStyle(
-                              fontFamily: 'Fredoka',
+                              fontFamily: 'Nunito',
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                             ),

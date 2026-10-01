@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'screening_screen.dart';
 import 'doctor_screen.dart';
+import 'screening_history_screen.dart';
 import '../widgets/bottom_navigation.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
@@ -29,6 +30,16 @@ class _HomeScreenState extends State<HomeScreen> {
   final Color primaryBrown = const Color(0xFF5A392F);
   final Color accentBrown = const Color(0xFFB9543A);
   final Color purple = const Color(0xFFB5A4E8);
+  final Color brown = const Color(0xFFB05039);
+
+  // ===============================================================
+  // WARNA TEKS
+  // ===============================================================
+
+  static const Color headingDark = Color(0xFF251814);
+  static const Color greetingDark = Color(0xFF4A2119);
+  static const Color greetingBody = Color(0xFF764C43);
+  static const Color bodyText = Color(0xFF6B5147);
 
   String _userName = 'Pengguna';
 
@@ -146,7 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -159,33 +169,39 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 14),
+
               _buildHeader(),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               _buildGreeting(),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
 
-              _buildScreeningCard(),
+              _buildLatestScreeningCard(),
 
-              const SizedBox(height: 27),
+              const SizedBox(height: 22),
+
+              // =====================================================
+              // JUDUL SECTION
+              // =====================================================
 
               const Text(
                 'Apa yang ingin kamu lakukan saat ini?',
                 style: TextStyle(
                   fontFamily: 'Fredoka',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF493028),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
                 ),
               ),
 
-              const SizedBox(height: 17),
+              const SizedBox(height: 15),
 
               _buildQuickActions(),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 26),
 
               _buildArticleSection(),
 
@@ -194,7 +210,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -203,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ===============================================================
-  // HEADER (LOGO + LONCENG + PROFIL)
+  // HEADER
   // ===============================================================
 
   Widget _buildHeader() {
@@ -212,10 +227,6 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // =========================================================
-          // LOGO
-          // =========================================================
-
           Expanded(
             child: Align(
               alignment: Alignment.centerLeft,
@@ -227,17 +238,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // =========================================================
-          // TOMBOL LONCENG NOTIFIKASI
-          // =========================================================
-
           const _NotificationBell(),
 
           const SizedBox(width: 10),
-
-          // =========================================================
-          // PROFILE BUTTON
-          // =========================================================
 
           GestureDetector(
             onTap: () {
@@ -268,146 +271,65 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ===============================================================
-  // GREETING
+  // GREETING CARD
   // ===============================================================
 
   Widget _buildGreeting() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Halo, $_userName! 👋',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontFamily: 'Fredoka',
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF493028),
-          ),
-        ),
-
-        const SizedBox(height: 4),
-
-        const Text(
-          'Jaga kesehatan lambungmu dengan langkah kecil setiap hari.',
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 12,
-            height: 1.3,
-            color: Color(0xFF675B57),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ===============================================================
-  // SCREENING CARD
-  // ===============================================================
-
-  Widget _buildScreeningCard() {
     return Container(
       width: double.infinity,
-      height: 163,
-      decoration: BoxDecoration(
-        color: purple,
-        borderRadius: BorderRadius.circular(20),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 14,
       ),
-      child: Stack(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFEDE3),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 7,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              18,
-              16,
-              130,
-              12,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Skrining Risiko\nGERD',
-                  style: TextStyle(
-                    fontFamily: 'Fredoka',
-                    fontSize: 22,
-                    height: 1.08,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-
-                const SizedBox(height: 7),
-
-                const Text(
-                  'Cek gejala dan kebiasaanmu\ndalam beberapa menit dengan AI',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 11,
-                    height: 1.3,
-                    color: Colors.white,
-                  ),
-                ),
-
-                const Spacer(),
-
-                SizedBox(
-                  height: 35,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const ScreeningScreen(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF8068D3),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 13,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Mulai Cek Sekarang',
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-
-                        SizedBox(width: 6),
-
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 17,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+          const Text(
+            'Halo,',
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+              height: 1.2,
             ),
           ),
 
-          Positioned(
-            right: 2,
-            top: 8,
-            child: Image.asset(
-              'assets/images/screening.png',
-              width: 125,
-              height: 145,
-              fit: BoxFit.contain,
+          const SizedBox(height: 2),
+
+          Text(
+            '$_userName! 👋',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+              height: 1.2,
+            ),
+          ),
+
+          const SizedBox(height: 7),
+
+          const Text(
+            'Bagaimana kondisi lambungmu hari ini?',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
             ),
           ),
         ],
@@ -416,94 +338,530 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ===============================================================
+  // HASIL SKRINING TERAKHIR
+  // ===============================================================
+
+  Widget _buildLatestScreeningCard() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return StreamBuilder<
+        QuerySnapshot<Map<String, dynamic>>>(
+      stream: user == null
+          ? null
+          : FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('screening_history')
+              .orderBy(
+                'createdAt',
+                descending: true,
+              )
+              .limit(1)
+              .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
+          return Container(
+            width: double.infinity,
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 7,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: SizedBox(
+                width: 26,
+                height: 26,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Color(0xFFB9543A),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final documents = snapshot.data?.docs ?? [];
+
+        if (documents.isEmpty) {
+          return _buildNoScreeningCard();
+        }
+
+        return _buildScreeningDataContent(
+          documents.first.data(),
+        );
+      },
+    );
+  }
+
+  // ===============================================================
+  // KARTU BELUM ADA RIWAYAT SKRINING
+  // ===============================================================
+
+  Widget _buildNoScreeningCard() {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ScreeningScreen(),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(
+          16,
+          14,
+          8,
+          14,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 7,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hasil Skrining Terakhir',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  const Text(
+                    'Belum ada hasil skrining',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                      height: 1.15,
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  const Text(
+                    'Lakukan skrining untuk melihat\nkondisi lambungmu di sini.',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      height: 1.35,
+                      color: Colors.black,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _buildBrownButton(
+                    label: 'Mulai Skrining',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const ScreeningScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            Image.asset(
+              'assets/images/mascot_happy.png',
+              width: 92,
+              height: 92,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return const SizedBox(
+                  width: 92,
+                  child: Icon(
+                    Icons.health_and_safety_rounded,
+                    size: 50,
+                    color: Color(0xFFB9543A),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===============================================================
+  // KARTU HASIL SKRINING TERBARU
+  // ===============================================================
+
+  Widget _buildScreeningDataContent(
+    Map<String, dynamic> data,
+  ) {
+    final bool isRisk = data['isRisk'] == true;
+
+    final String status =
+        isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
+
+    final Color statusColor = isRisk
+        ? const Color(0xFFE93636)
+        : const Color(0xFF18865A);
+
+    final String date =
+        _formatHistoryDate(data['createdAt']);
+
+    final String mascot = isRisk
+        ? 'assets/images/stomachy_worried.png'
+        : 'assets/images/mascot_happy.png';
+
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const ScreeningHistoryScreen(),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(
+          16,
+          14,
+          8,
+          14,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 7,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hasil Skrining Terakhir',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 25,
+                        fontWeight: FontWeight.w800,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Text(
+                    date,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF8A7A72),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Image.asset(
+              mascot,
+              width: 100,
+              height: 100,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return const SizedBox(
+                  width: 100,
+                  child: Icon(
+                    Icons.personal_injury_rounded,
+                    size: 55,
+                    color: Color(0xFFB9543A),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===============================================================
+  // TOMBOL COKLAT
+  // ===============================================================
+
+  Widget _buildBrownButton({
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      height: 36,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: accentBrown,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          shadowColor: Colors.black.withOpacity(0.2),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 11.5,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ===============================================================
+  // FORMAT TANGGAL
+  // ===============================================================
+
+  String _formatHistoryDate(dynamic createdAt) {
+    if (createdAt is Timestamp) {
+      final date = createdAt.toDate();
+
+      final day = date.day.toString();
+      final month = _monthName(date.month);
+      final year = date.year.toString();
+
+      return '$day $month $year';
+    }
+
+    return '-';
+  }
+
+  String _monthName(int month) {
+    const months = [
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    return months[month];
+  }
+
+  // ===============================================================
   // QUICK ACTIONS
   // ===============================================================
 
   Widget _buildQuickActions() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildQuickAction(
-          icon: Icons.search_rounded,
-          title: 'Skrining',
-          color: const Color(0xFFB5A4E8),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ScreeningScreen(),
-              ),
-            );
-          },
+        Expanded(
+          child: _buildQuickActionCard(
+            icon: Icons.search_rounded,
+            iconColor: brown,
+            title: 'Skrining',
+            subtitle: 'Cek risiko GERD-mu',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const ScreeningScreen(),
+                ),
+              );
+            },
+          ),
         ),
 
-        _buildQuickAction(
-          icon: Icons.medical_services_outlined,
-          title: 'Konsultasi',
-          color: const Color(0xFFFFC8B7),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const DoctorScreen(),
-              ),
-            );
-          },
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: _buildQuickActionCard(
+            icon: Icons.medical_services_outlined,
+            iconColor: brown,
+            title: 'Konsultasi',
+            subtitle: 'Chat dengan dokter',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const DoctorScreen(),
+                ),
+              );
+            },
+          ),
         ),
 
-        _buildQuickAction(
-          icon: Icons.menu_book_rounded,
-          title: 'Edukasi',
-          color: const Color(0xFFBFE7D8),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const EdukasiScreen(),
-              ),
-            );
-          },
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: _buildQuickActionCard(
+            icon: Icons.menu_book_rounded,
+            iconColor: brown,
+            title: 'Edukasi',
+            subtitle: 'Belajar tentang GERD',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const EdukasiScreen(),
+                ),
+              );
+            },
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildQuickAction({
+  // ===============================================================
+  // QUICK ACTION CARD
+  // ===============================================================
+
+  Widget _buildQuickActionCard({
     required IconData icon,
+    required Color iconColor,
     required String title,
-    required Color color,
+    required String subtitle,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: SizedBox(
-        width: 88,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 26,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 7,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
         child: Column(
           children: [
             Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: color,
+              width: 54,
+              height: 54,
+              decoration: const BoxDecoration(
+                // Background icon dibuat peach supaya
+                // icon brown tetap terlihat jelas.
+                color: Color(0xFFFFE1C8),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 size: 27,
-                color: const Color(0xFF5A392F),
+                color: iconColor,
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 14),
 
             Text(
               title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF493028),
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
+              ),
+            ),
+
+            const SizedBox(height: 5),
+
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 9.5,
+                fontWeight: FontWeight.w400,
+                color: Colors.black,
               ),
             ),
           ],
@@ -524,9 +882,9 @@ class _HomeScreenState extends State<HomeScreen> {
           'Artikel Minggu Ini',
           style: TextStyle(
             fontFamily: 'Fredoka',
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF493028),
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: Colors.black,
           ),
         ),
 
@@ -537,7 +895,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const ArtikelTidurScreen(),
+                builder: (context) =>
+                    const ArtikelTidurScreen(),
               ),
             );
           },
@@ -551,8 +910,8 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(17),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.09),
-                  blurRadius: 5,
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 7,
                   offset: const Offset(0, 3),
                 ),
               ],
@@ -575,8 +934,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 Expanded(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment:
+                        MainAxisAlignment.center,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Tips Tidur Nyenyak untuk Penderita GERD',
@@ -586,8 +947,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontFamily: 'Nunito',
                           fontSize: 13,
                           height: 1.2,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF493028),
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black,
                         ),
                       ),
 
@@ -601,7 +962,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontFamily: 'Nunito',
                           fontSize: 10,
                           height: 1.25,
-                          color: Color(0xFF675B57),
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
                         ),
                       ),
 
@@ -609,23 +971,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Text(
                             'Baca Selengkapnya',
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF8068D3),
+                              fontWeight: FontWeight.w800,
+                              color: brown,
                             ),
                           ),
 
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
 
                           Icon(
                             Icons.arrow_forward_rounded,
                             size: 13,
-                            color: Color(0xFF8068D3),
+                            color: brown,
                           ),
                         ],
                       ),
@@ -643,12 +1005,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // ===============================================================
 // TOMBOL LONCENG NOTIFIKASI
-//
-// Class ini berada DI LUAR class _HomeScreenState (top-level).
-// - Tidak ada yang belum dibaca -> lonceng outline biasa
-// - Ada yang belum dibaca -> lonceng fill + badge merah angka
-// - Data dari penyimpanan lokal, di-refresh otomatis
-//   setiap kali kembali dari halaman notifikasi
 // ===============================================================
 
 class _NotificationBell extends StatefulWidget {
@@ -707,8 +1063,6 @@ class _NotificationBellState
           ),
         );
 
-        // Kembali dari halaman notifikasi ->
-        // hitung ulang badge
         _refreshCount();
       },
       child: Stack(

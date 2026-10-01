@@ -19,7 +19,9 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
   int _selectedIndex = 4;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
-  final Color primaryBrown = const Color(0xFF5A392F);
+
+  // Warna brown utama STOMACHY
+  final Color brown = const Color(0xFFB05039);
 
   // ===============================================================
   // NAVIGATION
@@ -162,7 +164,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                 child: Icon(
                   Icons.arrow_back_rounded,
                   size: 29,
-                  color: Color(0xFF171310),
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -177,9 +179,9 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
               child: Text(
                 'Tentang Stomachy',
                 style: TextStyle(
-                  fontFamily: 'Fredoka',
+                  fontFamily: 'Nunito',
                   fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                   color: Colors.black,
                 ),
               ),
@@ -231,7 +233,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                   child: Icon(
                     Icons.image_not_supported_outlined,
                     size: 45,
-                    color: Color(0xFFB9543A),
+                    color: Color(0xFFB05039),
                   ),
                 ),
               );
@@ -248,7 +250,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
               fontFamily: 'Nunito',
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF30221E),
+              color: Colors.black,
             ),
           ),
 
@@ -282,7 +284,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                 fontSize: 11,
                 height: 1.45,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFF30221E),
+                color: Colors.black,
               ),
             ),
           ),
@@ -359,7 +361,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                 fontSize: 11,
                 height: 1.45,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFF30221E),
+                color: Colors.black,
               ),
             ),
           ),
@@ -394,7 +396,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           child: Icon(
             icon,
             size: 20,
-            color: const Color(0xFF705044),
+            color: brown,
           ),
         ),
 
@@ -413,8 +415,8 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                 style: const TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF30221E),
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
                 ),
               ),
 
@@ -427,7 +429,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                   fontSize: 11,
                   height: 1.35,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF493C37),
+                  color: Colors.black,
                 ),
               ),
             ],

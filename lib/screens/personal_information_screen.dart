@@ -39,6 +39,7 @@ class _PersonalInformationScreenState
   final TextEditingController birthController = TextEditingController();
   final TextEditingController genderController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  final Color brown = const Color(0xFFB05039);
 
   bool _isLoading = true;
   bool _isSaving = false;
@@ -190,7 +191,7 @@ class _PersonalInformationScreenState
                 const Text(
                   'Ubah Foto Profil',
                   style: TextStyle(
-                    fontFamily: 'Fredoka',
+                    fontFamily: 'Nunito',
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF5A392F),
@@ -961,7 +962,7 @@ class _PersonalInformationScreenState
       child: ElevatedButton(
         onPressed: _isSaving ? null : _saveUserData,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFB9543A),
+          backgroundColor: brown,
           foregroundColor: Colors.white,
           disabledBackgroundColor: const Color(0xFFB9543A),
           disabledForegroundColor: Colors.white,

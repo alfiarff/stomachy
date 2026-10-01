@@ -135,30 +135,11 @@ class _FoodRecommendationScreenState
               const SizedBox(height: 24),
 
               // ===================================================
-              // JUDUL REKOMENDASI
-              // ===================================================
-
-              const Padding(
-                padding: EdgeInsets.only(left: 3),
-                child: Text(
-                  'Rekomendasi',
-                  style: TextStyle(
-                    fontFamily: 'Fredoka',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFFB9543A),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 13),
-
-              // ===================================================
               // MAKANAN 1
               // ===================================================
 
               _buildFoodCard(
-                imagePath: 'assets/images/karbohidrat.png',
+                imagePath: 'assets/images/makanan_karbohidrat.png',
                 title: 'Oatmeal, Ubi jalar, Roti Gandum',
                 category: 'Karbohidrat',
                 description:
@@ -173,7 +154,7 @@ class _FoodRecommendationScreenState
               // ===================================================
 
               _buildFoodCard(
-                imagePath: 'assets/images/buah.png',
+                imagePath: 'assets/images/makanan_buah.png',
                 title: 'Pisang, Melon, Apel, Pir, Pepaya',
                 category: 'Buah-Buahan',
                 description:
@@ -188,7 +169,7 @@ class _FoodRecommendationScreenState
               // ===================================================
 
               _buildFoodCard(
-                imagePath: 'assets/images/protein.png',
+                imagePath: 'assets/images/makanan_protein.png',
                 title: 'Putih telur, Ayam, Ikan',
                 category: 'Protein',
                 description:
@@ -258,7 +239,7 @@ class _FoodRecommendationScreenState
                   fontFamily: 'Fredoka',
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: primaryBrown,
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -297,7 +278,7 @@ class _FoodRecommendationScreenState
               width: 125,
               height: 115,
               child: Image.asset(
-                'assets/images/gerd_food_banner.png',
+                'assets/images/maskot_makan.png',
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return const Center(
@@ -331,7 +312,7 @@ class _FoodRecommendationScreenState
                     const Text(
                       'Makanan Sehat Untuk',
                       style: TextStyle(
-                        fontFamily: 'Fredoka',
+                        fontFamily: 'Nunito',
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFFB9543A),
@@ -341,7 +322,7 @@ class _FoodRecommendationScreenState
                     const Text(
                       'Penderita GERD',
                       style: TextStyle(
-                        fontFamily: 'Fredoka',
+                        fontFamily: 'Nunito',
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFFB9543A),

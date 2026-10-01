@@ -14,12 +14,101 @@ class ApaItuGerdScreen extends StatefulWidget {
   State<ApaItuGerdScreen> createState() => _ApaItuGerdScreenState();
 }
 
-class _ApaItuGerdScreenState extends State<ApaItuGerdScreen> {
+// =====================================================================
+// MODEL SEKSI INFORMASI
+// =====================================================================
+
+class _InfoSection {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBackground;
+  final String title;
+  final List<String> points;
+
+  const _InfoSection({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBackground,
+    required this.title,
+    required this.points,
+  });
+}
+
+class _ApaItuGerdScreenState
+    extends State<ApaItuGerdScreen> {
   int _selectedIndex = 3;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color primaryBrown = const Color(0xFF493028);
-  final Color accentBrown = const Color(0xFFB65339);
+
+  // ===============================================================
+  // STATUS CARD MANA YANG SEDANG DIBUKA
+  //
+  // "Penyebab GERD" dibuka secara default (sesuai desain).
+  // Setiap kali card dipencet, kontennya muncul/hilang
+  // dengan animasi.
+  // ===============================================================
+
+  final Set<String> _expandedSections = {
+    'Penyebab GERD',
+  };
+
+  // ===============================================================
+  // DATA SEMUA SEKSI
+  // ===============================================================
+
+  static const List<_InfoSection> _sections = [
+    _InfoSection(
+      icon: Icons.warning_amber_rounded,
+      iconColor: Color(0xFFE8804C),
+      iconBackground: Color(0xFFFFE9DC),
+      title: 'Penyebab GERD',
+      points: [
+        'Otot cincin di ujung bawah kerongkongan (sfingter '
+            'esofagus bagian bawah) melemah atau relaksasi tidak '
+            'tepat, sehingga asam lambung mudah naik kembali.',
+        'Makanan pemicu: makanan asam, pedas, dan berkafein.',
+        'Kebiasaan buruk seperti langsung tidur setelah makan.',
+      ],
+    ),
+
+    _InfoSection(
+      icon: Icons.health_and_safety_outlined,
+      iconColor: Color(0xFF7B6BD0),
+      iconBackground: Color(0xFFEDE9FB),
+      title: 'Gejala Umum',
+      points: [
+        'Rasa terbakar di dada (heartburn)',
+        'Rasa asam di mulut',
+        'Mual atau begah',
+        'Batuk kronis atau suara serak',
+        'Nyeri saat menelan',
+      ],
+    ),
+
+    _InfoSection(
+      icon: Icons.shield_outlined,
+      iconColor: Color(0xFF5A9FE0),
+      iconBackground: Color(0xFFE3EEFC),
+      title: 'Dampak Jika Tidak Ditangani',
+      points: [
+        'Munculnya gejala lanjutan terkait komplikasi GERD.',
+        'Berisiko mengalami masalah kesehatan serius lainnya.',
+      ],
+    ),
+
+    _InfoSection(
+      icon: Icons.lightbulb_outline_rounded,
+      iconColor: Color(0xFF4AA978),
+      iconBackground: Color(0xFFDFF2E7),
+      title: 'Kapan Harus ke Dokter?',
+      points: [
+        'Gejala GERD terjadi lebih dari 2 kali seminggu.',
+        'Gejala semakin parah dan mengganggu aktivitas '
+            'sehari-hari.',
+      ],
+    ),
+  ];
 
   // ===============================================================
   // NAVIGATION
@@ -121,7 +210,7 @@ class _ApaItuGerdScreenState extends State<ApaItuGerdScreen> {
 
               _buildHeroImage(),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
               // =====================================================
               // JUDUL
@@ -137,107 +226,57 @@ class _ApaItuGerdScreenState extends State<ApaItuGerdScreen> {
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
 
               // =====================================================
               // DESKRIPSI
               // =====================================================
 
-              const Text(
-                'GERD (Gastroesophageal Reflux Disease) adalah kondisi ketika asam '
-                'lambung naik ke kerongkongan secara berulang sehingga '
-                'menyebabkan berbagai gejala yang mengganggu.',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 12,
-                  height: 1.5,
-                  color: Color(0xFF30221E),
-                ),
-              ),
-
-              const SizedBox(height: 13),
-
-              // =====================================================
-              // PENYEBAB GERD
-              // =====================================================
-
-              _buildInfoSection(
-                icon: Icons.sentiment_dissatisfied_outlined,
-                title: 'Penyebab GERD',
-                child: _buildCheckItem(
-                  'Terjadi ketika otot cincin di ujung bawah kerongkongan '
-                  '(sfingter esofagus bagian bawah) melemah atau relaksasi '
-                  'yang tidak tepat, sehingga asam lambung mudah naik kembali '
-                  'ke kerongkongan.',
-                ),
-              ),
-
-              const SizedBox(height: 13),
-
-              // =====================================================
-              // GEJALA UMUM
-              // =====================================================
-
-              _buildInfoSection(
-                icon: Icons.sentiment_satisfied_alt_outlined,
-                title: 'Gejala Umum',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildCheckItem('Rasa terbakar di dada (heartburn)'),
-                    _buildCheckItem('Rasa asam di mulut'),
-                    _buildCheckItem('Mual atau begah'),
-                    _buildCheckItem('Batuk kronis atau suara serak'),
-                    _buildCheckItem('Nyeri saat menelan'),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 13),
-
-              // =====================================================
-              // DAMPAK JIKA TIDAK DITANGANI
-              // =====================================================
-
-              _buildInfoSection(
-                icon: Icons.shield_outlined,
-                title: 'Dampak Jika Tidak Ditangani',
-                child: const Text(
-                  'GERD yang tidak ditangani dapat menyebabkan munculnya '
-                  'gejala lanjutan yang mungkin terjadi terkait dengan komplikasi '
-                  'GERD atau masalah kesehatan serius lainnya.',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    height: 1.3,
-                    color: Color(0xFF30221E),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 13),
-
-              // =====================================================
-              // KAPAN KE DOKTER
-              // =====================================================
-
-              _buildInfoSection(
-                icon: Icons.lightbulb_outline_rounded,
-                title: 'Kapan Harus ke Dokter?',
-                child: const Text(
-                  'Segera konsultasikan dengan dokter jika gejala GERD sering '
-                  'terjadi (lebih dari 2 kali seminggu) atau semakin parah dan '
-                  'mengganggu aktivitas sehari-hari.',
-                  style: TextStyle(
+              Text.rich(
+                TextSpan(
+                  style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 12,
                     height: 1.5,
                     color: Color(0xFF30221E),
                   ),
+                  children: const [
+                    TextSpan(
+                      text:
+                          'GERD adalah kondisi ketika ',
+                    ),
+                    TextSpan(
+                      text: 'asam lambung naik ke '
+                          'kerongkongan',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' secara berulang, '
+                          'menyebabkan iritasi dan rasa '
+                          'tidak nyaman.',
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
+
+              // =====================================================
+              // DAFTAR CARD INFORMASI (EXPANDABLE)
+              // =====================================================
+
+              for (int i = 0;
+                  i < _sections.length;
+                  i++) ...[
+                _buildInfoCard(_sections[i]),
+
+                if (i != _sections.length - 1)
+                  const SizedBox(height: 12),
+              ],
+
+              const SizedBox(height: 16),
 
               // =====================================================
               // INGAT
@@ -289,23 +328,21 @@ class _ApaItuGerdScreenState extends State<ApaItuGerdScreen> {
             ),
           ),
 
-          Expanded(
+          const Expanded(
             child: Center(
               child: Text(
-                'Apa Itu GERD?',
+                'Edukasi',
                 style: TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: primaryBrown,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF171310),
                 ),
               ),
             ),
           ),
 
-          const SizedBox(
-            width: 42,
-          ),
+          const SizedBox(width: 42),
         ],
       ),
     );
@@ -318,104 +355,212 @@ class _ApaItuGerdScreenState extends State<ApaItuGerdScreen> {
   Widget _buildHeroImage() {
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 170,
       decoration: BoxDecoration(
         color: const Color(0xFFFFE7D8),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(18),
         child: Image.asset(
           'assets/images/apa_itu_gerd.png',
           fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Text(
+                '🤔',
+                style: TextStyle(
+                  fontSize: 60,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
   // ===============================================================
-  // INFORMATION SECTION
+  // CARD INFORMASI (EXPANDABLE)
+  //
+  // - Dalam keadaan tertutup: ikon + judul + "N poin" + chevron
+  // - Dipencet: konten bullet muncul dengan animasi
   // ===============================================================
 
-  Widget _buildInfoSection({
-    required IconData icon,
-    required String title,
-    required Widget child,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ICON
-        Container(
-          width: 31,
-          height: 31,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFDEC8),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            size: 17,
-            color: accentBrown,
-          ),
-        ),
+  Widget _buildInfoCard(_InfoSection section) {
+    final bool isExpanded =
+        _expandedSections.contains(section.title);
 
-        const SizedBox(width: 9),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // ======================================================
+          // BARIS JUDUL (SELALU TERLIHAT, BISA DIPENCET)
+          // ======================================================
 
-        // CONTENT
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF171310),
-                ),
+          InkWell(
+            onTap: () {
+              setState(() {
+                if (isExpanded) {
+                  _expandedSections
+                      .remove(section.title);
+                } else {
+                  _expandedSections
+                      .add(section.title);
+                }
+              });
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                14,
+                13,
+                12,
+                13,
               ),
+              child: Row(
+                children: [
+                  // ICON
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: section.iconBackground,
+                      borderRadius:
+                          BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      section.icon,
+                      size: 19,
+                      color: section.iconColor,
+                    ),
+                  ),
 
-              const SizedBox(height: 2),
+                  const SizedBox(width: 12),
 
-              child,
-            ],
+                  // JUDUL
+                  Expanded(
+                    child: Text(
+                      section.title,
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF171310),
+                      ),
+                    ),
+                  ),
+
+                  // JUMLAH POIN
+                  Text(
+                    '${section.points.length} poin',
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF9A8F89),
+                    ),
+                  ),
+
+                  const SizedBox(width: 4),
+
+                  // CHEVRON (BERPUTAR SAAT DIBUKA)
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(
+                      milliseconds: 250,
+                    ),
+                    child: const Icon(
+                      Icons
+                          .keyboard_arrow_down_rounded,
+                      size: 22,
+                      color: Color(0xFF9A8F89),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ],
+
+          // ======================================================
+          // KONTEN (MUNCUL/HILANG DENGAN ANIMASI)
+          // ======================================================
+
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 250),
+            sizeCurve: Curves.easeOut,
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox(
+              width: double.infinity,
+            ),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                14,
+                0,
+                16,
+                14,
+              ),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  for (final point in section.points)
+                    _buildBulletItem(point),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   // ===============================================================
-  // CHECK ITEM
+  // BULLET ITEM
   // ===============================================================
 
-  Widget _buildCheckItem(String text) {
+  Widget _buildBulletItem(String text) {
     return Padding(
       padding: const EdgeInsets.only(
-        bottom: 2,
+        left: 44,
+        bottom: 7,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '◉',
-            style: TextStyle(
-              fontSize: 10,
-              color: Color(0xFFB65339),
+          Container(
+            width: 5,
+            height: 5,
+            margin: const EdgeInsets.only(top: 6),
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              shape: BoxShape.circle,
             ),
           ),
 
-          const SizedBox(width: 5),
+          const SizedBox(width: 8),
 
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 12,
-                height: 1.35,
+                fontSize: 11,
+                height: 1.4,
                 color: Color(0xFF30221E),
               ),
             ),
@@ -449,20 +594,20 @@ class _ApaItuGerdScreenState extends State<ApaItuGerdScreen> {
             'Ingat!',
             style: TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
               color: Color(0xFF171310),
             ),
           ),
 
-          SizedBox(height: 2),
+          SizedBox(height: 3),
 
           Text(
             'GERD dapat dikendalikan dengan perubahan gaya hidup sehat '
             'dan pengobatan yang tepat.',
             style: TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 14,
+              fontSize: 11,
               height: 1.4,
               color: Color(0xFF30221E),
             ),

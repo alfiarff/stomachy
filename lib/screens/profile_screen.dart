@@ -38,6 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color primaryBrown = const Color(0xFF5A392F);
   final Color softOrange = const Color(0xFFFFE3D1);
+  final Color brown = const Color(0xFFB05039);
 
   // ===============================================================
   // BUILD
@@ -290,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF30221E),
+                      color: Colors.black,
                     ),
                   ),
 
@@ -303,7 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
-                      color: Color(0xFF493C37),
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -330,18 +331,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           base64Decode(photoBase64),
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return const Icon(
+            return Icon(
               Icons.person,
               size: 38,
-              color: Color(0xFF777777),
+              color: brown,
             );
           },
         );
       } catch (e) {
-        return const Icon(
+        return Icon(
           Icons.person,
           size: 38,
-          color: Color(0xFF777777),
+          color: brown,
         );
       }
     }
@@ -352,20 +353,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         googlePhotoUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(
+          return Icon(
             Icons.person,
             size: 38,
-            color: Color(0xFF777777),
+            color: brown,
           );
         },
       );
     }
 
     // 3. Default
-    return const Icon(
+    return Icon(
       Icons.person,
       size: 38,
-      color: Color(0xFF777777),
+      color: brown,
     );
   }
 
@@ -557,7 +558,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Icon(
                 icon,
                 size: 21,
-                color: const Color(0xFF705044),
+                color: brown,
               ),
             ),
 
@@ -576,11 +577,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: primaryBrown,
+                      color: Colors.black,
                     ),
                   ),
 
@@ -593,7 +594,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
-                      color: Color(0xFF776C67),
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -609,7 +610,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const Icon(
               Icons.chevron_right_rounded,
               size: 23,
-              color: Color(0xFF222222),
+              color: Colors.black,
             ),
           ],
         ),
@@ -624,37 +625,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildLogoutButton() {
     return SizedBox(
       width: double.infinity,
-      height: 53,
-      child: OutlinedButton(
+      height: 50,
+      child: ElevatedButton(
         onPressed: () {
           _showLogoutDialog();
         },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFEEE5),
-          side: const BorderSide(
-            color: Color(0xFFFF806A),
-            width: 0.9,
-          ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: brown,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shadowColor: Colors.black.withOpacity(0.25),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(17),
+            borderRadius: BorderRadius.circular(25),
           ),
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(
               Icons.logout_rounded,
-              size: 18,
-              color: Color(0xFFB9543A),
+              size: 19,
+              color: Colors.white,
             ),
             SizedBox(width: 8),
             Text(
               'Keluar',
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFFB9543A),
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
               ),
             ),
           ],
@@ -701,7 +701,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     fontFamily: 'Nunito',
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFFB9543A),
+                    color: Colors.black,
                   ),
                 ),
 
@@ -713,7 +713,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 11,
-                    color: Color(0xFF493C37),
+                    color: Colors.black,
                   ),
                 ),
 
@@ -730,8 +730,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.zero,
-                            side: const BorderSide(
-                              color: Color(0xFFB9543A),
+                            side: BorderSide(
+                              color: brown,
                               width: 0.8,
                             ),
                             shape: RoundedRectangleBorder(
@@ -739,13 +739,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   BorderRadius.circular(7),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Batal',
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFFB9543A),
+                              color: brown,
                             ),
                           ),
                         ),
@@ -775,8 +775,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color(0xFFB9543A),
+                            backgroundColor: brown,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             padding: EdgeInsets.zero,

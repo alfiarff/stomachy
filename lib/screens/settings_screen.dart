@@ -30,8 +30,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ===============================================================
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
-  final Color primaryBrown = const Color(0xFF5A392F);
-  final Color accentBrown = const Color(0xFFB9543A);
+
+  // Brown utama STOMACHY
+  final Color brown = const Color(0xFFB05039);
 
   // ===============================================================
   // STATUS TOGGLE
@@ -235,11 +236,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+
       body: SafeArea(
         child: _isLoading
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xFFB9543A),
+                  color: brown,
                 ),
               )
             : SingleChildScrollView(
@@ -281,7 +283,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 10),
 
-                    // NOTIFIKASI APLIKASI + SUB-ITEM
                     _buildNotificationAppCard(),
 
                     const SizedBox(height: 10),
@@ -362,7 +363,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Icon(
                   Icons.arrow_back_rounded,
                   size: 29,
-                  color: Color(0xFF171310),
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -379,7 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                   color: Colors.black,
                 ),
               ),
@@ -408,8 +409,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       style: const TextStyle(
         fontFamily: 'Nunito',
         fontSize: 12,
-        fontWeight: FontWeight.w700,
-        color: Color(0xFF30221E),
+        fontWeight: FontWeight.w800,
+        color: Colors.black,
       ),
     );
   }
@@ -459,11 +460,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: Color(0xFFFFE8D8),
                 shape: BoxShape.circle,
               ),
-              child: const Center(
+              child: Center(
                 child: Icon(
                   BootstrapIcons.lock,
                   size: 19,
-                  color: Color(0xFFB9543A),
+                  color: brown,
                 ),
               ),
             ),
@@ -484,8 +485,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF30221E),
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
                     ),
                   ),
 
@@ -498,7 +499,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       fontSize: 11,
                       height: 1.2,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF493C37),
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -509,10 +510,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // CHEVRON
             // =====================================================
 
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 25,
-              color: Color(0xFFB9543A),
+              color: brown,
             ),
           ],
         ),
@@ -559,11 +560,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   color: Color(0xFFFFE8D8),
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     BootstrapIcons.bell,
                     size: 19,
-                    color: Color(0xFFB9543A),
+                    color: brown,
                   ),
                 ),
               ),
@@ -579,8 +580,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF30221E),
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black,
                       ),
                     ),
 
@@ -593,7 +594,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         fontSize: 11,
                         height: 1.2,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF493C37),
+                        color: Colors.black,
                       ),
                     ),
                   ],
@@ -727,7 +728,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Icon(
             icon,
             size: 17,
-            color: accentBrown,
+            color: brown,
           ),
         ),
 
@@ -747,7 +748,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   fontFamily: 'Nunito',
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF30221E),
+                  color: Colors.black,
                 ),
               ),
 
@@ -760,7 +761,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   fontSize: 10,
                   height: 1.2,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF776C67),
+                  color: Colors.black,
                 ),
               ),
             ],
@@ -827,7 +828,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Icon(
                 icon,
                 size: 19,
-                color: accentBrown,
+                color: brown,
               ),
             ),
           ),
@@ -848,8 +849,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF30221E),
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
                   ),
                 ),
 
@@ -862,7 +863,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     fontSize: 11,
                     height: 1.2,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFF493C37),
+                    color: Colors.black,
                   ),
                 ),
               ],
@@ -885,7 +886,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ===============================================================
   // CUSTOM SWITCH
   //
-  // ON  -> track coklat, thumb putih
+  // ON  -> track brown, thumb putih
   // OFF -> track abu terang, thumb putih
   // ===============================================================
 
@@ -909,7 +910,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
           color: value
-              ? accentBrown
+              ? brown
               : const Color(0xFFE5DDD8),
           borderRadius: BorderRadius.circular(20),
         ),

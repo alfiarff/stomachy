@@ -118,20 +118,26 @@ class ScreeningKondisi extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ==================================================
                   // JUDUL CARD
+                  // ==================================================
+
                   Text(
                     title,
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       color: Colors.black,
                     ),
                   ),
 
                   const SizedBox(height: 3),
 
+                  // ==================================================
                   // ISI / PENJELASAN
+                  // ==================================================
+
                   Text(
                     question,
                     maxLines: 2,
@@ -139,6 +145,7 @@ class ScreeningKondisi extends StatelessWidget {
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
+                      fontWeight: FontWeight.w400,
                       height: 1.15,
                       color: Color(0xFF766D68),
                     ),
@@ -221,7 +228,7 @@ class ScreeningKondisi extends StatelessWidget {
             fontFamily: 'Nunito',
             fontSize: 10,
             fontWeight: selected
-                ? FontWeight.w600
+                ? FontWeight.w700
                 : FontWeight.w400,
             color: Colors.black,
           ),

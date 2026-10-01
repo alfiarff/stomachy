@@ -57,13 +57,8 @@ class _ChangePasswordScreenState
 
   final Color cardColor = const Color(0xFFFFE9DC);
 
-  final Color primaryBrown = const Color(0xFFB3543A);
-
-  final Color textColor = const Color(0xFF171310);
-
-  final Color borderColor = const Color(0xFFFF806A);
-
-  final Color placeholderColor = const Color(0xFF8A7B75);
+  // Brown utama STOMACHY
+  final Color brown = const Color(0xFFB05039);
 
   // ===============================================================
   // DISPOSE
@@ -155,14 +150,12 @@ class _ChangePasswordScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-
           padding: const EdgeInsets.fromLTRB(
             22,
             12,
             22,
             105,
           ),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -285,7 +278,6 @@ class _ChangePasswordScreenState
   Widget _buildHeader() {
     return SizedBox(
       height: 42,
-
       child: Row(
         children: [
           // =========================================================
@@ -296,18 +288,15 @@ class _ChangePasswordScreenState
             onTap: () {
               Navigator.pop(context);
             },
-
             child: const SizedBox(
               width: 45,
               height: 42,
-
               child: Align(
                 alignment: Alignment.centerLeft,
-
                 child: Icon(
                   Icons.arrow_back_rounded,
                   size: 29,
-                  color: Color(0xFF171310),
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -321,12 +310,11 @@ class _ChangePasswordScreenState
             child: Center(
               child: Text(
                 'Ubah Kata Sandi',
-
                 style: TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF171310),
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -356,10 +344,8 @@ class _ChangePasswordScreenState
         horizontal: 14,
         vertical: 10,
       ),
-
       child: SizedBox(
         height: 132,
-
         child: Row(
           children: [
             // =======================================================
@@ -367,23 +353,20 @@ class _ChangePasswordScreenState
             // =======================================================
 
             SizedBox(
-              width: 105,
-              height: 105,
-
+              width: 120,
+              height: 120,
               child: Image.asset(
                 'assets/images/password_lock.png',
-
                 fit: BoxFit.contain,
-
                 errorBuilder: (
                   context,
                   error,
                   stackTrace,
                 ) {
-                  return const Icon(
+                  return Icon(
                     Icons.lock_outline_rounded,
                     size: 70,
-                    color: Color(0xFFFFA04D),
+                    color: brown,
                   );
                 },
               ),
@@ -399,16 +382,14 @@ class _ChangePasswordScreenState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
                   Text(
                     'Jaga keamanan akunmu',
-
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF171310),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
                     ),
                   ),
 
@@ -418,13 +399,12 @@ class _ChangePasswordScreenState
                     'Gunakan kata sandi yang kuat '
                     'dan jangan bagikan dengan '
                     'siapa pun.',
-
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
                       height: 1.35,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF30221E),
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -443,26 +423,21 @@ class _ChangePasswordScreenState
   Widget _buildSuccessMessage() {
     return Container(
       width: double.infinity,
-
       padding: const EdgeInsets.symmetric(
         horizontal: 13,
         vertical: 12,
       ),
-
       decoration: BoxDecoration(
         color: const Color(0xFFBFE3B6),
-
         borderRadius: BorderRadius.circular(10),
       ),
-
       child: const Text(
         'Kata sandi anda berhasil diubah!',
-
         style: TextStyle(
           fontFamily: 'Nunito',
           fontSize: 11,
           fontWeight: FontWeight.w400,
-          color: Color(0xFF253B22),
+          color: Colors.black,
         ),
       ),
     );
@@ -481,7 +456,6 @@ class _ChangePasswordScreenState
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-
       children: [
         // ===========================================================
         // LABEL
@@ -489,12 +463,11 @@ class _ChangePasswordScreenState
 
         Text(
           label,
-
           style: const TextStyle(
             fontFamily: 'Nunito',
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF171310),
+            color: Colors.black,
           ),
         ),
 
@@ -506,18 +479,21 @@ class _ChangePasswordScreenState
 
         Container(
           height: 56,
-
           decoration: BoxDecoration(
             color: const Color(0xFFFFFCF9),
-
             borderRadius: BorderRadius.circular(15),
 
-            border: Border.all(
-              color: borderColor,
-              width: 1,
-            ),
+            // Tidak menggunakan Border.all.
+            // Input dibuat shadow-only agar tidak terlihat seperti
+            // card yang memiliki stroke.
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-
           child: Row(
             children: [
               // =====================================================
@@ -526,10 +502,10 @@ class _ChangePasswordScreenState
 
               const SizedBox(width: 18),
 
-              const Icon(
+              Icon(
                 Icons.lock_outline_rounded,
                 size: 18,
-                color: Color(0xFF171310),
+                color: brown,
               ),
 
               const SizedBox(width: 20),
@@ -541,30 +517,28 @@ class _ChangePasswordScreenState
               Expanded(
                 child: TextField(
                   controller: controller,
-
                   obscureText: obscureText,
-
                   style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 11,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFF30221E),
+                    color: Colors.black,
                   ),
-
-                  cursorColor: primaryBrown,
-
+                  cursorColor: brown,
                   decoration: InputDecoration(
                     hintText: hint,
-
                     hintStyle: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
                       color: Color(0xFF8A7B75),
                     ),
-
                     border: InputBorder.none,
-
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
                     isCollapsed: true,
                   ),
                 ),
@@ -576,20 +550,16 @@ class _ChangePasswordScreenState
 
               GestureDetector(
                 onTap: onVisibilityTap,
-
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 17,
                   ),
-
                   child: Icon(
                     obscureText
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined,
-
                     size: 19,
-
-                    color: const Color(0xFF171310),
+                    color: brown,
                   ),
                 ),
               ),
@@ -607,26 +577,20 @@ class _ChangePasswordScreenState
   Widget _buildSaveButton() {
     return GestureDetector(
       onTap: _isLoading ? null : _changePassword,
-
       child: Container(
         width: double.infinity,
-
         height: 50,
-
         decoration: BoxDecoration(
-          color: primaryBrown,
-
+          color: brown,
           borderRadius: BorderRadius.circular(28),
-
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x40000000),
-              blurRadius: 3,
-              offset: Offset(0, 3),
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-
         child: Center(
           child: _isLoading
               ? const SizedBox(
@@ -639,7 +603,6 @@ class _ChangePasswordScreenState
                 )
               : const Text(
                   'Simpan Kata Sandi',
-
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 12,
@@ -661,35 +624,28 @@ class _ChangePasswordScreenState
       onTap: () {
         Navigator.pop(context);
       },
-
       child: Container(
         width: double.infinity,
-
         height: 50,
-
         decoration: BoxDecoration(
           color: const Color(0xFFFFE6D5),
-
           borderRadius: BorderRadius.circular(28),
-
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x35000000),
-              blurRadius: 3,
-              offset: Offset(0, 3),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-
         child: const Center(
           child: Text(
             'Batal',
-
             style: TextStyle(
               fontFamily: 'Nunito',
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Color(0xFFB3543A),
+              color: Color(0xFFB05039),
             ),
           ),
         ),
@@ -828,8 +784,7 @@ class _ChangePasswordScreenState
       switch (e.code) {
         case 'wrong-password':
         case 'invalid-credential':
-          message =
-              'Kata sandi saat ini salah.';
+          message = 'Kata sandi saat ini salah.';
           break;
 
         case 'requires-recent-login':
@@ -838,18 +793,15 @@ class _ChangePasswordScreenState
           break;
 
         case 'weak-password':
-          message =
-              'Kata sandi baru terlalu lemah.';
+          message = 'Kata sandi baru terlalu lemah.';
           break;
 
         case 'user-disabled':
-          message =
-              'Akun ini sedang dinonaktifkan.';
+          message = 'Akun ini sedang dinonaktifkan.';
           break;
 
         case 'network-request-failed':
-          message =
-              'Tidak dapat terhubung ke internet.';
+          message = 'Tidak dapat terhubung ke internet.';
           break;
 
         default:

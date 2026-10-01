@@ -21,7 +21,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   int _selectedIndex = 4;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
-  final Color primaryBrown = const Color(0xFF5A392F);
+
+  // Warna brown utama Stomachy
+  final Color brown = const Color(0xFFB05039);
 
   // ===============================================================
   // NAVIGATION
@@ -181,11 +183,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
             child: Center(
               child: Text(
                 'Riwayat',
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: primaryBrown,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -233,7 +235,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: Icon(
                 icon,
                 size: 29,
-                color: const Color(0xFFB65339),
+                color: brown,
               ),
             ),
 
@@ -250,11 +252,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: primaryBrown,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
                     ),
                   ),
 
@@ -267,7 +269,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
-                      color: Color(0xFF776C67),
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
                       height: 1.25,
                     ),
                   ),
@@ -279,10 +282,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
             // ARROW
             // =====================================================
 
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 28,
-              color: Colors.black,
+              color: brown,
             ),
           ],
         ),

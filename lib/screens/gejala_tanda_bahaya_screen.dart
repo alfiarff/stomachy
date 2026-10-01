@@ -15,33 +15,98 @@ class GejalaTandaBahayaScreen extends StatefulWidget {
       _GejalaTandaBahayaScreenState();
 }
 
+// =====================================================================
+// MODEL SEKSI INFORMASI
+// =====================================================================
+
+class _InfoSection {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBackground;
+  final String title;
+  final List<String> points;
+
+  const _InfoSection({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBackground,
+    required this.title,
+    required this.points,
+  });
+}
+
 class _GejalaTandaBahayaScreenState
     extends State<GejalaTandaBahayaScreen> {
-  // ===============================================================
-  // INDEX BOTTOM NAVIGATION
-  // ===============================================================
-
   int _selectedIndex = 3;
 
-  // ===============================================================
-  // WARNA
-  // ===============================================================
-
   final Color backgroundColor = const Color(0xFFFFF5EF);
+  final Color primaryBrown = const Color(0xFF493028);
 
-  final Color cardColor = const Color(0xFFFFFCF9);
+  final Set<String> _expandedSections = {
+    'Gejala Umum',
+  };
 
-  final Color primaryRed = const Color(0xFFB9543A);
+  // ===============================================================
+  // DATA SEMUA SEKSI
+  // ===============================================================
 
-  final Color darkText = const Color(0xFF30221E);
+  static const List<_InfoSection> _sections = [
+    _InfoSection(
+      icon: Icons.sentiment_satisfied_alt_outlined,
+      iconColor: Color(0xFF7B6BD0),
+      iconBackground: Color(0xFFEDE9FB),
+      title: 'Gejala Umum',
+      points: [
+        'Rasa terbakar di dada (heartburn)',
+        'Rasa asam di mulut',
+        'Mual atau begah',
+        'Batuk kronis atau suara serak',
+        'Nyeri saat menelan',
+      ],
+    ),
 
-  final Color secondaryText = const Color(0xFF493C37);
+    _InfoSection(
+      icon: Icons.warning_amber_rounded,
+      iconColor: Color(0xFFE8804C),
+      iconBackground: Color(0xFFFFE9DC),
+      title: 'Gejala yang Perlu Diwaspadai',
+      points: [
+        'Nyeri dada yang berat atau menetap',
+        'Sulit atau nyeri saat menelan',
+        'Makanan terasa tersangkut saat ditelan',
+        'Muntah berulang',
+        'Berat badan turun tanpa sebab yang jelas',
+        'Muntah darah atau BAB berwarna hitam',
+      ],
+    ),
 
-  final Color peachColor = const Color(0xFFFFE4D1);
+    _InfoSection(
+      icon: Icons.shield_outlined,
+      iconColor: Color(0xFF5A9FE0),
+      iconBackground: Color(0xFFE3EEFC),
+      title: 'Jangan Abaikan Gejala',
+      points: [
+        'Gejala yang sering muncul dapat menjadi tanda bahwa kamu '
+            'perlu mendapatkan pemeriksaan. Catat frekuensi dan kondisi '
+            'saat gejala muncul agar lebih mudah menjelaskannya kepada '
+            'dokter.',
+      ],
+    ),
 
-  final Color lightPeach = const Color(0xFFFFE9D9);
-
-  final Color borderColor = const Color(0xFFFF806A);
+    _InfoSection(
+      icon: Icons.lightbulb_outline_rounded,
+      iconColor: Color(0xFF4AA978),
+      iconBackground: Color(0xFFDFF2E7),
+      title: 'Data Prevalensi di Indonesia',
+      points: [
+        'GERD adalah kondisi umum di seluruh dunia. Di Indonesia, '
+            'diperkirakan sekitar 274.496 orang menderita GERD pada '
+            'tahun 2021. Namun, tidak ada statistik nasional, dengan '
+            'angka kematian yang sangat rendah, sekitar 0,02–0,20 per '
+            '100.000 orang.',
+      ],
+    ),
+  ];
 
   // ===============================================================
   // NAVIGATION
@@ -51,10 +116,6 @@ class _GejalaTandaBahayaScreenState
     if (index == _selectedIndex) {
       return;
     }
-
-    // =============================================================
-    // BERANDA
-    // =============================================================
 
     if (index == 0) {
       Navigator.pushReplacement(
@@ -66,10 +127,6 @@ class _GejalaTandaBahayaScreenState
       return;
     }
 
-    // =============================================================
-    // SKRINING
-    // =============================================================
-
     if (index == 1) {
       Navigator.pushReplacement(
         context,
@@ -79,10 +136,6 @@ class _GejalaTandaBahayaScreenState
       );
       return;
     }
-
-    // =============================================================
-    // DOKTER
-    // =============================================================
 
     if (index == 2) {
       Navigator.pushReplacement(
@@ -94,10 +147,6 @@ class _GejalaTandaBahayaScreenState
       return;
     }
 
-    // =============================================================
-    // EDUKASI
-    // =============================================================
-
     if (index == 3) {
       Navigator.pushReplacement(
         context,
@@ -107,10 +156,6 @@ class _GejalaTandaBahayaScreenState
       );
       return;
     }
-
-    // =============================================================
-    // PROFIL
-    // =============================================================
 
     if (index == 4) {
       Navigator.pushReplacement(
@@ -135,165 +180,89 @@ class _GejalaTandaBahayaScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-
           padding: const EdgeInsets.fromLTRB(
-            22,
-            12,
-            22,
+            27,
+            5,
+            27,
             105,
           ),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // =====================================================
-              // HEADER
-              // =====================================================
-
               _buildHeader(),
 
-              const SizedBox(height: 20),
-
-              // =====================================================
-              // GAMBAR UTAMA
-              // =====================================================
+              const SizedBox(height: 8),
 
               _buildHeroImage(),
 
-              const SizedBox(height: 17),
-
-              // =====================================================
-              // JUDUL
-              // =====================================================
+              const SizedBox(height: 14),
 
               const Text(
-                'Lebih lanjut tentang GERD',
-                style: TextStyle(
-                  fontFamily: 'Fredoka',
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF171310),
-                  height: 1.2,
-                ),
-              ),
-
-              const SizedBox(height: 5),
-
-              // =====================================================
-              // DESKRIPSI
-              // =====================================================
-
-              const Text(
-                'Kenali gejala GERD dan tanda bahaya yang perlu '
-                'diperhatikan agar kamu dapat mengetahui kapan '
-                'keluhan masih dapat ditangani dan kapan perlu '
-                'mendapatkan pemeriksaan dokter.',
-                textAlign: TextAlign.justify,
+                'Gejala & Tanda Bahaya (Red Flags)',
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF30221E),
-                  height: 1.35,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF171310),
                 ),
               ),
 
-              const SizedBox(height: 13),
+              const SizedBox(height: 6),
 
-              // =====================================================
-              // GEJALA UMUM
-              // =====================================================
-
-              _buildInfoSection(
-                icon: Icons.sentiment_satisfied_alt_outlined,
-                iconColor: const Color(0xFFB9543A),
-                title: 'Gejala Umum',
-                child: _buildChecklist(
-                  items: [
-                    'Rasa terbakar di dada (heartburn)',
-                    'Rasa asam di mulut',
-                    'Mual atau begah',
-                    'Batuk kronis atau suara serak',
-                    'Nyeri saat menelan',
+              Text.rich(
+                TextSpan(
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    height: 1.5,
+                    color: Color(0xFF30221E),
+                  ),
+                  children: const [
+                    TextSpan(
+                      text: 'Kenali gejala GERD dan ',
+                    ),
+                    TextSpan(
+                      text: 'tanda bahaya',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' yang perlu diperhatikan agar kamu '
+                          'dapat mengetahui kapan keluhan masih dapat '
+                          'ditangani dan kapan perlu mendapatkan '
+                          'pemeriksaan dokter.',
+                    ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
 
-              // =====================================================
-              // GEJALA YANG PERLU DIWASPADAI
-              // =====================================================
+              for (int i = 0;
+                  i < _sections.length;
+                  i++) ...[
+                _buildInfoCard(_sections[i]),
 
-              _buildInfoSection(
-                icon: Icons.sentiment_dissatisfied_outlined,
-                iconColor: const Color(0xFFB9543A),
-                title: 'Gejala yang Perlu Diwaspadai',
-                child: _buildChecklist(
-                  items: [
-                    'Nyeri dada yang berat atau menetap',
-                    'Sulit atau nyeri saat menelan',
-                    'Makanan terasa tersangkut saat ditelan',
-                    'Muntah berulang',
-                    'Berat badan turun tanpa sebab yang jelas',
-                    'Muntah darah atau BAB berwarna hitam',
-                  ],
-                ),
+                if (i != _sections.length - 1)
+                  const SizedBox(height: 12),
+              ],
+
+              const SizedBox(height: 16),
+
+              _buildRememberBox(
+                text:
+                    'Mengenali gejala sejak awal dapat membantu kamu '
+                    'menentukan langkah yang tepat. Jika muncul tanda '
+                    'bahaya, jangan menunda untuk mencari pertolongan '
+                    'medis.',
               ),
 
-              const SizedBox(height: 10),
-
-              // =====================================================
-              // JANGAN ABAIKAN GEJALA
-              // =====================================================
-
-              _buildInfoSection(
-                icon: Icons.shield_outlined,
-                iconColor: const Color(0xFFB9543A),
-                title: 'Jangan Abaikan Gejala',
-                description:
-                    'Gejala yang sering muncul dapat menjadi tanda '
-                    'bahwa kamu perlu mendapatkan pemeriksaan. Catat '
-                    'frekuensi dan kondisi saat gejala muncul agar '
-                    'lebih mudah menjelaskannya kepada dokter.',
-              ),
-
-              const SizedBox(height: 10),
-
-              // =====================================================
-              // DATA PREVALENSI
-              // =====================================================
-
-              _buildInfoSection(
-                icon: Icons.lightbulb_outline_rounded,
-                iconColor: const Color(0xFFB9543A),
-                title: 'Data Prevalensi di Indonesia',
-                description:
-                    'GERD adalah kondisi umum di seluruh dunia, dan '
-                    'di Indonesia, diperkirakan sekitar 274.496 orang '
-                    'menderita dari itu pada tahun 2021. Namun, tidak '
-                    'ada statistik nasional, dengan angka kematian '
-                    'yang sangat rendah sekitar 0,02–0,20 per 100.000 '
-                    'orang.',
-              ),
-
-              const SizedBox(height: 12),
-
-              // =====================================================
-              // CARD INGAT
-              // =====================================================
-
-              _buildReminderCard(),
-
-              const SizedBox(height: 18),
+              const SizedBox(height: 4),
             ],
           ),
         ),
       ),
-
-      // =============================================================
-      // BOTTOM NAVIGATION
-      // =============================================================
 
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
@@ -308,60 +277,42 @@ class _GejalaTandaBahayaScreenState
 
   Widget _buildHeader() {
     return SizedBox(
-      height: 42,
+      height: 48,
       child: Row(
         children: [
-          // =========================================================
-          // TOMBOL KEMBALI
-          // =========================================================
-
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
             },
-
             child: const SizedBox(
-              width: 45,
+              width: 42,
               height: 42,
-
               child: Align(
                 alignment: Alignment.centerLeft,
-
                 child: Icon(
                   Icons.arrow_back_rounded,
                   size: 29,
-                  color: Color(0xFF171310),
+                  color: Colors.black,
                 ),
               ),
             ),
           ),
 
-          // =========================================================
-          // JUDUL
-          // =========================================================
-
-          Expanded(
+          const Expanded(
             child: Center(
               child: Text(
-                'Gejala & Tanda Bahaya',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
+                'Edukasi',
+                style: TextStyle(
                   fontFamily: 'Fredoka',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
                   color: Color(0xFF171310),
                 ),
               ),
             ),
           ),
 
-          // =========================================================
-          // PENYEIMBANG
-          // =========================================================
-
-          const SizedBox(
-            width: 45,
-          ),
+          const SizedBox(width: 42),
         ],
       ),
     );
@@ -374,234 +325,247 @@ class _GejalaTandaBahayaScreenState
   Widget _buildHeroImage() {
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 170,
       decoration: BoxDecoration(
         color: const Color(0xFFFFE7D8),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(18),
         child: Image.asset(
           'assets/images/gejala_tanda_bahaya.png',
           fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Text(
+                '⚠️',
+                style: TextStyle(
+                  fontSize: 60,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
   // ===============================================================
-  // INFO SECTION
+  // CARD INFORMASI (EXPANDABLE)
   // ===============================================================
 
-  Widget _buildInfoSection({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    String? description,
-    Widget? child,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // =========================================================
-        // ICON
-        // =========================================================
+  Widget _buildInfoCard(_InfoSection section) {
+    final bool isExpanded =
+        _expandedSections.contains(section.title);
 
-        Container(
-          width: 31,
-          height: 31,
-
-          margin: const EdgeInsets.only(
-            top: 1,
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
-
-          decoration: BoxDecoration(
-            color: peachColor,
-            borderRadius: BorderRadius.circular(9),
-          ),
-
-          child: Icon(
-            icon,
-            size: 18,
-            color: iconColor,
-          ),
-        ),
-
-        const SizedBox(width: 9),
-
-        // =========================================================
-        // CONTENT
-        // =========================================================
-
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ===================================================
-              // TITLE
-              // ===================================================
-
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF30221E),
-                  height: 1.2,
-                ),
+        ],
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                if (isExpanded) {
+                  _expandedSections
+                      .remove(section.title);
+                } else {
+                  _expandedSections
+                      .add(section.title);
+                }
+              });
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                14,
+                13,
+                12,
+                13,
               ),
-
-              const SizedBox(height: 2),
-
-              // ===================================================
-              // DESCRIPTION
-              // ===================================================
-
-              if (description != null)
-                Text(
-                  description,
-                  textAlign: TextAlign.justify,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF30221E),
-                    height: 1.3,
-                  ),
-                ),
-
-              // ===================================================
-              // CHILD
-              // ===================================================
-
-              if (child != null) child,
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ===============================================================
-  // CHECKLIST
-  // ===============================================================
-
-  Widget _buildChecklist({
-    required List<String> items,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 1),
-
-        ...items.map(
-          (item) {
-            return Padding(
-              padding: const EdgeInsets.only(
-                bottom: 1,
-              ),
-
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // =================================================
-                  // CHECK ICON
-                  // =================================================
-
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 1,
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: section.iconBackground,
+                      borderRadius:
+                          BorderRadius.circular(10),
                     ),
-
                     child: Icon(
-                      Icons.check_circle_outline_rounded,
-                      size: 12,
-                      color: primaryRed,
+                      section.icon,
+                      size: 19,
+                      color: section.iconColor,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: Text(
+                      section.title,
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF171310),
+                      ),
+                    ),
+                  ),
+
+                  Text(
+                    '${section.points.length} poin',
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF9A8F89),
                     ),
                   ),
 
                   const SizedBox(width: 4),
 
-                  // =================================================
-                  // TEXT
-                  // =================================================
-
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF30221E),
-                        height: 1.25,
-                      ),
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(
+                      milliseconds: 250,
+                    ),
+                    child: const Icon(
+                      Icons
+                          .keyboard_arrow_down_rounded,
+                      size: 22,
+                      color: Color(0xFF9A8F89),
                     ),
                   ),
                 ],
               ),
-            );
-          },
-        ),
-      ],
+            ),
+          ),
+
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 250),
+            sizeCurve: Curves.easeOut,
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox(
+              width: double.infinity,
+            ),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                14,
+                0,
+                16,
+                14,
+              ),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  for (final point in section.points)
+                    _buildBulletItem(point),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   // ===============================================================
-  // REMINDER CARD
+  // BULLET ITEM
   // ===============================================================
 
-  Widget _buildReminderCard() {
+  Widget _buildBulletItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: 44,
+        bottom: 7,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            margin: const EdgeInsets.only(top: 6),
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              shape: BoxShape.circle,
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 11,
+                height: 1.4,
+                color: Color(0xFF30221E),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===============================================================
+  // REMEMBER BOX
+  // ===============================================================
+
+  Widget _buildRememberBox({
+    required String text,
+  }) {
     return Container(
       width: double.infinity,
-
       padding: const EdgeInsets.fromLTRB(
-        11,
-        9,
-        11,
+        14,
+        10,
+        14,
         10,
       ),
-
       decoration: BoxDecoration(
-        color: const Color(0xFFFFE5D2),
-        borderRadius: BorderRadius.circular(10),
+        color: const Color(0xFFFFE4D2),
+        borderRadius: BorderRadius.circular(11),
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // =========================================================
-          // JUDUL
-          // =========================================================
-
           const Text(
             'Ingat!',
             style: TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF30221E),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF171310),
             ),
           ),
 
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
 
-          // =========================================================
-          // ISI
-          // =========================================================
-
-          const Text(
-            'Mengenali gejala sejak awal dapat membantu kamu '
-            'menentukan langkah yang tepat. Jika muncul tanda '
-            'bahaya, jangan menunda untuk mencari pertolongan medis.',
-            textAlign: TextAlign.justify,
-            style: TextStyle(
+          Text(
+            text,
+            style: const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
+              fontSize: 11,
+              height: 1.4,
               color: Color(0xFF30221E),
-              height: 1.3,
             ),
           ),
         ],

@@ -357,7 +357,7 @@ class _NewPasswordScreenState
                   'Buat Kata Sandi Baru',
 
                   style: TextStyle(
-                    fontFamily: 'Fredoka',
+                    fontFamily: 'Nunito',
                     fontSize:
                         size.width * 0.060,
                     fontWeight:

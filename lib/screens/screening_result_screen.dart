@@ -513,10 +513,6 @@ class _ScreeningResultScreenState
 
               const SizedBox(height: 18),
 
-              _buildProbability(),
-
-              const SizedBox(height: 24),
-
               _buildAdviceSection(),
 
               const SizedBox(height: 26),
@@ -696,7 +692,7 @@ class _ScreeningResultScreenState
 
   Widget _buildResultTitle() {
     const baseStyle = TextStyle(
-      fontFamily: 'Fredoka',
+      fontFamily: 'Nunito',
       fontSize: 20,
       fontWeight:
           FontWeight.w600,
@@ -723,7 +719,7 @@ class _ScreeningResultScreenState
             text: 'tidak',
 
             style: TextStyle(
-              fontFamily: 'Fredoka',
+              fontFamily: 'Nunito',
               fontSize: 20,
               fontWeight:
                   FontWeight.w700,
@@ -739,70 +735,6 @@ class _ScreeningResultScreenState
 
       textAlign:
           TextAlign.center,
-    );
-  }
-
-  // ===============================================================
-  // PROBABILITY
-  // ===============================================================
-
-  Widget _buildProbability() {
-    return Container(
-      width: double.infinity,
-
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 13,
-      ),
-
-      decoration:
-          BoxDecoration(
-        color:
-            const Color(0xFFFFFCFA),
-        borderRadius:
-            BorderRadius.circular(15),
-        border: Border.all(
-          color: resultTheme.accentSoft,
-          width: 1.2,
-        ),
-      ),
-
-      child: Row(
-        children: [
-          Icon(
-            Icons.analytics_rounded,
-            color: resultTheme.accent,
-            size: 24,
-          ),
-
-          const SizedBox(width: 10),
-
-          const Expanded(
-            child: Text(
-              'Probabilitas GORD+',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 12,
-                fontWeight:
-                    FontWeight.w600,
-                color: primaryBrown,
-              ),
-            ),
-          ),
-
-          Text(
-            probabilityText,
-            style: TextStyle(
-              fontFamily: 'Fredoka',
-              fontSize: 16,
-              fontWeight:
-                  FontWeight.w700,
-              color: resultTheme.accent,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1014,7 +946,7 @@ class _ScreeningResultScreenState
           child: const Text(
             'Konsultasi Dokter',
             style: TextStyle(
-              fontFamily: 'Fredoka',
+              fontFamily: 'Nunito',
               fontSize: 13,
               fontWeight:
                   FontWeight.w700,

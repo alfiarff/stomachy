@@ -42,6 +42,9 @@ class _GrafikScreenState extends State<GrafikScreen> {
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
 
+  // Warna brown utama STOMACHY
+  final Color brown = const Color(0xFFB05039);
+
   // ===================================================================
   // NAVIGATION
   // ===================================================================
@@ -50,10 +53,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
     if (index == _selectedIndex) {
       return;
     }
-
-    // ================================================================
-    // BERANDA
-    // ================================================================
 
     if (index == 0) {
       Navigator.pushReplacement(
@@ -65,10 +64,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
       return;
     }
 
-    // ================================================================
-    // SKRINING
-    // ================================================================
-
     if (index == 1) {
       Navigator.pushReplacement(
         context,
@@ -78,10 +73,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
       );
       return;
     }
-
-    // ================================================================
-    // DOKTER
-    // ================================================================
 
     if (index == 2) {
       Navigator.pushReplacement(
@@ -93,10 +84,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
       return;
     }
 
-    // ================================================================
-    // EDUKASI
-    // ================================================================
-
     if (index == 3) {
       Navigator.pushReplacement(
         context,
@@ -106,10 +93,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
       );
       return;
     }
-
-    // ================================================================
-    // PROFIL
-    // ================================================================
 
     if (index == 4) {
       Navigator.pushReplacement(
@@ -144,17 +127,9 @@ class _GrafikScreenState extends State<GrafikScreen> {
           ),
           child: Column(
             children: [
-              // ======================================================
-              // HEADER
-              // ======================================================
-
               _buildHeader(),
 
               const SizedBox(height: 18),
-
-              // ======================================================
-              // KONTEN
-              // ======================================================
 
               if (user == null)
                 _buildEmptyState(
@@ -166,10 +141,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
           ),
         ),
       ),
-
-      // ===============================================================
-      // BOTTOM NAVIGATION
-      // ===============================================================
 
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
@@ -194,22 +165,14 @@ class _GrafikScreenState extends State<GrafikScreen> {
           )
           .snapshots(),
       builder: (context, snapshot) {
-        // ----------------------------------------------------------
-        // LOADING
-        // ----------------------------------------------------------
-
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
             padding: EdgeInsets.only(top: 60),
             child: CircularProgressIndicator(
-              color: Color(0xFFB9543A),
+              color: Color(0xFFB05039),
             ),
           );
         }
-
-        // ----------------------------------------------------------
-        // ERROR
-        // ----------------------------------------------------------
 
         if (snapshot.hasError) {
           return _buildEmptyState(
@@ -217,27 +180,15 @@ class _GrafikScreenState extends State<GrafikScreen> {
           );
         }
 
-        // ----------------------------------------------------------
-        // KONVERSI DOKUMEN FIRESTORE -> MODEL
-        // ----------------------------------------------------------
-
         final List<ScreeningHistory> history = _convertDocuments(
           snapshot.data?.docs ?? [],
         );
-
-        // ----------------------------------------------------------
-        // KOSONG
-        // ----------------------------------------------------------
 
         if (history.isEmpty) {
           return _buildEmptyState(
             'Belum ada riwayat skrining. Lakukan skrining untuk melihat grafiknya di sini.',
           );
         }
-
-        // ----------------------------------------------------------
-        // ADA DATA
-        // ----------------------------------------------------------
 
         return Column(
           children: [
@@ -347,7 +298,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
   }
 
   // ===================================================================
-  // EMPTY STATE / BELUM LOGIN
+  // EMPTY STATE
   // ===================================================================
 
   Widget _buildEmptyState(String message) {
@@ -360,10 +311,10 @@ class _GrafikScreenState extends State<GrafikScreen> {
       ),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.bar_chart_rounded,
             size: 45,
-            color: Color(0xFFB9543A),
+            color: brown,
           ),
 
           const SizedBox(height: 12),
@@ -375,7 +326,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
               fontFamily: 'Nunito',
               fontSize: 11,
               height: 1.4,
-              color: Color(0xFF493C37),
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
             ),
           ),
         ],
@@ -392,7 +344,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
       height: 42,
       child: Row(
         children: [
-          // TOMBOL KEMBALI
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
@@ -405,13 +356,12 @@ class _GrafikScreenState extends State<GrafikScreen> {
                 child: Icon(
                   Icons.arrow_back_rounded,
                   size: 29,
-                  color: Color(0xFF171310),
+                  color: Colors.black,
                 ),
               ),
             ),
           ),
 
-          // JUDUL
           const Expanded(
             child: Center(
               child: Text(
@@ -419,14 +369,13 @@ class _GrafikScreenState extends State<GrafikScreen> {
                 style: TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                   color: Colors.black,
                 ),
               ),
             ),
           ),
 
-          // PENYEIMBANG
           const SizedBox(
             width: 45,
           ),
@@ -454,10 +403,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ==========================================================
-          // JUDUL
-          // ==========================================================
-
           Row(
             children: [
               Container(
@@ -467,10 +412,10 @@ class _GrafikScreenState extends State<GrafikScreen> {
                   color: const Color(0xFFFFE5D8),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.bar_chart_rounded,
                   size: 18,
-                  color: Color(0xFFB9543A),
+                  color: brown,
                 ),
               ),
 
@@ -485,8 +430,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
                       style: TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFB9543A),
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black,
                       ),
                     ),
 
@@ -497,7 +442,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
                       style: TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 11,
-                        color: Color(0xFF493C37),
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
                       ),
                     ),
                   ],
@@ -507,10 +453,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
           ),
 
           const SizedBox(height: 10),
-
-          // ==========================================================
-          // AREA GRAFIK
-          // ==========================================================
 
           Container(
             width: double.infinity,
@@ -534,10 +476,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
           ),
 
           const SizedBox(height: 8),
-
-          // ==========================================================
-          // LEGEND
-          // ==========================================================
 
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -587,7 +525,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
           style: const TextStyle(
             fontFamily: 'Nunito',
             fontSize: 11,
-            color: Color(0xFF6C5A54),
+            fontWeight: FontWeight.w400,
+            color: Colors.black,
           ),
         ),
       ],
@@ -623,10 +562,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ==========================================================
-          // HEADER
-          // ==========================================================
-
           Row(
             children: [
               Container(
@@ -636,10 +571,10 @@ class _GrafikScreenState extends State<GrafikScreen> {
                   color: const Color(0xFFFFE5D8),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.article_outlined,
                   size: 18,
-                  color: Color(0xFFB9543A),
+                  color: brown,
                 ),
               ),
 
@@ -653,8 +588,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFB9543A),
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
                     ),
                   ),
 
@@ -665,7 +600,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
-                      color: Color(0xFF493C37),
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -674,10 +610,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
           ),
 
           const SizedBox(height: 10),
-
-          // ==========================================================
-          // SUMMARY
-          // ==========================================================
 
           Container(
             width: double.infinity,
@@ -693,7 +625,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                     title: 'Total Skrining',
                     value: '$total',
                     suffix: 'Kali',
-                    valueColor: const Color(0xFFB9543A),
+                    valueColor: brown,
                   ),
                 ),
 
@@ -747,8 +679,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
           style: const TextStyle(
             fontFamily: 'Nunito',
             fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFFB9543A),
+            fontWeight: FontWeight.w700,
+            color: Colors.black,
           ),
         ),
 
@@ -759,7 +691,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
           style: TextStyle(
             fontFamily: 'Nunito',
             fontSize: 22,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
             color: valueColor,
           ),
         ),
@@ -825,10 +757,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ==========================================================
-          // HEADER
-          // ==========================================================
-
           Row(
             children: [
               Container(
@@ -838,10 +766,10 @@ class _GrafikScreenState extends State<GrafikScreen> {
                   color: const Color(0xFFFFE5D8),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.assignment_outlined,
                   size: 18,
-                  color: Color(0xFFB9543A),
+                  color: brown,
                 ),
               ),
 
@@ -855,8 +783,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFB9543A),
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
                     ),
                   ),
 
@@ -867,7 +795,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
-                      color: Color(0xFF493C37),
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -876,10 +805,6 @@ class _GrafikScreenState extends State<GrafikScreen> {
           ),
 
           const SizedBox(height: 13),
-
-          // ==========================================================
-          // COMPLAINT LIST
-          // ==========================================================
 
           if (sortedComplaints.isEmpty)
             const Padding(
@@ -890,7 +815,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 11,
-                    color: Color(0xFF777777),
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
                   ),
                 ),
               ),
@@ -943,8 +869,9 @@ class _GrafikScreenState extends State<GrafikScreen> {
             style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 11,
+              fontWeight: FontWeight.w400,
               height: 1.2,
-              color: Color(0xFF493C37),
+              color: Colors.black,
             ),
           ),
         ),
@@ -960,7 +887,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
               backgroundColor: const Color(0xFFF1E4DE),
               valueColor:
                   const AlwaysStoppedAnimation<Color>(
-                Color(0xFFB9543A),
+                Color(0xFFB05039),
               ),
             ),
           ),
@@ -976,7 +903,8 @@ class _GrafikScreenState extends State<GrafikScreen> {
             style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 11,
-              color: Color(0xFF493C37),
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
             ),
           ),
         ),
@@ -1006,10 +934,10 @@ class _GrafikScreenState extends State<GrafikScreen> {
               color: Color(0xFFFFEEE5),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.priority_high_rounded,
               size: 17,
-              color: Color(0xFFB9543A),
+              color: brown,
             ),
           ),
 
@@ -1021,8 +949,9 @@ class _GrafikScreenState extends State<GrafikScreen> {
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 11,
+                fontWeight: FontWeight.w400,
                 height: 1.35,
-                color: Color(0xFF493C37),
+                color: Colors.black,
               ),
             ),
           ),
@@ -1341,6 +1270,7 @@ class GERDChartPainter extends CustomPainter {
         const TextStyle(
           fontFamily: 'Nunito',
           fontSize: 6.5,
+          fontWeight: FontWeight.w400,
           color: Color(0xFF65554F),
         ),
       );
@@ -1355,6 +1285,7 @@ class GERDChartPainter extends CustomPainter {
         const TextStyle(
           fontFamily: 'Nunito',
           fontSize: 6,
+          fontWeight: FontWeight.w400,
           color: Color(0xFF8B7B75),
         ),
       );
@@ -1401,7 +1332,7 @@ class GERDChartPainter extends CustomPainter {
         fontFamily: 'Nunito',
         fontSize: 11,
         color: Color(0xFF777777),
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
       ),
     );
 
@@ -1416,6 +1347,7 @@ class GERDChartPainter extends CustomPainter {
         fontFamily: 'Nunito',
         fontSize: 8,
         color: Color(0xFF999999),
+        fontWeight: FontWeight.w400,
       ),
     );
   }

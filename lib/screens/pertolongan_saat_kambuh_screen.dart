@@ -15,12 +15,89 @@ class PertolonganSaatKambuhScreen extends StatefulWidget {
       _PertolonganSaatKambuhScreenState();
 }
 
+// =====================================================================
+// MODEL SEKSI INFORMASI
+// =====================================================================
+
+class _InfoSection {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBackground;
+  final String title;
+  final List<String> points;
+
+  const _InfoSection({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBackground,
+    required this.title,
+    required this.points,
+  });
+}
+
 class _PertolonganSaatKambuhScreenState
     extends State<PertolonganSaatKambuhScreen> {
   int _selectedIndex = 3;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
-  final Color softPeach = const Color(0xFFFFE1CC);
+  final Color primaryBrown = const Color(0xFF493028);
+
+  final Set<String> _expandedSections = {
+    'Ubah Posisi Tubuh',
+  };
+
+  // ===============================================================
+  // DATA SEMUA SEKSI
+  // ===============================================================
+
+  static const List<_InfoSection> _sections = [
+    _InfoSection(
+      icon: Icons.info_outline_rounded,
+      iconColor: Color(0xFFE8804C),
+      iconBackground: Color(0xFFFFE9DC),
+      title: 'Ubah Posisi Tubuh',
+      points: [
+        'Duduk tegak atau bersandar dengan posisi setengah duduk. '
+            'Hindari berbaring langsung, karena bisa memperparah '
+            'naiknya asam lambung.',
+      ],
+    ),
+
+    _InfoSection(
+      icon: Icons.water_drop_outlined,
+      iconColor: Color(0xFF7B6BD0),
+      iconBackground: Color(0xFFEDE9FB),
+      title: 'Minum Air Putih Hangat',
+      points: [
+        'Air hangat dapat membantu menenangkan lambung dan '
+            'mengurangi rasa terbakar di dada. Minumlah perlahan, '
+            'jangan sekaligus banyak.',
+      ],
+    ),
+
+    _InfoSection(
+      icon: Icons.shield_outlined,
+      iconColor: Color(0xFF5A9FE0),
+      iconBackground: Color(0xFFE3EEFC),
+      title: 'Hindari Pemicu Sederhana',
+      points: [
+        'Jangan konsumsi makanan/minuman yang dapat memperparah '
+            'gejala, seperti makanan pedas, berlemak, asam, kopi, '
+            'soda, dan alkohol.',
+      ],
+    ),
+
+    _InfoSection(
+      icon: Icons.medication_outlined,
+      iconColor: Color(0xFF4AA978),
+      iconBackground: Color(0xFFDFF2E7),
+      title: 'Jika Perlu, Konsumsi Obat Antasida',
+      points: [
+        'Obat antasida dapat membantu menetralkan asam lambung. '
+            'Namun, gunakan sesuai anjuran dokter atau apoteker.',
+      ],
+    ),
+  ];
 
   // ===============================================================
   // NAVIGATION
@@ -94,75 +171,86 @@ class _PertolonganSaatKambuhScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-
           padding: const EdgeInsets.fromLTRB(
             27,
-            10,
+            5,
             27,
             105,
           ),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 8),
 
               _buildHeroImage(),
 
-              const SizedBox(height: 10),
-
-              _buildIntroduction(),
-
-              const SizedBox(height: 24),
-
-              _buildInformationItem(
-                icon: Icons.info_outline_rounded,
-                title: 'Ubah Posisi Tubuh',
-                description:
-                    'Duduk tegak atau bersandar dengan posisi setengah duduk. '
-                    'Hindari berbaring langsung, karena bisa memperparah naiknya '
-                    'asam lambung.',
-              ),
-
               const SizedBox(height: 14),
 
-              _buildInformationItem(
-                icon: Icons.sentiment_satisfied_alt_outlined,
-                title: 'Minum Air Putih Hangat',
-                description:
-                    'Air hangat dapat membantu menenangkan lambung dan '
-                    'mengurangi rasa terbakar di dada. Minumlah perlahan, '
-                    'jangan sekaligus banyak.',
+              const Text(
+                'Pertolongan Pertama saat Kambuh',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF171310),
+                ),
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 6),
 
-              _buildInformationItem(
-                icon: Icons.shield_outlined,
-                title: 'Hindari Pemicu Sederhana',
-                description:
-                    'Jangan konsumsi makanan/minuman yang dapat memperparah '
-                    'gejala, seperti makanan pedas, berlemak, asam, kopi, soda, '
-                    'dan alkohol.',
+              Text.rich(
+                TextSpan(
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    height: 1.5,
+                    color: Color(0xFF30221E),
+                  ),
+                  children: const [
+                    TextSpan(
+                      text: 'Tenang, ini ',
+                    ),
+                    TextSpan(
+                      text: 'langkah sederhana',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' yang bisa membantu meredakan '
+                          'gejala dengan cepat, sebelum kamu '
+                          'mendapatkan penanganan lebih lanjut.',
+                    ),
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
-              _buildInformationItem(
-                icon: Icons.lightbulb_outline_rounded,
-                title: 'Jika Perlu, Konsumsi Obat Antasida',
-                description:
-                    'Obat Antasida dapat membantu menetralkan asam lambung. '
-                    'Namun, gunakan sesuai anjuran dokter atau apoteker.',
+              for (int i = 0;
+                  i < _sections.length;
+                  i++) ...[
+                _buildInfoCard(_sections[i]),
+
+                if (i != _sections.length - 1)
+                  const SizedBox(height: 12),
+              ],
+
+              const SizedBox(height: 16),
+
+              _buildRememberBox(
+                header: 'Segera ke Dokter!',
+                text:
+                    'Segera periksakan diri jika nyeri dada semakin '
+                    'berat atau tidak hilang setelah beberapa jam, '
+                    'sering kambuh meski sudah melakukan langkah di '
+                    'atas, atau muncul gejala lain seperti muntah, '
+                    'sulit menelan, dan penurunan berat badan.',
               ),
 
-              const SizedBox(height: 24),
-
-              _buildDoctorWarning(),
-
-              const SizedBox(height: 20),
+              const SizedBox(height: 4),
             ],
           ),
         ),
@@ -181,52 +269,42 @@ class _PertolonganSaatKambuhScreenState
 
   Widget _buildHeader() {
     return SizedBox(
-      height: 58,
-
+      height: 48,
       child: Row(
         children: [
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
             },
-
             child: const SizedBox(
-              width: 45,
-              height: 45,
-
+              width: 42,
+              height: 42,
               child: Align(
                 alignment: Alignment.centerLeft,
-
                 child: Icon(
                   Icons.arrow_back_rounded,
                   size: 29,
-                  color: Color(0xFF171310),
-                ),
-              ),
-            ),
-          ),
-
-          Expanded(
-            child: Center(
-              child: Text(
-                'Pertolongan Pertama\nSaat Kambuh',
-
-                textAlign: TextAlign.center,
-
-                style: const TextStyle(
-                  fontFamily: 'Fredoka',
-                  fontSize: 21,
-                  height: 1.05,
-                  fontWeight: FontWeight.w700,
                   color: Colors.black,
                 ),
               ),
             ),
           ),
 
-          const SizedBox(
-            width: 45,
+          const Expanded(
+            child: Center(
+              child: Text(
+                'Edukasi',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF171310),
+                ),
+              ),
+            ),
           ),
+
+          const SizedBox(width: 42),
         ],
       ),
     );
@@ -239,194 +317,159 @@ class _PertolonganSaatKambuhScreenState
   Widget _buildHeroImage() {
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 170,
       decoration: BoxDecoration(
         color: const Color(0xFFFFE7D8),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(18),
         child: Image.asset(
           'assets/images/pertolongan_saat_kambuh.png',
           fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Text(
+                '🆘',
+                style: TextStyle(
+                  fontSize: 60,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
   // ===============================================================
-  // INTRODUCTION
+  // CARD INFORMASI (EXPANDABLE)
   // ===============================================================
 
-  Widget _buildIntroduction() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildInfoCard(_InfoSection section) {
+    final bool isExpanded =
+        _expandedSections.contains(section.title);
 
-      children: [
-        const Text(
-          'Tenang, Ini yang Bisa dilakukan saat GERD kambuh!',
-
-          style: TextStyle(
-            fontFamily: 'Fredoka',
-            fontSize: 15,
-            height: 1.3,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF171310),
-          ),
-        ),
-
-        const SizedBox(height: 2),
-
-        const Text(
-          'Langkah sederhana ini bisa membantu meredakan gejala dengan '
-          'cepat, sebelum kamu mendapatkan penanganan lebih lanjut',
-
-          textAlign: TextAlign.justify,
-
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 14,
-            height: 1.35,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF30221E),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ===============================================================
-  // INFORMATION ITEM
-  // ===============================================================
-
-  Widget _buildInformationItem({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-
-          decoration: BoxDecoration(
-            color: softPeach,
-            borderRadius: BorderRadius.circular(9),
-          ),
-
-          child: Icon(
-            icon,
-            size: 18,
-            color: const Color(0xFFB9543A),
-          ),
-        ),
-
-        const SizedBox(width: 9),
-
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-
-            children: [
-              Text(
-                title,
-
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF30221E),
-                ),
-              ),
-
-              const SizedBox(height: 1),
-
-              Text(
-                description,
-
-                textAlign: TextAlign.justify,
-
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 14,
-                  height: 1.25,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF30221E),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ===============================================================
-  // DOCTOR WARNING
-  // ===============================================================
-
-  Widget _buildDoctorWarning() {
     return Container(
       width: double.infinity,
-
-      padding: const EdgeInsets.fromLTRB(
-        11,
-        9,
-        11,
-        10,
-      ),
-
       decoration: BoxDecoration(
-        color: const Color(0xFFFFE5D4),
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-
-            children: [
-              const Icon(
-                Icons.warning_rounded,
-                size: 17,
-                color: Color(0xFFB9381E),
+          InkWell(
+            onTap: () {
+              setState(() {
+                if (isExpanded) {
+                  _expandedSections
+                      .remove(section.title);
+                } else {
+                  _expandedSections
+                      .add(section.title);
+                }
+              });
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                14,
+                13,
+                12,
+                13,
               ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: section.iconBackground,
+                      borderRadius:
+                          BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      section.icon,
+                      size: 19,
+                      color: section.iconColor,
+                    ),
+                  ),
 
-              const SizedBox(width: 6),
+                  const SizedBox(width: 12),
 
-              const Text(
-                'Segera ke Dokter jika:',
+                  Expanded(
+                    child: Text(
+                      section.title,
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF171310),
+                      ),
+                    ),
+                  ),
 
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFB9381E),
-                ),
+                  Text(
+                    '${section.points.length} poin',
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF9A8F89),
+                    ),
+                  ),
+
+                  const SizedBox(width: 4),
+
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(
+                      milliseconds: 250,
+                    ),
+                    child: const Icon(
+                      Icons
+                          .keyboard_arrow_down_rounded,
+                      size: 22,
+                      color: Color(0xFF9A8F89),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
 
-          const SizedBox(height: 3),
-
-          _buildWarningBullet(
-            'Nyeri dada semakin berat atau tidak hilang setelah '
-            'beberapa jam.',
-          ),
-
-          _buildWarningBullet(
-            'Sering kambuh meski sudah melakukan langkah di atas.',
-          ),
-
-          _buildWarningBullet(
-            'Muncul gejala lain seperti muntah, sulit menelan, atau '
-            'penurunan berat badan.',
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 250),
+            sizeCurve: Curves.easeOut,
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox(
+              width: double.infinity,
+            ),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                14,
+                0,
+                16,
+                14,
+              ),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  for (final point in section.points)
+                    _buildBulletItem(point),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -434,44 +477,88 @@ class _PertolonganSaatKambuhScreenState
   }
 
   // ===============================================================
-  // WARNING BULLET
+  // BULLET ITEM
   // ===============================================================
 
-  Widget _buildWarningBullet(String text) {
+  Widget _buildBulletItem(String text) {
     return Padding(
       padding: const EdgeInsets.only(
-        left: 23,
-        bottom: 1,
+        left: 44,
+        bottom: 7,
       ),
-
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
-          const Text(
-            '•  ',
-
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF30221E),
+          Container(
+            width: 5,
+            height: 5,
+            margin: const EdgeInsets.only(top: 6),
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              shape: BoxShape.circle,
             ),
           ),
+
+          const SizedBox(width: 8),
 
           Expanded(
             child: Text(
               text,
-
-              textAlign: TextAlign.justify,
-
               style: const TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 14,
-                height: 1.25,
-                fontWeight: FontWeight.w400,
+                fontSize: 11,
+                height: 1.4,
                 color: Color(0xFF30221E),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===============================================================
+  // REMEMBER BOX
+  // ===============================================================
+
+  Widget _buildRememberBox({
+    String header = 'Ingat!',
+    required String text,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        14,
+        10,
+        14,
+        10,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE4D2),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            header,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF171310),
+            ),
+          ),
+
+          const SizedBox(height: 3),
+
+          Text(
+            text,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+              height: 1.4,
+              color: Color(0xFF30221E),
             ),
           ),
         ],

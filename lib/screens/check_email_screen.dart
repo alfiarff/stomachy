@@ -123,7 +123,7 @@ class CheckEmailScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
 
                         style: TextStyle(
-                          fontFamily: 'Fredoka',
+                          fontFamily: 'Nunito',
                           fontSize:
                               size.width * 0.060,
                           fontWeight:

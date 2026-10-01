@@ -239,7 +239,7 @@ class _ForgotPasswordScreenState
                   'Lupa Kata Sandi?',
 
                   style: TextStyle(
-                    fontFamily: 'Fredoka',
+                    fontFamily: 'Nunito',
                     fontSize: size.width * 0.060,
                     fontWeight: FontWeight.bold,
                     color: brown,

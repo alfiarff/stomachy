@@ -290,10 +290,10 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
               child: Text(
                 'Tips Tidur Nyenyak',
                 style: TextStyle(
-                    fontFamily: 'Fredoka',
+                    fontFamily: 'Nunito',
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
-                    color: primaryBrown,
+                    color: Colors.black,
                 ),
               ),
             ),
