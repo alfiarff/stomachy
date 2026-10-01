@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DoctorPatientChatScreen extends StatefulWidget {
@@ -15,103 +17,19 @@ class DoctorPatientChatScreen extends StatefulWidget {
 
 class _DoctorPatientChatScreenState
     extends State<DoctorPatientChatScreen> {
-  // ===============================================================
-  // WARNA
-  // ===============================================================
-
-  final Color backgroundColor =
-      const Color(0xFFFFF7F2);
-
-  final Color primaryBrown =
-      const Color(0xFFB65339);
-
-  final Color titleBrown =
-      const Color(0xFF5A2017);
-
-  final Color patientBubbleColor =
-      const Color(0xFFFFE7D8);
-
-  final Color securityBackground =
-      const Color(0xFFFFE8D9);
-
-  final Color inputBackground =
-      const Color(0xFFF7DCCA);
-
-  // ===============================================================
-  // CONTROLLER
-  // ===============================================================
-
   final TextEditingController _messageController =
       TextEditingController();
 
   final ScrollController _scrollController =
       ScrollController();
 
-  // ===============================================================
-  // DATA PESAN
-  // ===============================================================
+  bool _isSending = false;
 
-  final List<Map<String, dynamic>> messages = [
-    {
-      'text':
-          'Selamat pagi, ada yang bisa saya bantu hari ini?',
-      'isDoctor': true,
-      'time': '10:00',
-    },
-    {
-      'text':
-          'Pagi dok, saya sering merasa panas di dada dan asam naik ke tenggorokan.',
-      'isDoctor': false,
-      'time': '10:13',
-    },
-    {
-      'text':
-          'Baik, sudah berapa lama Anda mengalami keluhan ini?',
-      'isDoctor': true,
-      'time': '10:14',
-    },
-    {
-      'text':
-          'Sudah sekitar 2 minggu terakhir dok, terutama setelah makan.',
-      'isDoctor': false,
-      'time': '10:14',
-    },
-    {
-      'text':
-          'Apakah ada keluhan seperti mual, nyeri saat menelan, atau batuk?',
-      'isDoctor': true,
-      'time': '10:15',
-    },
-    {
-      'text':
-          'Kadang mual dan sering sendawa dok.',
-      'isDoctor': false,
-      'time': '10:15',
-    },
-    {
-      'text':
-          'Baik, terima kasih informasinya. Saya sarankan untuk mengatur pola makan, menghindari makanan pedas dan berlemak, serta jangan langsung berbaring setelah makan.',
-      'isDoctor': true,
-      'time': '10:16',
-    },
-  ];
+  final Color backgroundColor =
+      const Color(0xFFFFF5EF);
 
-  // ===============================================================
-  // INIT
-  // ===============================================================
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
-  }
-
-  // ===============================================================
-  // DISPOSE
-  // ===============================================================
+  final Color primaryBrown =
+      const Color(0xFFB65339);
 
   @override
   void dispose() {
@@ -121,71 +39,54 @@ class _DoctorPatientChatScreenState
   }
 
   // ===============================================================
-  // KIRIM PESAN
+  // DATA PASIEN
   // ===============================================================
 
-  void _sendMessage() {
-    final String text =
-        _messageController.text.trim();
+  String get _patientName {
+    final String name =
+        (widget.patient['userName'] ??
+                widget.patient['name'] ??
+                'Pasien')
+            .toString()
+            .trim();
 
-    if (text.isEmpty) {
-      return;
+    return name.isEmpty ? 'Pasien' : name;
+  }
+
+  String get _consultationId {
+    return (widget.patient['consultationId'] ?? '')
+        .toString();
+  }
+
+  String get _consultationDay {
+    return (widget.patient['consultationDay'] ?? '')
+        .toString();
+  }
+
+  String get _consultationTime {
+    return (widget.patient['consultationTime'] ?? '')
+        .toString();
+  }
+
+  // ===============================================================
+  // STREAM PESAN
+  // ===============================================================
+
+  Stream<QuerySnapshot<Map<String, dynamic>>>
+      _messageStream() {
+    if (_consultationId.isEmpty) {
+      return const Stream.empty();
     }
 
-    setState(() {
-      messages.add({
-        'text': text,
-        'isDoctor': true,
-        'time': _currentTime(),
-      });
-    });
-
-    _messageController.clear();
-
-    _scrollToBottom();
-  }
-
-  // ===============================================================
-  // WAKTU SEKARANG
-  // ===============================================================
-
-  String _currentTime() {
-    final DateTime now =
-        DateTime.now();
-
-    final String hour =
-        now.hour.toString().padLeft(2, '0');
-
-    final String minute =
-        now.minute.toString().padLeft(2, '0');
-
-    return '$hour:$minute';
-  }
-
-  // ===============================================================
-  // SCROLL KE BAWAH
-  // ===============================================================
-
-  void _scrollToBottom() {
-    Future.delayed(
-      const Duration(
-        milliseconds: 100,
-      ),
-      () {
-        if (!_scrollController.hasClients) {
-          return;
-        }
-
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration:
-              const Duration(
-            milliseconds: 350,
-          ),
-          curve: Curves.easeOut,
-        );
-      },
-    );
+    return FirebaseFirestore.instance
+        .collection('consultations')
+        .doc(_consultationId)
+        .collection('messages')
+        .orderBy(
+          'createdAt',
+          descending: false,
+        )
+        .snapshots();
   }
 
   // ===============================================================
@@ -194,88 +95,106 @@ class _DoctorPatientChatScreenState
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> patient =
-        widget.patient;
-
     return Scaffold(
-      backgroundColor:
-          backgroundColor,
-      resizeToAvoidBottomInset: true,
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            // =======================================================
-            // HEADER
-            // =======================================================
-
             _buildHeader(),
 
-            // =======================================================
-            // IDENTITAS PASIEN
-            // =======================================================
+            _buildPatientCard(),
 
-            _buildPatientHeader(patient),
+            const SizedBox(height: 16),
 
-            const SizedBox(
-              height: 12,
-            ),
+            _buildPrivacyWarning(),
 
-            // =======================================================
-            // CHAT
-            // =======================================================
+            const SizedBox(height: 12),
+
+            _buildTodayLabel(),
+
+            const SizedBox(height: 12),
 
             Expanded(
-              child: ListView.builder(
-                controller:
-                    _scrollController,
-                physics:
-                    const BouncingScrollPhysics(),
-                padding:
-                    const EdgeInsets.fromLTRB(
-                  27,
-                  4,
-                  27,
-                  10,
-                ),
-                itemCount:
-                    messages.length + 2,
-                itemBuilder:
-                    (context, index) {
-                  // -----------------------------------------------
-                  // KEAMANAN
-                  // -----------------------------------------------
-
-                  if (index == 0) {
-                    return _buildSecurityNotice();
+              child: StreamBuilder<
+                  QuerySnapshot<
+                      Map<String, dynamic>>>(
+                stream: _messageStream(),
+                builder: (
+                  context,
+                  snapshot,
+                ) {
+                  if (_consultationId.isEmpty) {
+                    return _buildError(
+                      'ID konsultasi tidak ditemukan.',
+                    );
                   }
 
-                  // -----------------------------------------------
-                  // HARI INI
-                  // -----------------------------------------------
-
-                  if (index == 1) {
-                    return _buildDateDivider();
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child:
+                          CircularProgressIndicator(
+                        color: Color(0xFFB65339),
+                      ),
+                    );
                   }
 
-                  // -----------------------------------------------
-                  // PESAN
-                  // -----------------------------------------------
+                  if (snapshot.hasError) {
+                    return _buildError(
+                      'Chat gagal dimuat.',
+                    );
+                  }
 
-                  final int messageIndex =
-                      index - 2;
+                  final List<
+                          QueryDocumentSnapshot<
+                              Map<String, dynamic>>>
+                      messages =
+                      snapshot.data?.docs ?? [];
 
-                  return _buildMessageBubble(
-                    messages[messageIndex],
+                  WidgetsBinding.instance
+                      .addPostFrameCallback(
+                    (_) {
+                      _scrollToBottom();
+                    },
+                  );
+
+                  if (messages.isEmpty) {
+                    return _buildEmptyChat();
+                  }
+
+                  return ListView.builder(
+                    controller:
+                        _scrollController,
+                    padding:
+                        const EdgeInsets.fromLTRB(
+                      10,
+                      0,
+                      10,
+                      8,
+                    ),
+                    physics:
+                        const BouncingScrollPhysics(),
+                    itemCount: messages.length,
+                    itemBuilder:
+                        (context, index) {
+                      final Map<String, dynamic>
+                          message =
+                          messages[index].data();
+
+                      return _buildChatBubble(
+                        message,
+                      );
+                    },
                   );
                 },
               ),
             ),
 
-            // =======================================================
-            // INPUT + CATATAN
-            // =======================================================
+            _buildMessageInput(),
 
-            _buildBottomSection(),
+            _buildMedicalNote(),
+
+            const SizedBox(height: 5),
           ],
         ),
       ),
@@ -287,127 +206,110 @@ class _DoctorPatientChatScreenState
   // ===============================================================
 
   Widget _buildHeader() {
-    return Padding(
-      padding:
-          const EdgeInsets.fromLTRB(
-        28,
-        7,
-        28,
-        5,
-      ),
-      child: SizedBox(
-        height: 45,
-        child: Row(
-          children: [
-            // -------------------------------------------------------
-            // BACK
-            // -------------------------------------------------------
-
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child:
-                  const SizedBox(
-                width: 40,
-                height: 40,
-                child: Align(
-                  alignment:
-                      Alignment.centerLeft,
-                  child: Icon(
-                    Icons
-                        .arrow_back_ios_new_rounded,
-                    size: 25,
-                    color:
-                        Color(0xFFB65339),
-                  ),
+    return SizedBox(
+      height: 58,
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: const SizedBox(
+              width: 55,
+              height: 55,
+              child: Align(
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  size: 29,
+                  color: Colors.black,
                 ),
               ),
             ),
+          ),
 
-            // -------------------------------------------------------
-            // TITLE
-            // -------------------------------------------------------
-
-            const Expanded(
-              child: Center(
-                child: Text(
-                  'Konsultasi dengan Pasien',
-                  maxLines: 1,
-                  overflow:
-                      TextOverflow.ellipsis,
-                  style:
-                      TextStyle(
-                    fontFamily:
-                        'Nunito',
-                    fontSize: 20,
-                    fontWeight:
-                        FontWeight.w800,
-                    color:
-                        Color(0xFF5A2017),
-                  ),
+          Expanded(
+            child: Center(
+              child: Text(
+                'Chat dengan Pasien',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF171310),
                 ),
               ),
             ),
+          ),
 
-            const SizedBox(
-              width: 40,
+          SizedBox(
+            width: 75,
+            child: TextButton(
+              onPressed:
+                  _showFinishConfirmation,
+              style: TextButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 6,
+                ),
+              ),
+              child: const Text(
+                'Akhiri',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFB65339),
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   // ===============================================================
-  // IDENTITAS PASIEN
+  // PATIENT CARD
+  // TANPA RATING DAN ULASAN
   // ===============================================================
 
-  Widget _buildPatientHeader(
-    Map<String, dynamic> patient,
-  ) {
+  Widget _buildPatientCard() {
     return Container(
-      margin:
-          const EdgeInsets.symmetric(
+      margin: const EdgeInsets.symmetric(
         horizontal: 27,
       ),
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 15,
-        vertical: 11,
+      padding: const EdgeInsets.fromLTRB(
+        12,
+        10,
+        12,
+        10,
       ),
-      decoration:
-          BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCFA),
         borderRadius:
-            BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color:
-                Colors.black.withOpacity(
-              0.035,
-            ),
-            blurRadius: 7,
-            offset:
-                const Offset(0, 3),
-          ),
-        ],
+            BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          // ---------------------------------------------------------
-          // AVATAR
-          // ---------------------------------------------------------
-
-          _buildLargeAvatar(patient),
-
-          const SizedBox(
-            width: 16,
+          Container(
+            width: 62,
+            height: 62,
+            decoration:
+                const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFFFE3D1),
+            ),
+            child: const Icon(
+              Icons.person_rounded,
+              size: 42,
+              color: Color(0xFFB65339),
+            ),
           ),
 
-          // ---------------------------------------------------------
-          // DATA PASIEN
-          // ---------------------------------------------------------
+          const SizedBox(width: 14),
 
           Expanded(
             child: Column(
@@ -415,84 +317,57 @@ class _DoctorPatientChatScreenState
                   CrossAxisAlignment.start,
               children: [
                 Text(
-                  patient['name']
-                      .toString(),
+                  _patientName,
                   maxLines: 1,
                   overflow:
                       TextOverflow.ellipsis,
-                  style:
-                      const TextStyle(
-                    fontFamily:
-                        'Nunito',
-                    fontSize: 18,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
                     fontWeight:
                         FontWeight.w800,
-                    color:
-                        Color(0xFF5A2017),
+                    color: Color(0xFF211914),
                   ),
                 ),
 
-                const SizedBox(
-                  height: 5,
+                const SizedBox(height: 2),
+
+                const Text(
+                  'Pasien',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    color: Colors.black,
+                  ),
                 ),
 
-                Row(
-                  children: [
-                    Text(
-                      '${patient['age']} Tahun',
-                      style:
-                          const TextStyle(
-                        fontFamily:
-                            'Nunito',
-                        fontSize: 13,
-                        fontWeight:
-                            FontWeight.w500,
-                        color:
-                            Color(0xFF777777),
-                      ),
-                    ),
+                const SizedBox(height: 2),
 
-                    const SizedBox(
-                      width: 9,
-                    ),
-
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration:
-                          const BoxDecoration(
-                        color:
-                            Color(0xFF777777),
-                        shape:
-                            BoxShape.circle,
-                      ),
-                    ),
-
-                    const SizedBox(
-                      width: 9,
-                    ),
-
-                    Flexible(
-                      child: Text(
-                        patient['gender']
-                            .toString(),
-                        maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
-                        style:
-                            const TextStyle(
-                          fontFamily:
-                              'Nunito',
-                          fontSize: 13,
-                          fontWeight:
-                              FontWeight.w500,
-                          color:
-                              Color(0xFF777777),
-                        ),
-                      ),
-                    ),
-                  ],
+                const Text(
+                  'Online',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    color: Color(0xFF18C85A),
+                  ),
                 ),
+
+                if (_consultationTime.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _consultationDay.isNotEmpty
+                        ? 'Jadwal: $_consultationDay, $_consultationTime'
+                        : 'Jadwal: $_consultationTime',
+                    maxLines: 1,
+                    overflow:
+                        TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 9,
+                      color: Color(0xFF77716E),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -502,133 +377,41 @@ class _DoctorPatientChatScreenState
   }
 
   // ===============================================================
-  // AVATAR BESAR
+  // PRIVACY WARNING
   // ===============================================================
 
-  Widget _buildLargeAvatar(
-    Map<String, dynamic> patient,
-  ) {
-    final dynamic avatarImage =
-        patient['avatarImage'];
-
-    if (avatarImage is String &&
-        avatarImage.trim().isNotEmpty) {
-      return ClipOval(
-        child: Image.asset(
-          avatarImage,
-          width: 72,
-          height: 72,
-          fit: BoxFit.cover,
-          errorBuilder:
-              (context, error, stackTrace) {
-            return _buildIconAvatar(
-              patient,
-              72,
-              46,
-            );
-          },
-        ),
-      );
-    }
-
-    return _buildIconAvatar(
-      patient,
-      72,
-      46,
-    );
-  }
-
-  // ===============================================================
-  // AVATAR ICON
-  // ===============================================================
-
-  Widget _buildIconAvatar(
-    Map<String, dynamic> patient,
-    double size,
-    double iconSize,
-  ) {
+  Widget _buildPrivacyWarning() {
     return Container(
-      width: size,
-      height: size,
-      decoration:
-          BoxDecoration(
-        color:
-            patient['avatarColor'],
-        shape:
-            BoxShape.circle,
+      margin: const EdgeInsets.symmetric(
+        horizontal: 28,
       ),
-      child: Icon(
-        patient['avatarIcon'],
-        size: iconSize,
-        color:
-            patient['avatarIconColor'],
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 7,
       ),
-    );
-  }
-
-  // ===============================================================
-  // SECURITY NOTICE
-  // ===============================================================
-
-  Widget _buildSecurityNotice() {
-    return Container(
-      margin:
-          const EdgeInsets.only(
-        top: 0,
-        bottom: 15,
-      ),
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 10,
-      ),
-      decoration:
-          BoxDecoration(
-        color:
-            securityBackground,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE8DC),
         borderRadius:
-            BorderRadius.circular(17),
+            BorderRadius.circular(10),
       ),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration:
-                const BoxDecoration(
-              color:
-                  Color(0xFFFFE0CC),
-              shape:
-                  BoxShape.circle,
-            ),
-            child:
-                const Icon(
-              Icons.lock_rounded,
-              size: 22,
-              color:
-                  Color(0xFFB65339),
-            ),
+          const Icon(
+            Icons.lock_outline_rounded,
+            size: 17,
+            color: Color(0xFFB65339),
           ),
 
-          const SizedBox(
-            width: 12,
-          ),
+          const SizedBox(width: 10),
 
-          const Expanded(
+          Expanded(
             child: Text(
               'Jangan bagikan informasi pribadi atau kode OTP kepada siapapun.',
-              style:
-                  TextStyle(
-                fontFamily:
-                    'Nunito',
-                fontSize: 11.5,
-                height: 1.35,
-                fontWeight:
-                    FontWeight.w500,
-                color:
-                    Color(0xFF382620),
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 9.5,
+                height: 1.3,
+                color: Colors.grey[800],
               ),
             ),
           ),
@@ -641,39 +424,90 @@ class _DoctorPatientChatScreenState
   // HARI INI
   // ===============================================================
 
-  Widget _buildDateDivider() {
-    return Center(
-      child: Container(
-        margin:
-            const EdgeInsets.only(
-          top: 1,
-          bottom: 18,
-        ),
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 19,
-          vertical: 8,
-        ),
-        decoration:
-            BoxDecoration(
-          color:
-              const Color(0xFFFFEDE4),
-          borderRadius:
-              BorderRadius.circular(20),
-        ),
-        child:
-            const Text(
-          'Hari Ini',
-          style:
-              TextStyle(
-            fontFamily:
-                'Nunito',
-            fontSize: 12,
-            fontWeight:
-                FontWeight.w800,
-            color:
-                Color(0xFF5A2017),
+  Widget _buildTodayLabel() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE8DC),
+        borderRadius:
+            BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x25000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
           ),
+        ],
+      ),
+      child: const Text(
+        'Hari Ini',
+        style: TextStyle(
+          fontFamily: 'Nunito',
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF493028),
+        ),
+      ),
+    );
+  }
+
+  // ===============================================================
+  // EMPTY CHAT
+  // ===============================================================
+
+  Widget _buildEmptyChat() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration:
+                  const BoxDecoration(
+                color: Color(0xFFFFE3D1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.chat_bubble_outline_rounded,
+                size: 35,
+                color: Color(0xFFB65339),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            const Text(
+              'Mulai Percakapan',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 14,
+                fontWeight:
+                    FontWeight.w800,
+                color: Color(0xFF30221E),
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            const Text(
+              'Kirim pesan untuk memulai\n'
+              'konsultasi dengan pasien.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 11,
+                height: 1.4,
+                color: Color(0xFF77716E),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -681,161 +515,152 @@ class _DoctorPatientChatScreenState
 
   // ===============================================================
   // CHAT BUBBLE
+  // PASIEN KIRI
+  // DOKTER KANAN
+  // TANPA BORDER
   // ===============================================================
 
-  Widget _buildMessageBubble(
+  Widget _buildChatBubble(
     Map<String, dynamic> message,
   ) {
-    final bool isDoctor =
-        message['isDoctor'] == true;
+    final User? currentUser =
+        FirebaseAuth.instance.currentUser;
+
+    final String senderId =
+        (message['senderId'] ?? '')
+            .toString();
+
+    final String senderRole =
+        (message['senderRole'] ?? '')
+            .toString()
+            .toLowerCase();
+
+    final bool isMine =
+        currentUser != null &&
+            senderId == currentUser.uid;
+
+    final bool isDoctorMessage =
+        senderRole == 'doctor' || isMine;
+
+    final String text =
+        (message['message'] ?? '')
+            .toString();
+
+    final String time =
+        _formatTime(
+      message['createdAt'],
+    );
 
     return Padding(
       padding:
-          const EdgeInsets.only(
-        bottom: 12,
-      ),
+          const EdgeInsets.only(bottom: 14),
       child: Row(
         mainAxisAlignment:
-            isDoctor
+            isDoctorMessage
                 ? MainAxisAlignment.end
                 : MainAxisAlignment.start,
         crossAxisAlignment:
             CrossAxisAlignment.end,
         children: [
-          // ---------------------------------------------------------
-          // AVATAR PASIEN
-          // ---------------------------------------------------------
+          if (!isDoctorMessage) ...[
+            _buildSmallPatientImage(),
 
-          if (!isDoctor) ...[
-            _buildSmallAvatar(
-              widget.patient,
-            ),
-
-            const SizedBox(
-              width: 8,
-            ),
+            const SizedBox(width: 8),
           ],
-
-          // ---------------------------------------------------------
-          // BUBBLE
-          // ---------------------------------------------------------
 
           Flexible(
             child: Container(
               constraints:
                   const BoxConstraints(
-                maxWidth: 330,
+                maxWidth: 310,
               ),
               padding:
                   const EdgeInsets.fromLTRB(
-                14,
-                11,
-                11,
-                7,
+                13,
+                9,
+                10,
+                6,
               ),
-              decoration:
-                  BoxDecoration(
-                color: isDoctor
-                    ? Colors.white
-                    : patientBubbleColor,
+              decoration: BoxDecoration(
+                color: isDoctorMessage
+                    ? const Color(0xFFFFE7D8)
+                    : const Color(0xFFFFFCFA),
                 borderRadius:
                     BorderRadius.only(
                   topLeft:
-                      const Radius.circular(
-                    20,
-                  ),
+                      const Radius.circular(18),
                   topRight:
-                      const Radius.circular(
-                    20,
-                  ),
+                      const Radius.circular(18),
                   bottomLeft:
                       Radius.circular(
-                    isDoctor ? 20 : 5,
+                    isDoctorMessage
+                        ? 18
+                        : 4,
                   ),
                   bottomRight:
                       Radius.circular(
-                    isDoctor ? 5 : 20,
+                    isDoctorMessage
+                        ? 4
+                        : 18,
                   ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        Colors.black.withOpacity(
-                      0.025,
-                    ),
-                    blurRadius: 5,
-                    offset:
-                        const Offset(0, 2),
-                  ),
-                ],
+                boxShadow:
+                    isDoctorMessage
+                        ? const [
+                            BoxShadow(
+                              color:
+                                  Color(0x28000000),
+                              blurRadius: 4,
+                              offset:
+                                  Offset(0, 3),
+                            ),
+                          ]
+                        : [],
               ),
               child: Column(
                 crossAxisAlignment:
                     CrossAxisAlignment.end,
                 children: [
-                  // -------------------------------------------------
-                  // TEKS
-                  // -------------------------------------------------
-
                   Align(
                     alignment:
                         Alignment.centerLeft,
                     child: Text(
-                      message['text']
-                          .toString(),
+                      text,
                       style:
                           const TextStyle(
                         fontFamily:
                             'Nunito',
-                        fontSize: 12.5,
+                        fontSize: 12,
                         height: 1.35,
-                        fontWeight:
-                            FontWeight.w400,
                         color:
-                            Color(0xFF2F211D),
+                            Color(0xFF211914),
                       ),
                     ),
                   ),
 
-                  const SizedBox(
-                    height: 4,
-                  ),
-
-                  // -------------------------------------------------
-                  // WAKTU
-                  // -------------------------------------------------
+                  const SizedBox(height: 2),
 
                   Row(
                     mainAxisSize:
                         MainAxisSize.min,
                     children: [
                       Text(
-                        message['time']
-                            .toString(),
-                        style:
-                            const TextStyle(
+                        time,
+                        style: TextStyle(
                           fontFamily:
                               'Nunito',
-                          fontSize: 8.5,
-                          fontWeight:
-                              FontWeight.w500,
+                          fontSize: 8,
                           color:
-                              Color(0xFF777777),
+                              Colors.grey[600],
                         ),
                       ),
 
-                      // ------------------------------------------------
-                      // DOUBLE CHECK
-                      // ------------------------------------------------
+                      if (isDoctorMessage) ...[
+                        const SizedBox(width: 3),
 
-                      if (isDoctor) ...[
-                        const SizedBox(
-                          width: 4,
-                        ),
                         const Icon(
-                          Icons
-                              .done_all_rounded,
-                          size: 13,
+                          Icons.done_all_rounded,
+                          size: 12,
                           color:
                               Color(0xFFB65339),
                         ),
@@ -852,228 +677,141 @@ class _DoctorPatientChatScreenState
   }
 
   // ===============================================================
-  // AVATAR KECIL DI CHAT
+  // FOTO PASIEN KECIL
   // ===============================================================
 
-  Widget _buildSmallAvatar(
-    Map<String, dynamic> patient,
-  ) {
-    final dynamic avatarImage =
-        patient['avatarImage'];
-
-    if (avatarImage is String &&
-        avatarImage.trim().isNotEmpty) {
-      return ClipOval(
-        child: Image.asset(
-          avatarImage,
-          width: 35,
-          height: 35,
-          fit: BoxFit.cover,
-          errorBuilder:
-              (context, error, stackTrace) {
-            return _buildIconAvatar(
-              patient,
-              35,
-              23,
-            );
-          },
-        ),
-      );
-    }
-
-    return _buildIconAvatar(
-      patient,
-      35,
-      23,
+  Widget _buildSmallPatientImage() {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration:
+          const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Color(0xFFFFE3D1),
+      ),
+      child: const Icon(
+        Icons.person_rounded,
+        size: 25,
+        color: Color(0xFFB65339),
+      ),
     );
   }
 
   // ===============================================================
-  // BAGIAN BAWAH
-  // ===============================================================
-
-  Widget _buildBottomSection() {
-    return Column(
-      mainAxisSize:
-          MainAxisSize.min,
-      children: [
-        // -----------------------------------------------------------
-        // INPUT PESAN
-        // -----------------------------------------------------------
-
-        _buildMessageInput(),
-
-        const SizedBox(
-          height: 7,
-        ),
-
-        // -----------------------------------------------------------
-        // CATATAN
-        // -----------------------------------------------------------
-
-        _buildSafetyNote(),
-
-        const SizedBox(
-          height: 5,
-        ),
-      ],
-    );
-  }
-
-  // ===============================================================
-  // INPUT PESAN
+  // INPUT CHAT
   // ===============================================================
 
   Widget _buildMessageInput() {
     return Container(
-      margin:
-          const EdgeInsets.fromLTRB(
-        27,
-        4,
-        27,
+      margin: const EdgeInsets.fromLTRB(
+        9,
         0,
+        9,
+        8,
       ),
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 9,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 7,
       ),
-      decoration:
-          BoxDecoration(
-        color:
-            inputBackground,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFD1BC),
         borderRadius:
-            BorderRadius.circular(20),
+            BorderRadius.circular(13),
       ),
       child: Row(
         children: [
-          // ---------------------------------------------------------
-          // PLUS
-          // ---------------------------------------------------------
-
           Container(
-            width: 42,
-            height: 42,
+            width: 32,
+            height: 32,
             decoration:
                 const BoxDecoration(
-              color:
-                  Colors.white,
-              shape:
-                  BoxShape.circle,
+              color: Color(0xFFFFFCFA),
+              shape: BoxShape.circle,
             ),
-            child:
-                IconButton(
-              padding:
-                  EdgeInsets.zero,
+            child: IconButton(
+              padding: EdgeInsets.zero,
               onPressed: () {},
-              icon:
-                  const Icon(
+              icon: const Icon(
                 Icons.add_rounded,
-                size: 29,
-                color:
-                    Color(0xFFB65339),
+                size: 22,
+                color: Color(0xFFE76F51),
               ),
             ),
           ),
 
-          const SizedBox(
-            width: 8,
-          ),
-
-          // ---------------------------------------------------------
-          // TEXT FIELD
-          // ---------------------------------------------------------
+          const SizedBox(width: 7),
 
           Expanded(
-            child: Container(
-              constraints:
-                  const BoxConstraints(
-                minHeight: 42,
-              ),
+            child: TextField(
+              controller:
+                  _messageController,
+              textInputAction:
+                  TextInputAction.send,
+              onSubmitted: (_) {
+                _sendMessage();
+              },
               decoration:
-                  BoxDecoration(
-                color:
-                    Colors.white,
-                borderRadius:
-                    BorderRadius.circular(
-                  22,
+                  InputDecoration(
+                hintText:
+                    'Ketik pesan...',
+                hintStyle: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
+                  color: Colors.grey[500],
+                ),
+                filled: true,
+                fillColor:
+                    const Color(0xFFFFFCFA),
+                border:
+                    OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(18),
+                  borderSide:
+                      BorderSide.none,
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
                 ),
               ),
-              child:
-                  TextField(
-                controller:
-                    _messageController,
-                minLines: 1,
-                maxLines: 3,
-                textInputAction:
-                    TextInputAction.send,
-                onSubmitted:
-                    (_) {
-                  _sendMessage();
-                },
-                textAlignVertical:
-                    TextAlignVertical.center,
-                style:
-                    const TextStyle(
-                  fontFamily:
-                      'Nunito',
-                  fontSize: 12,
-                  color:
-                      Color(0xFF2F211D),
-                ),
-                decoration:
-                    const InputDecoration(
-                  border:
-                      InputBorder.none,
-                  hintText:
-                      'Ketik pesan...',
-                  hintStyle:
-                      TextStyle(
-                    fontFamily:
-                        'Nunito',
-                    fontSize: 11.5,
-                    color:
-                        Color(0xFF9A9A9A),
-                  ),
-                  contentPadding:
-                      EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 9,
-                  ),
-                ),
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 12,
               ),
             ),
           ),
 
-          const SizedBox(
-            width: 8,
-          ),
-
-          // ---------------------------------------------------------
-          // KIRIM
-          // ---------------------------------------------------------
+          const SizedBox(width: 7),
 
           GestureDetector(
             onTap:
-                _sendMessage,
-            child:
-                Container(
-              width: 42,
-              height: 42,
+                _isSending
+                    ? null
+                    : _sendMessage,
+            child: Container(
+              width: 34,
+              height: 34,
               decoration:
                   const BoxDecoration(
-                color:
-                    Color(0xFFB65339),
-                shape:
-                    BoxShape.circle,
+                color: Color(0xFFB65339),
+                shape: BoxShape.circle,
               ),
-              child:
-                  const Icon(
-                Icons.send_rounded,
-                size: 20,
-                color:
-                    Colors.white,
-              ),
+              child: _isSending
+                  ? const Padding(
+                      padding:
+                          EdgeInsets.all(9),
+                      child:
+                          CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 19,
+                    ),
             ),
           ),
         ],
@@ -1082,71 +820,407 @@ class _DoctorPatientChatScreenState
   }
 
   // ===============================================================
-  // CATATAN KEAMANAN
+  // CATATAN
   // ===============================================================
 
-  Widget _buildSafetyNote() {
+  Widget _buildMedicalNote() {
     return Container(
       margin:
           const EdgeInsets.symmetric(
-        horizontal: 27,
+        horizontal: 9,
       ),
       padding:
           const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 9,
+        horizontal: 10,
+        vertical: 7,
       ),
-      decoration:
-          BoxDecoration(
-        color:
-            const Color(0xFFFFEEE4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE7D8),
         borderRadius:
-            BorderRadius.circular(14),
+            BorderRadius.circular(10),
       ),
       child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration:
-                const BoxDecoration(
-              color:
-                  Color(0xFFFFF7F1),
-              shape:
-                  BoxShape.circle,
-            ),
-            child:
-                const Icon(
-              Icons.info_outline_rounded,
-              size: 21,
-              color:
-                  Color(0xFFB65339),
-            ),
+          const Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: Color(0xFFB65339),
           ),
 
-          const SizedBox(
-            width: 10,
-          ),
+          const SizedBox(width: 7),
 
-          const Expanded(
+          Expanded(
             child: Text(
-              'Catatan: Saran ini bukan pengganti pemeriksaan langsung.\nSegera periksa ke fasilitas kesehatan terdekat jika keluhan memburuk.',
-              style:
-                  TextStyle(
-                fontFamily:
-                    'Nunito',
-                fontSize: 10.5,
+              'Catatan: Saran ini bukan pengganti pemeriksaan langsung. '
+              'Segera periksa ke fasilitas kesehatan terdekat jika keluhan memburuk.',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 8.5,
                 height: 1.35,
-                fontWeight:
-                    FontWeight.w500,
-                color:
-                    Color(0xFF5A4038),
+                color: Colors.grey[800],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ===============================================================
+  // KIRIM PESAN
+  // ===============================================================
+
+  Future<void> _sendMessage() async {
+    final String message =
+        _messageController.text.trim();
+
+    if (message.isEmpty) {
+      return;
+    }
+
+    final User? doctor =
+        FirebaseAuth.instance.currentUser;
+
+    if (doctor == null) {
+      return;
+    }
+
+    if (_consultationId.isEmpty) {
+      _showMessage(
+        'ID konsultasi tidak ditemukan.',
+      );
+      return;
+    }
+
+    if (_isSending) {
+      return;
+    }
+
+    setState(() {
+      _isSending = true;
+    });
+
+    try {
+      final DocumentReference<
+          Map<String, dynamic>>
+          consultationReference =
+          FirebaseFirestore.instance
+              .collection('consultations')
+              .doc(_consultationId);
+
+      await consultationReference
+          .collection('messages')
+          .add({
+        'senderId': doctor.uid,
+        'senderRole': 'doctor',
+        'message': message,
+        'createdAt':
+            FieldValue.serverTimestamp(),
+      });
+
+      await consultationReference.set(
+        {
+          'updatedAt':
+              FieldValue.serverTimestamp(),
+          'lastMessage': message,
+          'lastSenderId': doctor.uid,
+        },
+        SetOptions(
+          merge: true,
+        ),
+      );
+
+      _messageController.clear();
+
+      await Future.delayed(
+        const Duration(
+          milliseconds: 100,
+        ),
+      );
+
+      _scrollToBottom();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Pesan gagal dikirim.',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
+          ),
+          behavior:
+              SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+    }
+  }
+
+  // ===============================================================
+  // AKHIRI KONSULTASI
+  // ===============================================================
+
+  void _showFinishConfirmation() {
+    FocusScope.of(context).unfocus();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor:
+              const Color(0xFFFFFCFA),
+          shape: RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Akhiri Konsultasi?',
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 20,
+              fontWeight:
+                  FontWeight.w700,
+              color: Color(0xFF493028),
+            ),
+          ),
+          content: const Text(
+            'Apakah kamu yakin ingin mengakhiri konsultasi dengan pasien?',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 13,
+              height: 1.4,
+              color: Color(0xFF493C37),
+            ),
+          ),
+          actionsPadding:
+              const EdgeInsets.fromLTRB(
+            16,
+            0,
+            16,
+            14,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                );
+              },
+              child: const Text(
+                'Batal',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 13,
+                  fontWeight:
+                      FontWeight.w700,
+                  color:
+                      Color(0xFF77716E),
+                ),
+              ),
+            ),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                );
+
+                _finishConsultation();
+              },
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    const Color(0xFFB65339),
+                foregroundColor:
+                    Colors.white,
+                elevation: 0,
+                shape:
+                    RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(
+                    20,
+                  ),
+                ),
+              ),
+              child: const Text(
+                'Akhiri Konsultasi',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
+                  fontWeight:
+                      FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ===============================================================
+  // SELESAI
+  // ===============================================================
+
+  Future<void> _finishConsultation() async {
+    FocusScope.of(context).unfocus();
+
+    try {
+      if (_consultationId.isNotEmpty) {
+        await FirebaseFirestore.instance
+            .collection('consultations')
+            .doc(_consultationId)
+            .set(
+          {
+            'status': 'completed',
+            'updatedAt':
+                FieldValue.serverTimestamp(),
+          },
+          SetOptions(
+            merge: true,
+          ),
+        );
+      }
+    } catch (_) {}
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pop(context);
+  }
+
+  // ===============================================================
+  // SCROLL
+  // ===============================================================
+
+  void _scrollToBottom() {
+    if (!_scrollController
+        .hasClients) {
+      return;
+    }
+
+    _scrollController.animateTo(
+      _scrollController
+          .position
+          .maxScrollExtent,
+      duration:
+          const Duration(
+        milliseconds: 300,
+      ),
+      curve: Curves.easeOut,
+    );
+  }
+
+  // ===============================================================
+  // FORMAT WAKTU
+  // ===============================================================
+
+  String _formatTime(
+    dynamic timestamp,
+  ) {
+    if (timestamp is! Timestamp) {
+      return '';
+    }
+
+    final DateTime date =
+        timestamp.toDate();
+
+    final String hour =
+        date.hour
+            .toString()
+            .padLeft(2, '0');
+
+    final String minute =
+        date.minute
+            .toString()
+            .padLeft(2, '0');
+
+    return '$hour:$minute';
+  }
+
+  // ===============================================================
+  // ERROR
+  // ===============================================================
+
+  Widget _buildError(String message) {
+    return Center(
+      child: Padding(
+        padding:
+            const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 45,
+              color: Color(0xFFB65339),
+            ),
+
+            const SizedBox(height: 12),
+
+            const Text(
+              'Chat gagal dimuat.',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 13,
+                fontWeight:
+                    FontWeight.w700,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 10,
+                color: Color(0xFF777777),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===============================================================
+  // MESSAGE
+  // ===============================================================
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 11,
+          ),
+        ),
+        behavior:
+            SnackBarBehavior.floating,
       ),
     );
   }

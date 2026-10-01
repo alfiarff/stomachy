@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../widgets/doctor_bottom_navigation.dart';
 import 'doctor_patients_screen.dart';
 import 'doctor_chat_screen.dart';
 import 'doctor_patient_chat_screen.dart';
@@ -15,52 +16,23 @@ class DoctorHomeScreen extends StatefulWidget {
       _DoctorHomeScreenState();
 }
 
-class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
+class _DoctorHomeScreenState
+    extends State<DoctorHomeScreen> {
   int _selectedIndex = 0;
 
-  // ===============================================================
-  // WARNA STOMACHY
-  // ===============================================================
-
-  final Color backgroundColor = const Color(0xFFFFF5EF);
-
-  final Color primaryBrown = const Color(0xFF5A392F);
-
-  final Color accentBrown = const Color(0xFFB9543A);
-
-  // Warna icon dan selected bottom navigation
-  final Color navigationBrown = const Color(0xFF93432F);
-
-  final Color navigationBackground = const Color(0xFFFFE5D5);
+  final Color backgroundColor =
+      const Color(0xFFFFF5EF);
 
   String _doctorName = 'Dokter';
 
-  bool isOnline = true;
-
-  // ===============================================================
-  // JUMLAH PESAN BELUM DIBACA
-  // ===============================================================
-
-  int get notificationCount {
-    int total = 0;
-
-    for (final chat in DoctorChatScreen.chatItems) {
-      final int unread = chat['unread'] as int;
-      total += unread;
-    }
-
-    return total;
-  }
-
-  // ===============================================================
-  // INIT
-  // ===============================================================
+  bool isOnline = false;
 
   @override
   void initState() {
     super.initState();
 
     _loadDoctorName();
+    _loadDoctorStatus();
   }
 
   // ===============================================================
@@ -69,24 +41,30 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
 
   Future<void> _loadDoctorName() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final User? user =
+          FirebaseAuth.instance.currentUser;
 
       if (user == null) {
         return;
       }
 
-      String name = user.displayName ?? '';
+      String name =
+          user.displayName ?? '';
 
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final DocumentSnapshot<
+          Map<String, dynamic>> doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
 
       if (doc.exists) {
-        final data = doc.data();
+        final Map<String, dynamic>? data =
+            doc.data();
 
         if (data != null) {
-          final firestoreName = data['name'];
+          final dynamic firestoreName =
+              data['name'];
 
           if (firestoreName is String &&
               firestoreName.trim().isNotEmpty) {
@@ -108,15 +86,218 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
         return;
       }
 
-      final user = FirebaseAuth.instance.currentUser;
+      final User? user =
+          FirebaseAuth.instance.currentUser;
 
       setState(() {
         _doctorName =
-            user?.displayName?.isNotEmpty == true
+            user?.displayName?.trim().isNotEmpty == true
                 ? user!.displayName!
                 : 'Dokter';
       });
     }
+  }
+
+  // ===============================================================
+  // LOAD STATUS DOKTER
+  // ===============================================================
+
+  Future<void> _loadDoctorStatus() async {
+    try {
+      final User? user =
+          FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        return;
+      }
+
+      final DocumentSnapshot<
+          Map<String, dynamic>> doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+
+      if (!mounted) {
+        return;
+      }
+
+      if (doc.exists) {
+        final Map<String, dynamic>? data =
+            doc.data();
+
+        setState(() {
+          isOnline =
+              data?['status'] == 'online';
+        });
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        isOnline = false;
+      });
+    }
+  }
+
+  // ===============================================================
+  // UBAH STATUS DOKTER
+  // ===============================================================
+
+  Future<void> _toggleDoctorStatus() async {
+    final User? user =
+        FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return;
+    }
+
+    final bool previousStatus =
+        isOnline;
+
+    final bool newStatus =
+        !isOnline;
+
+    setState(() {
+      isOnline = newStatus;
+    });
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+        {
+          'status':
+              newStatus ? 'online' : 'offline',
+          'updatedAt':
+              FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            newStatus
+                ? 'Status kamu sekarang Online.'
+                : 'Status kamu sekarang Offline.',
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
+          ),
+          behavior:
+              SnackBarBehavior.floating,
+          duration:
+              const Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        isOnline = previousStatus;
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Gagal mengubah status praktik.',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
+          ),
+          behavior:
+              SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // ===============================================================
+  // STREAM KONSULTASI
+  // ===============================================================
+
+  Stream<QuerySnapshot<Map<String, dynamic>>>
+      _consultationStream() {
+    final User? user =
+        FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Stream.empty();
+    }
+
+    return FirebaseFirestore.instance
+        .collection('consultations')
+        .where(
+          'doctorId',
+          isEqualTo: user.uid,
+        )
+        .snapshots();
+  }
+
+  // ===============================================================
+  // JUMLAH PESAN BELUM DIBACA
+  // ===============================================================
+
+  int _getUnreadCount(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>>
+        consultations,
+  ) {
+    int total = 0;
+
+    for (final consultation in consultations) {
+      final Map<String, dynamic> data = consultation.data();
+      final dynamic value = data['unreadForDoctor'];
+      final int unread = value is int
+          ? value
+          : value is num
+              ? value.toInt()
+              : int.tryParse(value?.toString() ?? '0') ?? 0;
+      if (unread > 0) total += unread;
+    }
+
+    return total;
+  }
+
+  // ===============================================================
+  // JUMLAH PASIEN
+  // ===============================================================
+
+  int _getPatientCount(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>>
+        consultations,
+  ) {
+    final Set<String> patients = {};
+
+    for (final consultation in consultations) {
+      final data = consultation.data();
+
+      final String status =
+          data['status']?.toString().toLowerCase() ?? '';
+
+      final String userId =
+          data['userId']?.toString() ?? '';
+
+      if (status == 'active' &&
+          userId.isNotEmpty) {
+        patients.add(userId);
+      }
+    }
+
+    return patients.length;
   }
 
   // ===============================================================
@@ -128,6 +309,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       setState(() {
         _selectedIndex = 0;
       });
+
+      _loadDoctorStatus();
 
       return;
     }
@@ -164,13 +347,11 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               const DoctorProfileScreen(),
         ),
       );
-
-      return;
     }
   }
 
   // ===============================================================
-  // BUKA NOTIFIKASI
+  // BUKA CHAT
   // ===============================================================
 
   void _openNotifications() {
@@ -183,10 +364,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
-  // ===============================================================
-  // BUKA PROFIL
-  // ===============================================================
-
   void _openProfile() {
     Navigator.push(
       context,
@@ -196,10 +373,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       ),
     );
   }
-
-  // ===============================================================
-  // BUKA CHAT PASIEN
-  // ===============================================================
 
   void _openPatientChat(
     Map<String, dynamic> patient,
@@ -222,62 +395,88 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor:
+          backgroundColor,
+
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics:
-              const BouncingScrollPhysics(),
-          padding:
-              const EdgeInsets.fromLTRB(
-            15,
-            10,
-            15,
-            25,
-          ),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
-              // HEADER
-              _buildHeader(),
+        child: StreamBuilder<
+            QuerySnapshot<Map<String, dynamic>>>(
+          stream: _consultationStream(),
+          builder: (context, snapshot) {
+            final consultations =
+                snapshot.data?.docs ?? [];
 
-              const SizedBox(
-                height: 18,
+            final int unreadCount =
+                _getUnreadCount(
+              consultations,
+            );
+
+            return SingleChildScrollView(
+              physics:
+                  const BouncingScrollPhysics(),
+              padding:
+                  const EdgeInsets.fromLTRB(
+                15,
+                10,
+                15,
+                25,
               ),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(
+                    unreadCount,
+                  ),
 
-              // GREETING
-              _buildGreeting(),
+                  const SizedBox(
+                    height: 18,
+                  ),
 
-              const SizedBox(
-                height: 18,
+                  _buildGreeting(
+                    unreadCount,
+                  ),
+
+                  const SizedBox(
+                    height: 18,
+                  ),
+
+                  _buildPracticeStatus(),
+
+                  const SizedBox(
+                    height: 18,
+                  ),
+
+                  _buildStatistics(
+                    consultations,
+                    unreadCount,
+                  ),
+
+                  const SizedBox(
+                    height: 25,
+                  ),
+
+                  _buildRecentMessages(
+                    consultations,
+                  ),
+
+                  const SizedBox(
+                    height: 15,
+                  ),
+                ],
               ),
-
-              // STATUS PRAKTIK
-              _buildPracticeStatus(),
-
-              const SizedBox(
-                height: 18,
-              ),
-
-              // STATISTIK
-              _buildStatistics(),
-
-              const SizedBox(
-                height: 25,
-              ),
-
-              // PESAN TERBARU
-              _buildRecentMessages(),
-
-              const SizedBox(
-                height: 15,
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
+
       bottomNavigationBar:
-          _buildBottomNavigation(),
+          DoctorBottomNavigation(
+        selectedIndex:
+            _selectedIndex,
+        onItemSelected:
+            _onNavigationTap,
+      ),
     );
   }
 
@@ -285,35 +484,30 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   // HEADER
   // ===============================================================
 
-  Widget _buildHeader() {
+  Widget _buildHeader(
+    int unreadCount,
+  ) {
     return SizedBox(
       height: 75,
       child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.center,
         children: [
-          // ---------------------------------------------------------
-          // LOGO
-          // ---------------------------------------------------------
-
           Expanded(
             child: Align(
               alignment:
                   Alignment.centerLeft,
               child: Image.asset(
-                'assets/images/logo_beranda_stomachy.png',
+                'assets/images/logo_beranda_baru.png',
                 height: 72,
                 fit: BoxFit.contain,
               ),
             ),
           ),
 
-          // ---------------------------------------------------------
-          // NOTIFIKASI
-          // ---------------------------------------------------------
-
           GestureDetector(
-            onTap: _openNotifications,
+            onTap:
+                _openNotifications,
             child: Stack(
               clipBehavior:
                   Clip.none,
@@ -338,13 +532,12 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                   ),
                 ),
 
-                // BADGE NOTIFIKASI
-
-                if (notificationCount > 0)
+                if (unreadCount > 0)
                   Positioned(
                     right: -3,
                     top: -4,
-                    child: Container(
+                    child:
+                        Container(
                       width: 19,
                       height: 19,
                       alignment:
@@ -352,14 +545,15 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                       decoration:
                           const BoxDecoration(
                         color:
-                            Color(0xFFFF6680),
+                            Color(0xFFAA4E39),
                         shape:
                             BoxShape.circle,
                       ),
-                      child: Text(
-                        notificationCount > 9
+                      child:
+                          Text(
+                        unreadCount > 9
                             ? '9+'
-                            : notificationCount
+                            : unreadCount
                                 .toString(),
                         style:
                             const TextStyle(
@@ -382,14 +576,11 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             width: 10,
           ),
 
-          // ---------------------------------------------------------
-          // PROFIL
-          // Warna disamakan dengan icon bottom navigation
-          // ---------------------------------------------------------
-
           GestureDetector(
-            onTap: _openProfile,
-            child: Container(
+            onTap:
+                _openProfile,
+            child:
+                Container(
               width: 42,
               height: 42,
               decoration:
@@ -418,7 +609,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   // GREETING
   // ===============================================================
 
-  Widget _buildGreeting() {
+  Widget _buildGreeting(
+    int unreadCount,
+  ) {
     return Container(
       width: double.infinity,
       padding:
@@ -455,7 +648,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             style:
                 TextStyle(
               fontFamily:
-                  'Nunito',
+                  'Fredoka',
               fontSize: 22,
               fontWeight:
                   FontWeight.w800,
@@ -477,7 +670,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             style:
                 const TextStyle(
               fontFamily:
-                  'Nunito',
+                  'Fredoka',
               fontSize: 22,
               fontWeight:
                   FontWeight.w800,
@@ -492,8 +685,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           ),
 
           Text(
-            notificationCount > 0
-                ? 'Anda punya $notificationCount pesan belum dibaca.'
+            unreadCount > 0
+                ? 'Anda punya $unreadCount pesan belum dibaca.'
                 : 'Tidak ada pesan baru.',
             style:
                 const TextStyle(
@@ -525,7 +718,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       ),
       decoration:
           BoxDecoration(
-        color: Colors.white,
+        color:
+            Colors.white,
         borderRadius:
             BorderRadius.circular(27),
         boxShadow: [
@@ -552,7 +746,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                   style:
                       TextStyle(
                     fontFamily:
-                        'Nunito',
+                        'Fredoka',
                     fontSize: 16,
                     fontWeight:
                         FontWeight.w800,
@@ -576,7 +770,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                             ? const Color(
                                 0xFF54C467,
                               )
-                            : Colors.grey,
+                            : const Color(
+                                0xFF9E9E9E,
+                              ),
                         shape:
                             BoxShape.circle,
                       ),
@@ -587,7 +783,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                     ),
 
                     Flexible(
-                      child: Text(
+                      child:
+                          Text(
                         isOnline
                             ? 'Online – pasien bisa chat'
                             : 'Offline – pasien tidak bisa chat',
@@ -595,9 +792,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                             const TextStyle(
                           fontFamily:
                               'Nunito',
-                          fontSize: 11,
-                          fontWeight:
-                              FontWeight.w400,
+                          fontSize: 12,
                           color:
                               Color(
                             0xFF777783,
@@ -615,15 +810,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             width: 8,
           ),
 
-          // SWITCH
-
           GestureDetector(
-            onTap: () {
-              setState(() {
-                isOnline =
-                    !isOnline;
-              });
-            },
+            onTap:
+                _toggleDoctorStatus,
             child:
                 AnimatedContainer(
               duration:
@@ -633,7 +822,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               width: 58,
               height: 30,
               padding:
-                  const EdgeInsets.all(3),
+                  const EdgeInsets.all(
+                3,
+              ),
               decoration:
                   BoxDecoration(
                 color: isOnline
@@ -657,7 +848,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 alignment: isOnline
                     ? Alignment.centerRight
                     : Alignment.centerLeft,
-                child: Container(
+                child:
+                    Container(
                   width: 24,
                   height: 24,
                   decoration:
@@ -680,7 +872,16 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   // STATISTICS
   // ===============================================================
 
-  Widget _buildStatistics() {
+  Widget _buildStatistics(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>>
+        consultations,
+    int unreadCount,
+  ) {
+    final int patientCount =
+        _getPatientCount(
+      consultations,
+    );
+
     return Row(
       children: [
         Expanded(
@@ -689,14 +890,11 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             icon:
                 Icons.groups_rounded,
             iconColor:
-                const Color(
-              0xFFFF806E,
-            ),
+                const Color(0xFFFF806E),
             iconBackground:
-                const Color(
-              0xFFFFE8E2,
-            ),
-            value: '5',
+                const Color(0xFFFFE8E2),
+            value:
+                patientCount.toString(),
             label:
                 'PASIEN HARI INI',
           ),
@@ -710,19 +908,13 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           child:
               _buildStatisticCard(
             icon:
-                Icons
-                    .chat_bubble_rounded,
+                Icons.chat_bubble_rounded,
             iconColor:
-                const Color(
-              0xFF9074E8,
-            ),
+                const Color(0xFFAA4E39),
             iconBackground:
-                const Color(
-              0xFFEAE3FF,
-            ),
+                const Color(0xFFFFE5D8),
             value:
-                notificationCount
-                    .toString(),
+                unreadCount.toString(),
             label:
                 'BELUM DIBACA',
           ),
@@ -736,17 +928,13 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           child:
               _buildStatisticCard(
             icon:
-                Icons
-                    .calendar_month_rounded,
+                Icons.calendar_month_rounded,
             iconColor:
-                const Color(
-              0xFFEBA21D,
-            ),
+                const Color(0xFFEBA21D),
             iconBackground:
-                const Color(
-              0xFFFFF0D7,
-            ),
-            value: '24',
+                const Color(0xFFFFF0D7),
+            value:
+                _getPatientCount(consultations).toString(),
             label:
                 'TOTAL PASIEN',
           ),
@@ -775,7 +963,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       ),
       decoration:
           BoxDecoration(
-        color: Colors.white,
+        color:
+            Colors.white,
         borderRadius:
             BorderRadius.circular(25),
         boxShadow: [
@@ -804,7 +993,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               shape:
                   BoxShape.circle,
             ),
-            child: Icon(
+            child:
+                Icon(
               icon,
               size: 33,
               color:
@@ -842,7 +1032,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 const TextStyle(
               fontFamily:
                   'Nunito',
-              fontSize: 10,
+              fontSize: 12,
               fontWeight:
                   FontWeight.w700,
               color:
@@ -859,11 +1049,55 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   // PESAN TERBARU
   // ===============================================================
 
-  Widget _buildRecentMessages() {
-    final recentChats =
-        DoctorChatScreen.chatItems
-            .take(3)
-            .toList();
+  Widget _buildRecentMessages(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>>
+        consultations,
+  ) {
+    final Map<String, QueryDocumentSnapshot<Map<String, dynamic>>> latestByUser = {};
+
+    for (final document in consultations) {
+      final Map<String, dynamic> data = document.data();
+      final String userId = (data['userId'] ?? '').toString();
+      if (userId.isEmpty) continue;
+
+      final existing = latestByUser[userId];
+      if (existing == null) {
+        latestByUser[userId] = document;
+        continue;
+      }
+
+      final Timestamp? oldTime = existing.data()['updatedAt'] is Timestamp
+          ? existing.data()['updatedAt'] as Timestamp
+          : null;
+      final Timestamp? newTime = data['updatedAt'] is Timestamp
+          ? data['updatedAt'] as Timestamp
+          : null;
+
+      if (newTime != null &&
+          (oldTime == null || newTime.compareTo(oldTime) > 0)) {
+        latestByUser[userId] = document;
+      }
+    }
+
+    final List<QueryDocumentSnapshot<Map<String, dynamic>>> recentChats =
+        latestByUser.values.toList();
+
+    recentChats.sort((a, b) {
+      final Timestamp? aTime = a.data()['updatedAt'] is Timestamp
+          ? a.data()['updatedAt'] as Timestamp
+          : null;
+      final Timestamp? bTime = b.data()['updatedAt'] is Timestamp
+          ? b.data()['updatedAt'] as Timestamp
+          : null;
+
+      if (aTime == null && bTime == null) return 0;
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+      return bTime.compareTo(aTime);
+    });
+
+    final List<QueryDocumentSnapshot<Map<String, dynamic>>> limitedChats =
+        recentChats.take(3).toList();
 
     return Container(
       width: double.infinity,
@@ -876,7 +1110,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       ),
       decoration:
           BoxDecoration(
-        color: Colors.white,
+        color:
+            Colors.white,
         borderRadius:
             BorderRadius.circular(27),
         boxShadow: [
@@ -893,10 +1128,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       ),
       child: Column(
         children: [
-          // ---------------------------------------------------------
-          // JUDUL
-          // ---------------------------------------------------------
-
           Row(
             children: [
               const Expanded(
@@ -927,13 +1158,11 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                           TextStyle(
                         fontFamily:
                             'Nunito',
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight:
                             FontWeight.w700,
                         color:
-                            Color(
-                          0xFFB65339,
-                        ),
+                            Color(0xFFAA4E39),
                       ),
                     ),
 
@@ -946,9 +1175,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                           .chevron_right_rounded,
                       size: 19,
                       color:
-                          Color(
-                        0xFFB65339,
-                      ),
+                          Color(0xFFAA4E39),
                     ),
                   ],
                 ),
@@ -960,17 +1187,32 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             height: 8,
           ),
 
-          // ---------------------------------------------------------
-          // DATA CHAT
-          // ---------------------------------------------------------
-
-          ...recentChats.map(
-            (chat) {
-              return _buildMessageItem(
-                chat,
-              );
-            },
-          ),
+          if (limitedChats.isEmpty)
+            const Padding(
+              padding:
+                  EdgeInsets.symmetric(
+                vertical: 20,
+              ),
+              child: Text(
+                'Belum ada pesan terbaru.',
+                style:
+                    TextStyle(
+                  fontFamily:
+                      'Nunito',
+                  fontSize: 12,
+                  color:
+                      Color(0xFF777777),
+                ),
+              ),
+            )
+          else
+            ...limitedChats.map(
+              (document) {
+                return _buildMessageItem(
+                  document,
+                );
+              },
+            ),
         ],
       ),
     );
@@ -981,14 +1223,51 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   // ===============================================================
 
   Widget _buildMessageItem(
-    Map<String, dynamic> chat,
+    QueryDocumentSnapshot<Map<String, dynamic>>
+        document,
   ) {
-    final int unread =
-        chat['unread'] as int;
+    final Map<String, dynamic> data =
+        document.data();
+
+    final String patientName =
+        data['userName']?.toString() ??
+            data['name']?.toString() ??
+            'Pasien';
+
+    final String message =
+        data['lastMessage']?.toString() ??
+            '';
+
+    final String status =
+        data['status']?.toString().toLowerCase() ??
+            '';
+
+    final String lastSenderId =
+        data['lastSenderId']?.toString() ??
+            '';
+
+    final dynamic unreadValue = data['unreadForDoctor'];
+    final int unreadCount = unreadValue is int
+        ? unreadValue
+        : unreadValue is num
+            ? unreadValue.toInt()
+            : int.tryParse(unreadValue?.toString() ?? '0') ?? 0;
+    final bool unread = unreadCount > 0;
+
+    final Map<String, dynamic> patient =
+        {
+      ...data,
+      'consultationId':
+          document.id,
+      'userName':
+          patientName,
+    };
 
     return GestureDetector(
       onTap: () {
-        _openPatientChat(chat);
+        _openPatientChat(
+          patient,
+        );
       },
       child: Container(
         padding:
@@ -998,7 +1277,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
         decoration:
             const BoxDecoration(
           border: Border(
-            bottom: BorderSide(
+            bottom:
+                BorderSide(
               color:
                   Color(0xFFEFE7E3),
               width: 1,
@@ -1007,26 +1287,22 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
         ),
         child: Row(
           children: [
-            // -------------------------------------------------------
-            // AVATAR
-            // -------------------------------------------------------
-
             Container(
               width: 48,
               height: 48,
               decoration:
-                  BoxDecoration(
+                  const BoxDecoration(
                 color:
-                    chat['avatarColor'],
+                    Color(0xFFFFE5D8),
                 shape:
                     BoxShape.circle,
               ),
-              child: Icon(
-                chat['avatarIcon'],
+              child:
+                  const Icon(
+                Icons.person_rounded,
                 size: 31,
                 color:
-                    chat[
-                        'avatarIconColor'],
+                    Color(0xFFAA4E39),
               ),
             ),
 
@@ -1034,17 +1310,13 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               width: 11,
             ),
 
-            // -------------------------------------------------------
-            // NAMA + PESAN
-            // -------------------------------------------------------
-
             Expanded(
               child: Column(
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
                 children: [
                   Text(
-                    chat['name'],
+                    patientName,
                     maxLines: 1,
                     overflow:
                         TextOverflow.ellipsis,
@@ -1065,7 +1337,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                   ),
 
                   Text(
-                    chat['message'],
+                    message.isNotEmpty
+                        ? message
+                        : 'Belum ada pesan',
                     maxLines: 1,
                     overflow:
                         TextOverflow.ellipsis,
@@ -1073,7 +1347,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                         const TextStyle(
                       fontFamily:
                           'Nunito',
-                      fontSize: 10.5,
+                      fontSize: 11,
                       fontWeight:
                           FontWeight.w400,
                       color:
@@ -1088,54 +1362,19 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               width: 6,
             ),
 
-            // -------------------------------------------------------
-            // UNREAD
-            // Warnanya disamakan dengan bottom navigation
-            // -------------------------------------------------------
-
-            if (unread > 0)
+            if (unread)
               Container(
-                width:
-                    unread > 1
-                        ? 28
-                        : 11,
-                height:
-                    unread > 1
-                        ? 28
-                        : 11,
-                alignment:
-                    Alignment.center,
+                width: 11,
+                height: 11,
                 decoration:
-                    BoxDecoration(
-                  color: unread > 1
-                      ? navigationBackground
-                      : const Color(
-                          0xFFFFD9E1,
-                        ),
+                    const BoxDecoration(
+                  color:
+                      Color(0xFFFFD9E1),
                   shape:
                       BoxShape.circle,
                 ),
-                child: unread > 1
-                    ? Text(
-                        unread.toString(),
-                        style:
-                            TextStyle(
-                          fontFamily:
-                              'Nunito',
-                          fontSize: 11,
-                          fontWeight:
-                              FontWeight.w800,
-                          color:
-                              navigationBrown,
-                        ),
-                      )
-                    : null,
               )
             else
-              // -----------------------------------------------------
-              // SELESAI
-              // -----------------------------------------------------
-
               Container(
                 padding:
                     const EdgeInsets
@@ -1146,19 +1385,25 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 decoration:
                     BoxDecoration(
                   color:
-                      const Color(
-                    0xFFFFEEE5,
-                  ),
+                      status == 'active'
+                          ? const Color(
+                              0xFFFFE5D8,
+                            )
+                          : const Color(
+                              0xFFFFEEE5,
+                            ),
                   borderRadius:
                       BorderRadius.circular(
                     10,
                   ),
                 ),
                 child:
-                    const Text(
-                  'Selesai',
+                    Text(
+                  status == 'active'
+                      ? 'Aktif'
+                      : 'Selesai',
                   style:
-                      TextStyle(
+                      const TextStyle(
                     fontFamily:
                         'Nunito',
                     fontSize: 9,
@@ -1170,157 +1415,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-
-  // ===============================================================
-  // BOTTOM NAVIGATION
-  // ===============================================================
-
-  Widget _buildBottomNavigation() {
-    return Container(
-      height: 94,
-      decoration:
-          BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            const BorderRadius.only(
-          topLeft:
-              Radius.circular(30),
-          topRight:
-              Radius.circular(30),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color:
-                Colors.black.withOpacity(
-              0.08,
-            ),
-            blurRadius: 10,
-            offset:
-                const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 7,
-          vertical: 7,
-        ),
-        child: Row(
-          children: [
-            _buildNavigationItem(
-              index: 0,
-              icon:
-                  Icons.home_rounded,
-              label: 'Beranda',
-            ),
-
-            _buildNavigationItem(
-              index: 1,
-              icon:
-                  Icons.groups_rounded,
-              label: 'Pasien',
-            ),
-
-            _buildNavigationItem(
-              index: 2,
-              icon:
-                  Icons
-                      .chat_bubble_outline_rounded,
-              label: 'Chat',
-            ),
-
-            _buildNavigationItem(
-              index: 3,
-              icon:
-                  Icons
-                      .person_outline_rounded,
-              label: 'Profil',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ===============================================================
-  // NAVIGATION ITEM
-  // ===============================================================
-
-  Widget _buildNavigationItem({
-    required int index,
-    required IconData icon,
-    required String label,
-  }) {
-    final bool isSelected =
-        _selectedIndex == index;
-
-    return Expanded(
-      child: GestureDetector(
-        behavior:
-            HitTestBehavior.opaque,
-        onTap: () {
-          _onNavigationTap(index);
-        },
-        child:
-            AnimatedContainer(
-          duration:
-              const Duration(
-            milliseconds: 180,
-          ),
-          margin:
-              const EdgeInsets.symmetric(
-            horizontal: 4,
-            vertical: 2,
-          ),
-          decoration:
-              BoxDecoration(
-            color: isSelected
-                ? navigationBackground
-                : Colors.transparent,
-            borderRadius:
-                BorderRadius.circular(
-              27,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 30,
-                color:
-                    navigationBrown,
-              ),
-
-              const SizedBox(
-                height: 3,
-              ),
-
-              Text(
-                label,
-                style:
-                    TextStyle(
-                  fontFamily:
-                      'Nunito',
-                  fontSize: 12,
-                  fontWeight:
-                      isSelected
-                          ? FontWeight.w800
-                          : FontWeight.w500,
-                  color:
-                      const Color(
-                    0xFF784033,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

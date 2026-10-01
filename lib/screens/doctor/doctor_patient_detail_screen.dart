@@ -283,7 +283,7 @@ class _DoctorPatientChatScreenState
                         .arrow_back_ios_new_rounded,
                     size: 25,
                     color:
-                        Color(0xFFB65339),
+                        color: Colors.black,
                   ),
                 ),
               ),
@@ -299,8 +299,8 @@ class _DoctorPatientChatScreenState
                   style:
                       TextStyle(
                     fontFamily:
-                        'Nunito',
-                    fontSize: 20,
+                        'Fredoka',
+                    fontSize: 22,
                     fontWeight:
                         FontWeight.w800,
                     color: Colors.black,

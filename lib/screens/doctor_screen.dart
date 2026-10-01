@@ -1,806 +1,2177 @@
+import 'dart:convert';
+
+
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 
+
+
 import 'home_screen.dart';
+
 import 'screening_screen.dart';
+
 import '../widgets/bottom_navigation.dart';
+
 import '../widgets/stomachy_card.dart';
+
 import 'edukasi_screen.dart';
+
 import 'profile_screen.dart';
+
 import 'doctor_detail_screen.dart';
 
+
+
 class DoctorScreen extends StatefulWidget {
+
   const DoctorScreen({super.key});
 
+
+
   @override
+
   State<DoctorScreen> createState() => _DoctorScreenState();
+
 }
+
+
 
 class _DoctorScreenState extends State<DoctorScreen> {
+
   int _selectedIndex = 2;
 
+
+
   bool _showAvailableOnly = false;
+
   String _searchQuery = '';
 
+
+
   final Color backgroundColor = const Color(0xFFFFF5ED);
+
   final Color primaryBrown = const Color(0xFFB65339);
+
   final Color darkBrown = const Color(0xFF2F211D);
+
   final Color borderBrown = const Color(0xFFE76F51);
 
-  // ================================================================
-  // DATA DOKTER
-  // ================================================================
 
-  final List<DoctorData> doctors = [
-    DoctorData(
-      name: 'dr. Amanda Putri',
-      specialty: 'Dokter Umum',
-      status: 'Online',
-      rating: '4.9',
-      reviews: '128',
-      image: 'assets/images/dokter_amanda.jpeg',
-      schedules: ['10.00', '13.00', '19.00'],
-    ),
-    DoctorData(
-      name: 'dr. Jefri Nichol',
-      specialty: 'Dokter Umum',
-      status: 'Offline',
-      rating: '4.8',
-      reviews: '96',
-      image: 'assets/images/dokter_jefri.jpeg',
-      schedules: ['09.00', '14.00', '20.00'],
-    ),
-    DoctorData(
-      name: 'dr. Karina Lestari',
-      specialty: 'Dokter Umum',
-      status: 'Offline',
-      rating: '4.8',
-      reviews: '87',
-      image: 'assets/images/dokter_karina.jpeg',
-      schedules: ['11.00', '16.00', '21.00'],
-    ),
-  ];
 
   // ================================================================
-  // FILTER DATA
-  // ================================================================
 
-  List<DoctorData> get filteredDoctors {
-    return doctors.where((doctor) {
-      final query = _searchQuery.toLowerCase().trim();
+  // FIRESTORE
 
-      final matchesSearch =
-          doctor.name.toLowerCase().contains(query) ||
-          doctor.specialty.toLowerCase().contains(query);
-
-      final matchesAvailability =
-          !_showAvailableOnly || doctor.status == 'Online';
-
-      return matchesSearch && matchesAvailability;
-    }).toList();
-  }
-
-  // ================================================================
-  // NAVIGATION
-  // ================================================================
-
-  void _onNavigationTap(int index) {
-    // Dokter
-    if (index == 2) {
-      return;
-    }
-
-    // Beranda
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
-      );
-      return;
-    }
-
-    // Skrining
-    if (index == 1) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
-      );
-      return;
-    }
-
-    // Edukasi
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
-      );
-      return;
-    }
-
-    // Profil
-    if (index == 4) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
-      );
-      return;
-    }
-  }
-
-  // ================================================================
-  // BUILD
-  // ================================================================
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> _doctorStream;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  14,
-                  10,
-                  14,
-                  90,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // HEADER
-                    _buildHeader(),
+  void initState() {
+    super.initState();
 
-                    const SizedBox(height: 20),
-
-                    // SEARCH
-                    _buildSearchBar(),
-
-                    const SizedBox(height: 20),
-
-                    // FILTER
-                    _buildFilterButtons(),
-
-                    const SizedBox(height: 20),
-
-                    // DOCTOR LIST
-                    ...filteredDoctors.map(
-                      (doctor) => Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 20,
-                        ),
-                        child: _buildDoctorCard(doctor),
-                      ),
-                    ),
-
-                    // EMPTY STATE
-                    if (filteredDoctors.isEmpty)
-                      _buildEmptyState(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      // ================================================================
-      // BOTTOM NAVIGATION
-      // ================================================================
-
-      bottomNavigationBar: AppBottomNavigation(
-        selectedIndex: _selectedIndex,
-        onItemSelected: _onNavigationTap,
-      ),
-    );
+    _doctorStream = FirebaseFirestore.instance
+        .collection('users')
+        .where(
+          'role',
+          isEqualTo: 'doctor',
+        )
+        .snapshots();
   }
 
   // ================================================================
-  // HEADER
+
+  // FILTER DATA
+
   // ================================================================
+
+
+
+  List<DoctorData> _filteredDoctors(
+
+    List<DoctorData> doctors,
+
+  ) {
+
+    final String query =
+
+        _searchQuery.trim().toLowerCase();
+
+
+
+    return doctors.where((doctor) {
+
+      final bool matchesSearch =
+
+          doctor.name
+
+                  .toLowerCase()
+
+                  .contains(query) ||
+
+              doctor.specialty
+
+                  .toLowerCase()
+
+                  .contains(query);
+
+
+
+      final bool matchesAvailability =
+
+          !_showAvailableOnly ||
+
+              doctor.status
+
+                      .toLowerCase() ==
+
+                  'online';
+
+
+
+      return matchesSearch &&
+
+          matchesAvailability;
+
+    }).toList();
+
+  }
+
+
+
+  // ================================================================
+
+  // NAVIGATION
+
+  // ================================================================
+
+
+
+  void _onNavigationTap(int index) {
+
+    if (index == 2) {
+
+      return;
+
+    }
+
+
+
+    if (index == 0) {
+
+      Navigator.pushReplacement(
+
+        context,
+
+        MaterialPageRoute(
+
+          builder: (context) =>
+
+              const HomeScreen(),
+
+        ),
+
+      );
+
+      return;
+
+    }
+
+
+
+    if (index == 1) {
+
+      Navigator.pushReplacement(
+
+        context,
+
+        MaterialPageRoute(
+
+          builder: (context) =>
+
+              const ScreeningScreen(),
+
+        ),
+
+      );
+
+      return;
+
+    }
+
+
+
+    if (index == 3) {
+
+      Navigator.pushReplacement(
+
+        context,
+
+        MaterialPageRoute(
+
+          builder: (context) =>
+
+              const EdukasiScreen(),
+
+        ),
+
+      );
+
+      return;
+
+    }
+
+
+
+    if (index == 4) {
+
+      Navigator.push(
+
+        context,
+
+        MaterialPageRoute(
+
+          builder: (context) =>
+
+              const ProfileScreen(),
+
+        ),
+
+      );
+
+    }
+
+  }
+
+
+
+  // ================================================================
+
+  // BUKA DETAIL DOKTER
+
+  // ================================================================
+
+
+
+  void _openDoctorDetail(
+
+    DoctorData doctor,
+
+  ) {
+
+    if (doctor.status
+
+            .toLowerCase() !=
+
+        'online') {
+
+      return;
+
+    }
+
+
+
+    Navigator.push(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder: (context) =>
+
+            DoctorDetailScreen(
+
+          doctor: doctor,
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+
+
+  // ================================================================
+
+  // BUILD
+
+  // ================================================================
+
+
+
+  @override
+
+  Widget build(
+
+    BuildContext context,
+
+  ) {
+
+    return Scaffold(
+
+      backgroundColor:
+
+          backgroundColor,
+
+
+
+      body: SafeArea(
+
+        child: StreamBuilder<
+
+            QuerySnapshot<
+
+                Map<String, dynamic>>>(
+
+          stream: _doctorStream,
+
+          builder: (
+
+            context,
+
+            snapshot,
+
+          ) {
+
+            if (snapshot
+
+                    .connectionState ==
+
+                ConnectionState.waiting) {
+
+              return const Center(
+
+                child:
+
+                    CircularProgressIndicator(
+
+                  color:
+
+                      Color(0xFFB65339),
+
+                  strokeWidth: 2,
+
+                ),
+
+              );
+
+            }
+
+
+
+            if (snapshot.hasError) {
+
+              return _buildErrorState(
+
+                snapshot.error
+
+                    .toString(),
+
+              );
+
+            }
+
+
+
+            final List<
+
+                    QueryDocumentSnapshot<
+
+                        Map<String, dynamic>>>
+
+                documents =
+
+                snapshot.data?.docs ??
+
+                    [];
+
+
+
+            final List<DoctorData>
+
+                doctors =
+
+                documents.map(
+
+              (document) {
+
+                return DoctorData
+
+                    .fromFirestore(
+
+                  document.id,
+
+                  document.data(),
+
+                );
+
+              },
+
+            ).toList();
+
+
+
+            final List<DoctorData>
+
+                filteredDoctors =
+
+                _filteredDoctors(
+
+              doctors,
+
+            );
+
+
+
+            return SingleChildScrollView(
+
+              physics:
+
+                  const ClampingScrollPhysics(),
+
+              padding:
+
+                  const EdgeInsets.fromLTRB(
+
+                14,
+
+                10,
+
+                14,
+
+                90,
+
+              ),
+
+              child: Column(
+
+                crossAxisAlignment:
+
+                    CrossAxisAlignment.start,
+
+                children: [
+
+                  _buildHeader(),
+
+
+
+                  const SizedBox(
+
+                    height: 20,
+
+                  ),
+
+
+
+                  _buildSearchBar(),
+
+
+
+                  const SizedBox(
+
+                    height: 20,
+
+                  ),
+
+
+
+                  _buildFilterButtons(),
+
+
+
+                  const SizedBox(
+
+                    height: 20,
+
+                  ),
+
+
+
+                  if (filteredDoctors
+
+                      .isEmpty)
+
+                    _buildEmptyState()
+
+                  else
+
+                    ...filteredDoctors.map(
+
+                      (doctor) =>
+
+                          Padding(
+
+                        padding:
+
+                            const EdgeInsets
+
+                                .only(
+
+                          bottom: 20,
+
+                        ),
+
+                        child:
+
+                            _buildDoctorCard(
+
+                          doctor,
+
+                        ),
+
+                      ),
+
+                    ),
+
+                ],
+
+              ),
+
+            );
+
+          },
+
+        ),
+
+      ),
+
+
+
+      bottomNavigationBar:
+
+          AppBottomNavigation(
+
+        selectedIndex:
+
+            _selectedIndex,
+
+        onItemSelected:
+
+            _onNavigationTap,
+
+      ),
+
+    );
+
+  }
+
+
+
+  // ================================================================
+
+  // HEADER
+
+  // ================================================================
+
+
 
   Widget _buildHeader() {
+
     return Row(
+
       children: [
+
         GestureDetector(
+
           onTap: () {
-            Navigator.pop(context);
+
+            Navigator.pop(
+
+              context,
+
+            );
+
           },
+
+          behavior:
+
+              HitTestBehavior.opaque,
+
           child: const SizedBox(
+
             width: 40,
+
             height: 40,
+
             child: Align(
-              alignment: Alignment.centerLeft,
+
+              alignment:
+
+                  Alignment.centerLeft,
+
               child: Icon(
-                Icons.arrow_back_ios_new_rounded,
+
+                Icons
+
+                    .arrow_back_ios_new_rounded,
+
                 size: 25,
+
                 color: Colors.black,
+
               ),
+
             ),
+
           ),
+
         ),
+
+
 
         Expanded(
+
           child: Center(
+
             child: Text(
+
               'Konsultasi Dokter',
-              style: TextStyle(
-                fontFamily: 'Fredoka',
+
+              style:
+
+                  const TextStyle(
+
+                fontFamily:
+
+                    'Fredoka',
+
                 fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: darkBrown,
+
+                fontWeight:
+
+                    FontWeight.w800,
+
+                color:
+
+                    Colors.black,
+
               ),
+
             ),
+
           ),
+
         ),
 
-        const SizedBox(width: 40),
+
+
+        const SizedBox(
+
+          width: 40,
+
+        ),
+
       ],
+
     );
+
   }
 
+
+
   // ================================================================
+
   // SEARCH BAR
+
   // ================================================================
+
+
 
   Widget _buildSearchBar() {
+
     return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCFA),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: borderBrown,
-          width: 1,
+
+      height: 42,
+
+      padding:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 15,
+
+      ),
+
+      decoration:
+
+          BoxDecoration(
+
+        color:
+
+            const Color(0xFFFFFCFA),
+
+        borderRadius:
+
+            BorderRadius.circular(
+
+          21,
+
         ),
+
         boxShadow: [
+
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+
+            color: Colors.black
+
+                .withOpacity(
+
+              0.07,
+
+            ),
+
             blurRadius: 6,
-            offset: const Offset(0, 3),
+
+            offset:
+
+                const Offset(0, 3),
+
           ),
+
         ],
+
       ),
-      child: TextField(
-        onChanged: (value) {
-          setState(() {
-            _searchQuery = value;
-          });
-        },
-        textAlignVertical: TextAlignVertical.center,
-        style: const TextStyle(
-          fontFamily: 'Nunito',
-          fontSize: 11,
-          color: Colors.black,
-        ),
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          prefixIcon: Icon(
+
+      child: Row(
+
+        crossAxisAlignment:
+
+            CrossAxisAlignment.center,
+
+        children: [
+
+          const Icon(
+
             Icons.search_rounded,
-            size: 24,
-            color: Colors.black,
+
+            size: 19,
+
+            color:
+
+                Color(0xFFB65339),
+
           ),
-          hintText: 'Cari dokter atau spesialis',
-          hintStyle: TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 11,
-            color: Color(0xFF8C8582),
+
+
+
+          const SizedBox(
+
+            width: 8,
+
           ),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 4,
+
+
+
+          Expanded(
+
+            child: TextField(
+
+              onChanged: (
+
+                value,
+
+              ) {
+
+                setState(() {
+
+                  _searchQuery =
+
+                      value;
+
+                });
+
+              },
+
+              textAlignVertical:
+
+                  TextAlignVertical
+
+                      .center,
+
+              style:
+
+                  const TextStyle(
+
+                fontFamily:
+
+                    'Nunito',
+
+                fontSize: 11,
+
+                color:
+
+                    Colors.black,
+
+              ),
+
+              decoration:
+
+                  const InputDecoration(
+
+                border:
+
+                    InputBorder.none,
+
+                enabledBorder:
+
+                    InputBorder.none,
+
+                focusedBorder:
+
+                    InputBorder.none,
+
+                disabledBorder:
+
+                    InputBorder.none,
+
+                isCollapsed:
+
+                    true,
+
+                hintText:
+
+                    'Cari dokter atau spesialis',
+
+                hintStyle:
+
+                    TextStyle(
+
+                  fontFamily:
+
+                      'Nunito',
+
+                  fontSize: 11,
+
+                  color:
+
+                      Color(0xFF8C8582),
+
+                ),
+
+              ),
+
+            ),
+
           ),
-        ),
+
+        ],
+
       ),
+
     );
+
   }
 
+
+
   // ================================================================
+
   // FILTER BUTTON
+
+  // TANPA ANIMASI
+
+  // TANPA RIPPLE
+
+  // TANPA POP-UP
+
   // ================================================================
+
+
 
   Widget _buildFilterButtons() {
+
     return Row(
+
       children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                _showAvailableOnly = false;
-              });
-            },
-            child: Container(
-              height: 42,
-              decoration: BoxDecoration(
-                color: !_showAvailableOnly
-                    ? primaryBrown
-                    : const Color(0xFFFFFCFA),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: borderBrown,
-                  width: 0.8,
-                ),
-                boxShadow: [
-                  if (!_showAvailableOnly)
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'Semua',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: !_showAvailableOnly
-                        ? Colors.white
-                        : darkBrown,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(width: 20),
 
         Expanded(
-          child: GestureDetector(
+
+          child: _buildFilterButton(
+
+            label: 'Semua',
+
+            isActive:
+
+                !_showAvailableOnly,
+
             onTap: () {
-              setState(() {
-                _showAvailableOnly = true;
-              });
+
+              if (_showAvailableOnly) {
+
+                setState(() {
+
+                  _showAvailableOnly =
+
+                      false;
+
+                });
+
+              }
+
             },
-            child: Container(
-              height: 42,
-              decoration: BoxDecoration(
-                color: _showAvailableOnly
-                    ? primaryBrown
-                    : const Color(0xFFFFFCFA),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: borderBrown,
-                  width: 0.8,
-                ),
-                boxShadow: [
-                  if (_showAvailableOnly)
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'Tersedia Hari Ini',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: _showAvailableOnly
-                        ? Colors.white
-                        : darkBrown,
-                  ),
-                ),
-              ),
-            ),
+
           ),
+
         ),
+
+
+
+        const SizedBox(
+
+          width: 10,
+
+        ),
+
+
+
+        Expanded(
+
+          child: _buildFilterButton(
+
+            label:
+
+                'Tersedia Hari Ini',
+
+            isActive:
+
+                _showAvailableOnly,
+
+            onTap: () {
+
+              if (!_showAvailableOnly) {
+
+                setState(() {
+
+                  _showAvailableOnly =
+
+                      true;
+
+                });
+
+              }
+
+            },
+
+          ),
+
+        ),
+
       ],
+
     );
+
   }
 
-  // ================================================================
-  // DOCTOR CARD
-  // ================================================================
 
-  Widget _buildDoctorCard(DoctorData doctor) {
-    final bool isOnline = doctor.status == 'Online';
 
-    return StomachyCard(
-      color: const Color(0xFFFFFCFA),
-      radius: 20,
-      padding: const EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        10,
-      ),
-      onTap: isOnline
-          ? () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DoctorDetailScreen(
-                    doctor: doctor,
-                  ),
-                ),
-              );
-            }
-          : null,
-      child: SizedBox(
-        height: 150,
-        child: Column(
-          children: [
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // FOTO DOKTER
-                  _buildDoctorImage(doctor.image),
+  Widget _buildFilterButton({
 
-                  const SizedBox(width: 14),
+    required String label,
 
-                  // INFORMASI DOKTER
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // NAMA
-                        Text(
-                          doctor.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: darkBrown,
-                          ),
-                        ),
+    required bool isActive,
 
-                        const SizedBox(height: 2),
+    required VoidCallback onTap,
 
-                        // SPESIALIS
-                        Text(
-                          doctor.specialty,
-                          style: const TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 11,
-                            color: Colors.black,
-                          ),
-                        ),
+  }) {
 
-                        const SizedBox(height: 2),
-
-                        // STATUS ONLINE / OFFLINE
-                        Text(
-                          doctor.status,
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 11,
-                            color: isOnline
-                                ? const Color(0xFF18C85A)
-                                : const Color(0xFFFF3F3F),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-
-                        const SizedBox(height: 2),
-
-                        // RATING
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 17,
-                              color: Color(0xFFFFC107),
-                            ),
-
-                            const SizedBox(width: 3),
-
-                            Expanded(
-                              child: Text(
-                                '${doctor.rating} (${doctor.reviews} ulasan)',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: 'Nunito',
-                                  fontSize: 11,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 2),
-
-                        // KETERSEDIAAN
-                        Text(
-                          isOnline
-                              ? 'Tersedia Hari Ini'
-                              : 'Tidak Tersedia Hari Ini',
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 11,
-                            color: isOnline
-                                ? const Color(0xFF18C85A)
-                                : const Color(0xFFFF3F3F),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            // JADWAL
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: doctor.schedules.map(
-                (time) {
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                      left: 8,
-                    ),
-                    child: _buildScheduleButton(
-                      time,
-                      isOnline,
-                    ),
-                  );
-                },
-              ).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ================================================================
-  // FOTO DOKTER
-  // ================================================================
-
-  Widget _buildDoctorImage(String imagePath) {
-    return Container(
-      width: 62,
-      height: 62,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Color(0xFFEDE5DF),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Image.asset(
-        imagePath,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return const Icon(
-            Icons.person_rounded,
-            size: 42,
-            color: Color(0xFFB65339),
-          );
-        },
-      ),
-    );
-  }
-
-  // ================================================================
-  // SCHEDULE BUTTON
-  // ================================================================
-
-  Widget _buildScheduleButton(
-    String time,
-    bool isOnline,
-  ) {
     return GestureDetector(
-      // HANYA JADWAL DOKTER ONLINE YANG BISA DIPENCET
-      onTap: isOnline
-          ? () {
-              _showScheduleDialog(time);
-            }
-          : null,
+
+      onTap: onTap,
+
+      behavior:
+
+          HitTestBehavior.opaque,
 
       child: Container(
-        width: 54,
-        height: 30,
-        decoration: BoxDecoration(
-          color: isOnline
-              ? const Color(0xFFFFFCFA)
-              : const Color(0xFFF0EAE6),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isOnline
-                ? borderBrown
-                : const Color(0xFFD5CCC7),
-            width: 0.8,
+
+        width:
+
+            double.infinity,
+
+        height: 38,
+
+        alignment:
+
+            Alignment.center,
+
+        decoration:
+
+            BoxDecoration(
+
+          color: isActive
+
+              ? primaryBrown
+
+              : const Color(
+
+                  0xFFFFFCFA,
+
+                ),
+
+          borderRadius:
+
+              BorderRadius.circular(
+
+            19,
+
           ),
+
           boxShadow: [
-            if (isOnline)
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 3,
-                offset: const Offset(0, 2),
+
+            BoxShadow(
+
+              color: Colors.black
+
+                  .withOpacity(
+
+                0.07,
+
               ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            time,
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: isOnline
-                  ? Colors.black
-                  : const Color(0xFF99918D),
+
+              blurRadius: 5,
+
+              offset:
+
+                  const Offset(
+
+                0,
+
+                2,
+
+              ),
+
             ),
-          ),
+
+          ],
+
         ),
+
+        child: Text(
+
+          label,
+
+          textAlign:
+
+              TextAlign.center,
+
+          maxLines: 1,
+
+          overflow:
+
+              TextOverflow.ellipsis,
+
+          style: TextStyle(
+
+            fontFamily:
+
+                'Nunito',
+
+            fontSize: 11,
+
+            fontWeight:
+
+                FontWeight.w700,
+
+            color: isActive
+
+                ? Colors.white
+
+                : Colors.black,
+
+          ),
+
+        ),
+
       ),
+
     );
+
   }
 
+
+
   // ================================================================
-  // DIALOG PILIH JADWAL
+
+  // DOCTOR CARD
+
   // ================================================================
 
-  void _showScheduleDialog(String time) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFFFFFCFA),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            'Pilih Jadwal Konsultasi',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            'Apakah kamu ingin memilih jadwal pukul $time?',
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
-          ),
-          actions: [
-            // BATAL
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Batal',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                  color: Color(0xFF777777),
-                ),
-              ),
-            ),
 
-            // PILIH
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Jadwal pukul $time dipilih.',
-                      style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 11,
-                      ),
-                    ),
-                    behavior: SnackBarBehavior.floating,
+  Widget _buildDoctorCard(
+
+    DoctorData doctor,
+
+  ) {
+
+    final bool isOnline =
+
+        doctor.status
+
+                .toLowerCase() ==
+
+            'online';
+
+
+
+    return StomachyCard(
+
+      color:
+
+          const Color(0xFFFFFCF9),
+
+      radius: 19,
+
+      padding:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 15,
+
+        vertical: 14,
+
+      ),
+
+      onTap: isOnline
+
+          ? () {
+
+              _openDoctorDetail(
+
+                doctor,
+
+              );
+
+            }
+
+          : null,
+
+      child: Row(
+
+        crossAxisAlignment:
+
+            CrossAxisAlignment.center,
+
+        children: [
+
+          _buildDoctorImage(
+
+            doctor,
+
+          ),
+
+
+
+          const SizedBox(
+
+            width: 14,
+
+          ),
+
+
+
+          Expanded(
+
+            child: Column(
+
+              mainAxisSize:
+
+                  MainAxisSize.min,
+
+              crossAxisAlignment:
+
+                  CrossAxisAlignment
+
+                      .start,
+
+              children: [
+
+                Text(
+
+                  doctor.name,
+
+                  maxLines: 1,
+
+                  overflow:
+
+                      TextOverflow
+
+                          .ellipsis,
+
+                  style:
+
+                      const TextStyle(
+
+                    fontFamily:
+
+                        'Nunito',
+
+                    fontSize: 12,
+
+                    fontWeight:
+
+                        FontWeight.w700,
+
+                    color:
+
+                        Colors.black,
+
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryBrown,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text(
-                'Pilih',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+
                 ),
-              ),
+
+
+
+                const SizedBox(
+
+                  height: 5,
+
+                ),
+
+
+
+                Text(
+
+                  doctor.specialty,
+
+                  maxLines: 1,
+
+                  overflow:
+
+                      TextOverflow
+
+                          .ellipsis,
+
+                  style:
+
+                      const TextStyle(
+
+                    fontFamily:
+
+                        'Nunito',
+
+                    fontSize: 11,
+
+                    fontWeight:
+
+                        FontWeight.w400,
+
+                    color:
+
+                        Colors.black,
+
+                  ),
+
+                ),
+
+
+
+                const SizedBox(
+
+                  height: 5,
+
+                ),
+
+
+
+                Row(
+
+                  mainAxisSize:
+
+                      MainAxisSize.min,
+
+                  children: [
+
+                    Container(
+
+                      width: 7,
+
+                      height: 7,
+
+                      decoration:
+
+                          BoxDecoration(
+
+                        color: isOnline
+
+                            ? const Color(
+
+                                0xFF18C85A,
+
+                              )
+
+                            : const Color(
+
+                                0xFFFF3F3F,
+
+                              ),
+
+                        shape:
+
+                            BoxShape
+
+                                .circle,
+
+                      ),
+
+                    ),
+
+
+
+                    const SizedBox(
+
+                      width: 5,
+
+                    ),
+
+
+
+                    Text(
+
+                      doctor.status,
+
+                      style:
+
+                          TextStyle(
+
+                        fontFamily:
+
+                            'Nunito',
+
+                        fontSize: 11,
+
+                        fontWeight:
+
+                            FontWeight.w500,
+
+                        color: isOnline
+
+                            ? const Color(
+
+                                0xFF18C85A,
+
+                              )
+
+                            : const Color(
+
+                                0xFFFF3F3F,
+
+                              ),
+
+                      ),
+
+                    ),
+
+                  ],
+
+                ),
+
+              ],
+
             ),
-          ],
-        );
-      },
+
+          ),
+
+
+
+          if (isOnline)
+
+            const Padding(
+
+              padding:
+
+                  EdgeInsets.only(
+
+                left: 8,
+
+              ),
+
+              child: Icon(
+
+                Icons
+
+                    .chevron_right_rounded,
+
+                size: 22,
+
+                color:
+
+                    Color(0xFFB65339),
+
+              ),
+
+            ),
+
+        ],
+
+      ),
+
     );
+
   }
 
+
+
   // ================================================================
-  // EMPTY SEARCH
+
+  // FOTO DOKTER
+
   // ================================================================
+
+
+
+  Widget _buildDoctorImage(
+
+    DoctorData doctor,
+
+  ) {
+
+    // Prioritas 1: Base64 dari Firestore
+
+    if (doctor.photoBase64 !=
+
+            null &&
+
+        doctor.photoBase64!
+
+            .isNotEmpty) {
+
+      try {
+
+        return Container(
+
+          width: 56,
+
+          height: 56,
+
+          decoration:
+
+              const BoxDecoration(
+
+            shape:
+
+                BoxShape.circle,
+
+            color:
+
+                Color(0xFFFFE3D1),
+
+          ),
+
+          clipBehavior:
+
+              Clip.antiAlias,
+
+          child: Image.memory(
+
+            base64Decode(
+
+              doctor.photoBase64!,
+
+            ),
+
+            fit: BoxFit.cover,
+
+            errorBuilder:
+
+                (
+
+              context,
+
+              error,
+
+              stackTrace,
+
+            ) {
+
+              return _buildDefaultDoctorIcon();
+
+            },
+
+          ),
+
+        );
+
+      } catch (_) {
+
+        return _buildDefaultDoctorIcon();
+
+      }
+
+    }
+
+
+
+    // Prioritas 2: URL dari Firestore
+
+    if (doctor.photoUrl !=
+
+            null &&
+
+        doctor.photoUrl!
+
+            .isNotEmpty) {
+
+      return Container(
+
+        width: 56,
+
+        height: 56,
+
+        decoration:
+
+            const BoxDecoration(
+
+          shape:
+
+              BoxShape.circle,
+
+          color:
+
+              Color(0xFFFFE3D1),
+
+        ),
+
+        clipBehavior:
+
+            Clip.antiAlias,
+
+        child: Image.network(
+
+          doctor.photoUrl!,
+
+          fit: BoxFit.cover,
+
+          errorBuilder:
+
+              (
+
+            context,
+
+            error,
+
+            stackTrace,
+
+          ) {
+
+            return _buildDefaultDoctorIcon();
+
+          },
+
+        ),
+
+      );
+
+    }
+
+
+
+    // Prioritas 3: field image
+
+    if (doctor.image.isNotEmpty) {
+
+      return Container(
+
+        width: 56,
+
+        height: 56,
+
+        decoration:
+
+            const BoxDecoration(
+
+          shape:
+
+              BoxShape.circle,
+
+          color:
+
+              Color(0xFFFFE3D1),
+
+        ),
+
+        clipBehavior:
+
+            Clip.antiAlias,
+
+        child: Image.asset(
+
+          doctor.image,
+
+          fit: BoxFit.cover,
+
+          errorBuilder:
+
+              (
+
+            context,
+
+            error,
+
+            stackTrace,
+
+          ) {
+
+            return _buildDefaultDoctorIcon();
+
+          },
+
+        ),
+
+      );
+
+    }
+
+
+
+    return _buildDefaultDoctorIcon();
+
+  }
+
+
+
+  Widget _buildDefaultDoctorIcon() {
+
+    return Container(
+
+      width: 56,
+
+      height: 56,
+
+      decoration:
+
+          const BoxDecoration(
+
+        shape:
+
+            BoxShape.circle,
+
+        color:
+
+            Color(0xFFFFE3D1),
+
+      ),
+
+      child: const Center(
+
+        child: Icon(
+
+          Icons.person_rounded,
+
+          size: 32,
+
+          color:
+
+              Color(0xFFB65339),
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+
+
+  // ================================================================
+
+  // EMPTY STATE
+
+  // ================================================================
+
+
 
   Widget _buildEmptyState() {
+
     return StomachyCard(
-      color: const Color(0xFFFFFCFA),
-      radius: 20,
-      margin: const EdgeInsets.only(
-        top: 20,
+
+      color:
+
+          const Color(0xFFFFFCF9),
+
+      radius: 19,
+
+      margin:
+
+          const EdgeInsets.only(
+
+        top: 10,
+
       ),
-      padding: const EdgeInsets.symmetric(
+
+      padding:
+
+          const EdgeInsets.symmetric(
+
         vertical: 30,
+
         horizontal: 20,
+
       ),
+
       child: Column(
+
         children: [
+
           Icon(
-            Icons.search_off_rounded,
+
+            Icons
+
+                .search_off_rounded,
+
             size: 45,
-            color: primaryBrown,
+
+            color:
+
+                primaryBrown,
+
           ),
 
-          const SizedBox(height: 12),
+
+
+          const SizedBox(
+
+            height: 12,
+
+          ),
+
+
 
           const Text(
+
             'Dokter tidak ditemukan',
-            style: TextStyle(
-              fontFamily: 'Nunito',
+
+            style:
+
+                TextStyle(
+
+              fontFamily:
+
+                  'Nunito',
+
               fontSize: 12,
-              fontWeight: FontWeight.bold,
+
+              fontWeight:
+
+                  FontWeight.w700,
+
+              color:
+
+                  Colors.black,
+
             ),
+
           ),
 
-          const SizedBox(height: 6),
+
+
+          const SizedBox(
+
+            height: 6,
+
+          ),
+
+
 
           const Text(
+
             'Coba cari dengan nama dokter atau spesialis.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Nunito',
+
+            textAlign:
+
+                TextAlign.center,
+
+            style:
+
+                TextStyle(
+
+              fontFamily:
+
+                  'Nunito',
+
               fontSize: 11,
-              color: Color(0xFF777777),
+
+              color:
+
+                  Colors.black,
+
             ),
+
           ),
+
         ],
+
       ),
+
     );
+
   }
+
+
+
+  // ================================================================
+
+  // ERROR STATE
+
+  // ================================================================
+
+
+
+  Widget _buildErrorState(
+
+    String error,
+
+  ) {
+
+    return Center(
+
+      child: Padding(
+
+        padding:
+
+            const EdgeInsets.all(
+
+          24,
+
+        ),
+
+        child: Column(
+
+          mainAxisAlignment:
+
+              MainAxisAlignment
+
+                  .center,
+
+          children: [
+
+            const Icon(
+
+              Icons
+
+                  .error_outline_rounded,
+
+              size: 50,
+
+              color:
+
+                  Color(0xFFB65339),
+
+            ),
+
+
+
+            const SizedBox(
+
+              height: 12,
+
+            ),
+
+
+
+            const Text(
+
+              'Data dokter gagal dimuat',
+
+              textAlign:
+
+                  TextAlign.center,
+
+              style:
+
+                  TextStyle(
+
+                fontFamily:
+
+                    'Nunito',
+
+                fontSize: 12,
+
+                fontWeight:
+
+                    FontWeight.w700,
+
+                color:
+
+                    Colors.black,
+
+              ),
+
+            ),
+
+
+
+            const SizedBox(
+
+              height: 6,
+
+            ),
+
+
+
+            Text(
+
+              error,
+
+              textAlign:
+
+                  TextAlign.center,
+
+              style:
+
+                  const TextStyle(
+
+                fontFamily:
+
+                    'Nunito',
+
+                fontSize: 10,
+
+                color:
+
+                    Color(0xFF8C8582),
+
+              ),
+
+            ),
+
+          ],
+
+        ),
+
+      ),
+
+    );
+
+  }
+
 }
 
+
+
 // ================================================================
+
 // MODEL DATA DOKTER
+
 // ================================================================
+
+
 
 class DoctorData {
+
+  final String id;
+
+
+
   final String name;
+
   final String specialty;
+
   final String status;
+
+
+
   final String rating;
+
   final String reviews;
+
+
+
   final String image;
+
   final List<String> schedules;
 
+
+
+  final String experience;
+
+  final String education;
+
+  final String location;
+
+
+
+  final String? photoBase64;
+
+  final String? photoUrl;
+
+
+
   DoctorData({
+
+    this.id = '',
+
     required this.name,
+
     required this.specialty,
+
     required this.status,
+
     required this.rating,
+
     required this.reviews,
+
     required this.image,
+
     required this.schedules,
+
+    this.experience = '-',
+
+    this.education = '-',
+
+    this.location = '-',
+
+    this.photoBase64,
+
+    this.photoUrl,
+
   });
+
+
+
+  factory DoctorData.fromFirestore(
+
+    String id,
+
+    Map<String, dynamic> data,
+
+  ) {
+
+    return DoctorData(
+
+      id: id,
+
+
+
+          name:
+        'dr. ${(data['name'] ??
+                'Dokter')
+            .toString()}',
+
+      specialty:
+
+          (data['specialization'] ??
+
+                  data['specialty'] ??
+
+                  'Dokter Umum')
+
+              .toString(),
+
+
+
+      status:
+
+          (data['status'] ??
+
+                  'Offline')
+
+              .toString(),
+
+
+
+      rating:
+
+          (data['rating'] ??
+
+                  '0.0')
+
+              .toString(),
+
+
+
+      reviews:
+
+          (data['reviews'] ??
+
+                  '0')
+
+              .toString(),
+
+
+
+      image:
+
+          (data['image'] ??
+
+                  '')
+
+              .toString(),
+
+
+
+      schedules:
+
+          data['schedules'] is List
+
+              ? List<String>.from(
+
+                  (data['schedules']
+
+                          as List)
+
+                      .map(
+
+                        (item) =>
+
+                            item.toString(),
+
+                      ),
+
+                )
+
+              : [],
+
+
+
+      experience:
+
+          (data['experience'] ??
+
+                  '-')
+
+              .toString(),
+
+
+
+      education:
+
+          (data['education'] ??
+
+                  '-')
+
+              .toString(),
+
+
+
+      location:
+
+          (data['location'] ??
+
+                  '-')
+
+              .toString(),
+
+
+
+      photoBase64:
+
+          data['photoBase64']
+
+              ?.toString(),
+
+
+
+      photoUrl:
+
+          data['photoUrl']
+
+              ?.toString(),
+
+    );
+
+  }
+
 }
