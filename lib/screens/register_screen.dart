@@ -84,6 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           .set({
         'name': name,
         'email': email,
+        'role': 'user',
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -176,6 +177,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         {
           'name': user.displayName ?? '',
           'email': user.email ?? '',
+          'role': 'user',
           'createdAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),

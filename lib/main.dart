@@ -6,9 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firebase_options.dart';
+import 'services/notification_service.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
+import 'screens/admin/admin_home_screen.dart';
 import 'screens/doctor/doctorr_home_screen.dart';
 
 Future<void> main() async {
@@ -17,6 +19,8 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await NotificationService.init();
 
   runApp(const StomachyApp());
 }
@@ -29,140 +33,115 @@ class StomachyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: true,
       title: 'Stomachy',
+
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: 'Nunito',
-        scaffoldBackgroundColor: const Color(0xFFFFF5ED),
+        scaffoldBackgroundColor:
+            const Color(0xFFFFF5ED),
       ),
+
       home: const SplashScreen(),
     );
   }
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({
+    super.key,
+  });
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  State<SplashScreen> createState() =>
+      _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState
+    extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateNext();
+
+    Timer(
+      const Duration(seconds: 3),
+      () async {
+        if (!mounted) return;
+
+        await NotificationService
+            .syncWeeklyScreeningFromSettings();
+
+        if (!mounted) return;
+
+        await _navigateBasedOnRole();
+      },
+    );
   }
 
-  Future<void> _navigateNext() async {
-    // Splash tampil minimal 3 detik
-    await Future.delayed(
-      const Duration(seconds: 3),
-    );
+  // =============================================================
+  // NAVIGASI BERDASARKAN ROLE
+  //
+  // Belum login      -> Landing
+  // role admin       -> Beranda Admin
+  // role doctor      -> Beranda Dokter
+  // role user/kosong -> Beranda User
+  // =============================================================
 
-    if (!mounted) return;
+  Future<void> _navigateBasedOnRole() async {
+    final user = FirebaseAuth.instance.currentUser;
 
-    User? user = FirebaseAuth.instance.currentUser;
-
-    // Tunggu Firebase membaca sesi login jika currentUser belum tersedia.
     if (user == null) {
-      try {
-        user = await FirebaseAuth.instance
-            .authStateChanges()
-            .first
-            .timeout(
-              const Duration(seconds: 2),
-            );
-      } catch (e) {
-        user = FirebaseAuth.instance.currentUser;
-      }
-    }
-
-    if (!mounted) return;
-
-    // =========================================================
-    // BELUM LOGIN
-    // =========================================================
-    // Kalau aplikasi dibuka dan tidak ada sesi login,
-    // masuk ke LandingScreen.
-    if (user == null) {
-      _goToLanding();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              const LandingScreen(),
+        ),
+      );
       return;
     }
 
-    // =========================================================
-    // SUDAH LOGIN
-    // =========================================================
-    // Cek role dari Firestore.
+    Widget target = const HomeScreen();
+
     try {
-      final DocumentSnapshot<Map<String, dynamic>> userDoc =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
 
-      if (!mounted) return;
+      final role = doc.data()?['role']
+              ?.toString()
+              .trim()
+              .toLowerCase() ??
+          '';
 
-      String role = '';
+      debugPrint('SPLASH: role = $role');
 
-      if (userDoc.exists) {
-        final Map<String, dynamic>? data = userDoc.data();
-
-        if (data != null) {
-          role = data['role']?.toString().trim().toLowerCase() ?? '';
-        }
+      if (role == 'admin') {
+        target = const AdminHomeScreen();
+      } else if (role == 'doctor' ||
+          role == 'dokter') {
+        target = const DoctorHomeScreen();
       }
-
-      // Dokter
-      if (role == 'doctor' || role == 'dokter') {
-        _goToDoctorHome();
-        return;
-      }
-
-      // User biasa
-      _goToUserHome();
     } catch (e) {
-      if (!mounted) return;
-
-      // Kalau gagal membaca role, tetap masuk ke Home user
-      // sebagai fallback.
-      _goToUserHome();
+      debugPrint('SPLASH: gagal ambil role = $e');
     }
-  }
 
-  void _goToLanding() {
-    Navigator.pushAndRemoveUntil(
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => const LandingScreen(),
+        builder: (context) => target,
       ),
-      (route) => false,
-    );
-  }
-
-  void _goToUserHome() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
-      ),
-      (route) => false,
-    );
-  }
-
-  void _goToDoctorHome() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const DoctorHomeScreen(),
-      ),
-      (route) => false,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF5ED),
+      backgroundColor:
+          const Color(0xFFFFF5ED),
+
       body: Center(
         child: Image.asset(
           'assets/images/logo_utama_stomachy.png',
