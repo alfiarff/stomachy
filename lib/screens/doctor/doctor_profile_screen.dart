@@ -24,7 +24,7 @@ import '../about_stomachy_screen.dart';
 
 import '../change_password_screen.dart';
 
-import '../landing_screen.dart';
+import '../login_screen.dart';
 
 const Color brown = Color(0xFFB05039);
 
@@ -1166,7 +1166,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
                                   builder: (context) =>
 
-                                      const LandingScreen(),
+                                      const LoginScreen(),
 
                                 ),
 

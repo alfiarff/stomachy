@@ -5,6 +5,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
@@ -17,6 +18,8 @@ class NotificationService {
 
   static Future<void> init() async {
     tzdata.initializeTimeZones();
+
+    await _setupFirebaseMessaging();
 
     const AndroidInitializationSettings androidInit =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -41,6 +44,78 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>();
 
     await android?.requestNotificationsPermission();
+  }
+
+  static Future<void> _setupFirebaseMessaging() async {
+    try {
+      final FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+      final NotificationSettings settings =
+          await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      debugPrint(
+        'FCM: authorizationStatus = ${settings.authorizationStatus}',
+      );
+
+      if (settings.authorizationStatus ==
+          AuthorizationStatus.denied) {
+        debugPrint('FCM: izin notifikasi ditolak.');
+        return;
+      }
+
+      final String? token = await messaging.getToken();
+
+      debugPrint('FCM TOKEN: $token');
+
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null && token != null && token.isNotEmpty) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set(
+          {
+            'fcmToken': token,
+            'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+
+        debugPrint(
+          'FCM: token berhasil disimpan untuk user ${user.uid}',
+        );
+      }
+
+      FirebaseMessaging.instance.onTokenRefresh.listen(
+        (newToken) async {
+          final currentUser = FirebaseAuth.instance.currentUser;
+
+          if (currentUser == null || newToken.isEmpty) {
+            return;
+          }
+
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .set(
+            {
+              'fcmToken': newToken,
+              'fcmTokenUpdatedAt':
+                  FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
+
+          debugPrint('FCM: token diperbarui.');
+        },
+      );
+    } catch (e) {
+      debugPrint('FCM: gagal setup messaging: $e');
+    }
   }
 
   static Future<tz.TZDateTime> scheduleWeeklyScreening() async {

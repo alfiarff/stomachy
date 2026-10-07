@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
@@ -296,38 +297,81 @@ class _PersonalInformationScreenState
     if (_isUploadingPhoto) return;
 
     try {
-      // ---------------------------------------------------------
-      // PILIH FOTO
-      // ---------------------------------------------------------
+      // ===========================================================
+      // 1. PILIH FOTO
+      // ===========================================================
 
       final XFile? picked = await ImagePicker().pickImage(
         source: source,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 55,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
       );
 
       if (picked == null) return;
 
       if (!mounted) return;
 
+      // ===========================================================
+      // 2. BUKA HALAMAN CROPPING
+      // ===========================================================
+
+      final CroppedFile? cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 85,
+        maxWidth: 512,
+        maxHeight: 512,
+        aspectRatio: const CropAspectRatio(
+          ratioX: 1,
+          ratioY: 1,
+        ),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Atur Foto Profil',
+            toolbarColor: const Color(0xFFB05039),
+            toolbarWidgetColor: Colors.white,
+            activeControlsWidgetColor: Color(0xFFB05039),
+            backgroundColor: Colors.black,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            hideBottomControls: false,
+          ),
+          IOSUiSettings(
+            title: 'Atur Foto Profil',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+            aspectRatioPickerButtonHidden: true,
+          ),
+        ],
+      );
+
+      // User membatalkan cropping
+      if (cropped == null) return;
+
+      if (!mounted) return;
+
+      // ===========================================================
+      // 3. BARU TAMPILKAN LOADING
+      // ===========================================================
+
       setState(() {
         _isUploadingPhoto = true;
       });
 
-      // ---------------------------------------------------------
-      // KONVERSI KE BASE64
-      // ---------------------------------------------------------
+      // ===========================================================
+      // 4. BACA HASIL FOTO YANG SUDAH DI-CROP
+      // ===========================================================
 
-      final File file = File(picked.path);
+      final File file = File(cropped.path);
 
       final List<int> bytes = await file.readAsBytes();
 
       final String base64String = base64Encode(bytes);
 
-      // ---------------------------------------------------------
-      // PENJAGAAN UKURAN
-      // ---------------------------------------------------------
+      // ===========================================================
+      // 5. CEK UKURAN
+      // ===========================================================
 
       if (base64String.length > 900000) {
         if (!mounted) return;
@@ -348,12 +392,13 @@ class _PersonalInformationScreenState
             behavior: SnackBarBehavior.floating,
           ),
         );
+
         return;
       }
 
-      // ---------------------------------------------------------
-      // SIMPAN KE FIRESTORE
-      // ---------------------------------------------------------
+      // ===========================================================
+      // 6. SIMPAN KE FIRESTORE
+      // ===========================================================
 
       await FirebaseFirestore.instance
           .collection('users')

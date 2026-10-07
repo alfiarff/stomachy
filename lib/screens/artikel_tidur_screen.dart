@@ -131,8 +131,8 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
                 'Tips Tidur Nyenyak untuk Penderita GERD',
                 style: TextStyle(
                   fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF493028),
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF171310),
                 ),
               ),
 
@@ -150,54 +150,44 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   height: 1.5,
-                  color: Color(0xFF332823),
+                  color: Color(0xFF30221E),
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // =====================================================
-              // BOX TIPS
+              // CARD TIPS
               // =====================================================
 
-              _buildTipsHeader(),
-
-              const SizedBox(height: 7),
-
-              // =====================================================
-              // TIPS 1
-              // =====================================================
-
-              _buildTipItem(
-                number: '1',
+              _buildTipCard(
+                icon: Icons.schedule_rounded,
+                iconColor: const Color(0xFFE8804C),
+                iconBackground: const Color(0xFFFFE9DC),
                 title: 'Atur Pola Tidur',
                 description:
                     'Usahakan tidur dan bangun pada jam yang sama setiap '
                     'hari agar ritme tubuh lebih stabil.',
               ),
 
-              const SizedBox(height: 7),
+              const SizedBox(height: 12),
 
-              // =====================================================
-              // TIPS 2
-              // =====================================================
-
-              _buildTipItem(
-                number: '2',
+              _buildTipCard(
+                icon: Icons.no_food_rounded,
+                iconColor: const Color(0xFF7B6BD0),
+                iconBackground: const Color(0xFFEDE9FB),
                 title: 'Hindari Makan Sebelum Tidur',
                 description:
                     'Berikan jeda minimal 2–3 jam setelah makan sebelum '
                     'berbaring untuk mengurangi risiko refluks asam lambung.',
               ),
 
-              const SizedBox(height: 7),
+              const SizedBox(height: 12),
 
-              // =====================================================
-              // TIPS 3
-              // =====================================================
-
-              _buildTipItem(
-                number: '3',
+              _buildTipCard(
+                icon: Icons.bed_rounded,
+                iconColor: const Color(0xFF5A9FE0),
+                iconBackground: const Color(0xFFE3EEFC),
                 title: 'Gunakan Posisi Tidur yang Tepat',
                 description:
                     'Tidur dengan posisi kepala lebih tinggi (menggunakan '
@@ -205,35 +195,31 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
                     'mencegah asam lambung naik ke esofagus.',
               ),
 
-              const SizedBox(height: 7),
+              const SizedBox(height: 12),
 
-              // =====================================================
-              // TIPS 4
-              // =====================================================
-
-              _buildTipItem(
-                number: '4',
+              _buildTipCard(
+                icon: Icons.self_improvement_rounded,
+                iconColor: const Color(0xFF4AA978),
+                iconBackground: const Color(0xFFDFF2E7),
                 title: 'Kelola Stres',
                 description:
                     'Lakukan aktivitas relaksasi seperti pernapasan dalam, '
                     'meditasi, atau mendengarkan musik yang menenangkan.',
               ),
 
-              const SizedBox(height: 7),
+              const SizedBox(height: 12),
 
-              // =====================================================
-              // TIPS 5
-              // =====================================================
-
-              _buildTipItem(
-                number: '5',
+              _buildTipCard(
+                icon: Icons.phone_android_rounded,
+                iconColor: const Color(0xFFE8804C),
+                iconBackground: const Color(0xFFFFE9DC),
                 title: 'Batasi Penggunaan Gadget Sebelum Tidur',
                 description:
                     'Kurangi paparan layar minimal 1 jam sebelum tidur agar '
                     'kualitas tidur lebih baik.',
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               // =====================================================
               // BOX INGAT
@@ -288,12 +274,12 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
           Expanded(
             child: Center(
               child: Text(
-                'Tips Tidur Nyenyak',
+                'Artikel',
                 style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black,
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -328,106 +314,101 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
   }
 
   // ===============================================================
-  // TIPS HEADER
+  // CARD TIPS
+  //
+  // Mengikuti gaya card pada ApaItuGerdScreen:
+  // - background putih
+  // - radius 16
+  // - shadow lembut
+  // - tanpa border
+  // - icon dengan background warna lembut
+  // - judul Nunito 12 w800
+  // - deskripsi Nunito 11
   // ===============================================================
 
-  Widget _buildTipsHeader() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 27,
-          height: 27,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFE1CE),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(
-            Icons.lightbulb_outline_rounded,
-            size: 17,
-            color: Color(0xFFB65339),
-          ),
-        ),
-
-        const SizedBox(width: 8),
-
-        const Expanded(
-          child: Text(
-            'Tips Tidur Nyenyak untuk Penderita GERD',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF493028),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ===============================================================
-  // TIP ITEM
-  // ===============================================================
-
-  Widget _buildTipItem({
-    required String number,
+  Widget _buildTipCard({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBackground,
     required String title,
     required String description,
   }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // NOMOR
-        Container(
-          width: 17,
-          height: 17,
-          margin: const EdgeInsets.only(top: 1),
-          decoration: const BoxDecoration(
-            color: Color(0xFFFFE1CE),
-            shape: BoxShape.circle,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        14,
+        13,
+        14,
+        13,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
-          child: Center(
-            child: Text(
-              number,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF8E422F),
-              ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // =========================================================
+          // ICON
+          // =========================================================
+
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: iconBackground,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              size: 19,
+              color: iconColor,
             ),
           ),
-        ),
 
-        const SizedBox(width: 6),
+          const SizedBox(width: 12),
 
-        // TEXT
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF493028),
+          // =========================================================
+          // TEKS
+          // =========================================================
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF30221E),
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 2),
+                const SizedBox(height: 5),
 
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 12,
-                  height: 1.5,
-                  color: Color(0xFF332823),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
+                    height: 1.4,
+                    color: Color(0xFF30221E),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -454,8 +435,9 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
           Text(
             'Ingat!',
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
               color: Color(0xFF493028),
             ),
           ),
@@ -467,8 +449,8 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
             'tetapi juga membantu mengurangi keluhan GERD dan menjaga '
             'kualitas hidup sehari-hari.',
             style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
+              fontSize: 11,
+              height: 1.4,
               color: Color(0xFF332823),
             ),
           ),

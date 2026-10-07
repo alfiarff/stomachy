@@ -169,10 +169,10 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
             child: Center(
               child: Text(
                 'Tentang Stomachy',
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                   color: Colors.black,
                 ),
               ),

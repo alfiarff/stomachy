@@ -10,17 +10,19 @@ class AppBottomNavigation extends StatelessWidget {
     required this.onItemSelected,
   });
 
-  static const Color primaryBrown = Color(0xFFAA4E39);
+  // ===============================================================
+  // WARNA UTAMA STOMACHY
+  // ===============================================================
+
+  static const Color primaryBrown = Color(0xFFB05039);
 
   @override
   Widget build(BuildContext context) {
     // =========================================================
     // WRAPPER TRANSPARAN
     //
-    // Slot bottomNavigationBar memang selalu menempel di dasar
-    // layar. Supaya kartunya terlihat "terbang", kartunya kita
-    // beri margin di dalam wrapper yang transparan, sehingga
-    // background halaman tetap terlihat di sekelilingnya.
+    // Panjang/lebar navigasi tetap sama.
+    // Yang diperkecil hanya tinggi card dan isi di dalamnya.
     // =========================================================
 
     return Container(
@@ -30,9 +32,9 @@ class AppBottomNavigation extends StatelessWidget {
         top: false,
 
         child: Container(
-          // ================================================
-          // MARGIN INI YANG MEMBUAT NAVIGASI "TERBANG"
-          // ================================================
+          // =====================================================
+          // MARGIN
+          // =====================================================
 
           margin: const EdgeInsets.fromLTRB(
             14,
@@ -44,8 +46,8 @@ class AppBottomNavigation extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
 
-            // 4 SUDUT SEMUA MEMBULAT (bukan cuma atas)
-            borderRadius: BorderRadius.circular(24),
+            // Tetap membulat di semua sudut
+            borderRadius: BorderRadius.circular(20),
 
             boxShadow: [
               BoxShadow(
@@ -57,9 +59,13 @@ class AppBottomNavigation extends StatelessWidget {
           ),
 
           child: Padding(
+            // ===================================================
+            // CARD DIPENDEKKAN
+            // ===================================================
+
             padding: const EdgeInsets.symmetric(
               horizontal: 8,
-              vertical: 10,
+              vertical: 8,
             ),
 
             child: Row(
@@ -110,6 +116,10 @@ class AppBottomNavigation extends StatelessWidget {
     );
   }
 
+  // ===============================================================
+  // NAV ITEM
+  // ===============================================================
+
   Widget _buildNavItem({
     required int index,
     required IconData icon,
@@ -132,20 +142,28 @@ class AppBottomNavigation extends StatelessWidget {
             horizontal: 2,
           ),
 
-          height: 60,
+          // =====================================================
+          // ITEM DIPENDEKKAN
+          // =====================================================
+
+          height: 48,
 
           decoration: BoxDecoration(
             color: active
                 ? const Color(0xFFFFE5D8)
                 : Colors.transparent,
 
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(15),
           ),
 
           child: Column(
             mainAxisAlignment:
                 MainAxisAlignment.center,
             children: [
+              // =================================================
+              // ICON DIPERKECIL
+              // =================================================
+
               AnimatedSwitcher(
                 duration:
                     const Duration(milliseconds: 200),
@@ -158,18 +176,26 @@ class AppBottomNavigation extends StatelessWidget {
                 child: Icon(
                   active ? activeIcon : icon,
                   key: ValueKey(active),
-                  size: 26,
+                  size: 21,
                   color: primaryBrown,
                 ),
               ),
 
-              const SizedBox(height: 3),
+              // =================================================
+              // JARAK ICON - TEXT DIPERKECIL
+              // =================================================
+
+              const SizedBox(height: 1),
+
+              // =================================================
+              // FONT DIPERKECIL
+              // =================================================
 
               Text(
                 label,
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 10,
+                  fontSize: 9,
                   color: primaryBrown,
                   fontWeight: active
                       ? FontWeight.w800

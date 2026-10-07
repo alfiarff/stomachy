@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -222,6 +224,60 @@ class _HomeScreenState extends State<HomeScreen> {
   // ===============================================================
 
   Widget _buildHeader() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return _buildHeaderContent(
+        googlePhotoUrl: '',
+        photoBase64: null,
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        String googlePhotoUrl = user.photoURL ?? '';
+
+        if (googlePhotoUrl.startsWith('data:')) {
+          googlePhotoUrl = '';
+        }
+
+        String? photoBase64;
+
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data =
+              snapshot.data!.data() as Map<String, dynamic>?;
+
+          if (data != null) {
+            final firestorePhoto =
+                data['photoBase64']?.toString().trim();
+
+            if (firestorePhoto != null &&
+                firestorePhoto.isNotEmpty) {
+              photoBase64 = firestorePhoto;
+            }
+          }
+        }
+
+        return _buildHeaderContent(
+          googlePhotoUrl: googlePhotoUrl,
+          photoBase64: photoBase64,
+        );
+      },
+    );
+  }
+
+  // ===============================================================
+  // HEADER CONTENT
+  // ===============================================================
+
+  Widget _buildHeaderContent({
+    required String googlePhotoUrl,
+    required String? photoBase64,
+  }) {
     return SizedBox(
       height: 75,
       child: Row(
@@ -243,13 +299,17 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 10),
 
           GestureDetector(
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const ProfileScreen(),
                 ),
               );
+
+              if (!mounted) return;
+
+              setState(() {});
             },
             child: Container(
               width: 38,
@@ -258,15 +318,83 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Color(0xFFFFF5EF),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.account_circle_rounded,
-                size: 37,
-                color: Color(0xFFB9543A),
+              child: ClipOval(
+                child: _buildHomeProfilePhoto(
+                  photoBase64: photoBase64,
+                  googlePhotoUrl: googlePhotoUrl,
+                ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  // ===============================================================
+  // FOTO PROFIL HOME
+  // ===============================================================
+
+  Widget _buildHomeProfilePhoto({
+    required String? photoBase64,
+    required String googlePhotoUrl,
+  }) {
+    // =============================================================
+    // 1. FOTO PROFIL DARI FIRESTORE
+    // =============================================================
+
+    if (photoBase64 != null && photoBase64.isNotEmpty) {
+      try {
+        return Image.memory(
+          base64Decode(photoBase64),
+          width: 38,
+          height: 38,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.account_circle_rounded,
+              size: 37,
+              color: Color(0xFFB9543A),
+            );
+          },
+        );
+      } catch (e) {
+        return const Icon(
+          Icons.account_circle_rounded,
+          size: 37,
+          color: Color(0xFFB9543A),
+        );
+      }
+    }
+
+    // =============================================================
+    // 2. FOTO GOOGLE
+    // =============================================================
+
+    if (googlePhotoUrl.isNotEmpty) {
+      return Image.network(
+        googlePhotoUrl,
+        width: 38,
+        height: 38,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(
+            Icons.account_circle_rounded,
+            size: 37,
+            color: Color(0xFFB9543A),
+          );
+        },
+      );
+    }
+
+    // =============================================================
+    // 3. DEFAULT
+    // =============================================================
+
+    return const Icon(
+      Icons.account_circle_rounded,
+      size: 37,
+      color: Color(0xFFB9543A),
     );
   }
 
