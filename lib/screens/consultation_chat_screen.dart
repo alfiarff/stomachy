@@ -2,19 +2,11 @@ import 'dart:convert';
 
 import 'dart:typed_data';
 
-
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
-
-
-
-import 'consultation_complete_screen.dart';
-
-
 
 class ConsultationChatScreen extends StatefulWidget {
 
@@ -27,8 +19,6 @@ class ConsultationChatScreen extends StatefulWidget {
   final String doctorImage;
 
   final String selectedTime;
-
-
 
   const ConsultationChatScreen({
 
@@ -46,8 +36,6 @@ class ConsultationChatScreen extends StatefulWidget {
 
   });
 
-
-
   @override
 
   State<ConsultationChatScreen> createState() =>
@@ -55,8 +43,6 @@ class ConsultationChatScreen extends StatefulWidget {
       _ConsultationChatScreenState();
 
 }
-
-
 
 class _ConsultationChatScreenState
 
@@ -66,36 +52,86 @@ class _ConsultationChatScreenState
 
       TextEditingController();
 
-
-
   final ScrollController scrollController =
 
       ScrollController();
-
-
 
   bool _isSending = false;
 
   int _lastMessageCount = -1;
 
   bool _hasLoadedMessages = false;
-
-
+  bool _isCompleted = false;
+  bool _statusLoaded = false;
+  String _consultationDateText = '';
 
   final Color backgroundColor =
 
       const Color(0xFFFFF5EF);
 
-
-
   final Color primaryBrown =
 
       const Color(0xFFB65339);
+  @override
+  void initState() {
+    super.initState();
+    _markAsRead();
+    _loadConsultationStatus();
+  }
 
+  Future<void> _markAsRead() async {
+    try {
+      await FirebaseFirestore.instance.collection('consultations').doc(widget.consultationId).set({'unreadForUser': 0, 'lastReadByUserAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  Future<bool> _isChatActive() async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('consultations').doc(widget.consultationId).get();
+      return (doc.data()?['status'] ?? '').toString().toLowerCase() == 'active';
+    } catch (_) {
+      return false;
+    }
+  }
+  Future<void> _loadConsultationStatus() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('consultations')
+          .doc(widget.consultationId)
+          .get();
+
+      if (!mounted) return;
+
+      final status =
+          (doc.data()?['status'] ?? '').toString().toLowerCase();
+
+      final ts = doc.data()?['consultationTimestamp'];
+      String dateText = '';
+      if (ts is Timestamp) {
+        final d = ts.toDate();
+        final date = '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+        final time = widget.selectedTime.trim().replaceAll(' WIB', '');
+        if (time.isNotEmpty) {
+          dateText = '$date • $time WIB';
+        }
+      }
+
+      setState(() {
+        _isCompleted = status == 'completed';
+        _consultationDateText = dateText;
+        _statusLoaded = true;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _statusLoaded = true;
+        });
+      }
+    }
+  }
 
 
   @override
-
   void dispose() {
 
     messageController.dispose();
@@ -106,15 +142,11 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // STREAM PESAN
 
   // ===============================================================
-
-
 
   Stream<QuerySnapshot<Map<String, dynamic>>>
 
@@ -140,15 +172,11 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // BUILD
 
   // ===============================================================
-
-
 
   @override
 
@@ -166,31 +194,17 @@ class _ConsultationChatScreenState
 
             _buildHeader(),
 
-
-
             _buildDoctorCard(),
-
-
 
             const SizedBox(height: 16),
 
-
-
             _buildPrivacyWarning(),
 
-
-
             const SizedBox(height: 12),
-
-
 
             _buildTodayLabel(),
 
-
-
             const SizedBox(height: 12),
-
-
 
             Expanded(
 
@@ -230,15 +244,11 @@ class _ConsultationChatScreenState
 
                   }
 
-
-
                   if (snapshot.hasError) {
 
                     return _buildError();
 
                   }
-
-
 
                   final List<
 
@@ -252,38 +262,43 @@ class _ConsultationChatScreenState
 
                       snapshot.data?.docs ?? [];
 
-
-
                   final int currentMessageCount = messages.length;
 
                   final bool shouldScroll =
+
                       !_hasLoadedMessages ||
+
                       currentMessageCount > _lastMessageCount;
 
                   if (shouldScroll) {
+
                     WidgetsBinding.instance
+
                         .addPostFrameCallback((_) {
+
                       if (!mounted ||
+
                           !scrollController.hasClients) {
+
                         return;
+
                       }
 
                       _scrollToBottom();
+
                     });
+
                   }
 
                   _lastMessageCount = currentMessageCount;
+
                   _hasLoadedMessages = true;
-
-
 
                   if (messages.isEmpty) {
 
                     return _buildEmptyChat();
 
                   }
-
-
 
                   return ListView.builder(
 
@@ -321,8 +336,6 @@ class _ConsultationChatScreenState
 
                           messages[index].data();
 
-
-
                       return _buildChatBubble(
 
                         message,
@@ -339,17 +352,13 @@ class _ConsultationChatScreenState
 
             ),
 
-
-
-            _buildMessageInput(),
-
-
-
-            _buildMedicalNote(),
-
-
-
-            const SizedBox(height: 5),
+            if (_statusLoaded && _isCompleted)
+              _buildReadOnlyNotice()
+            else ...[
+              _buildMessageInput(),
+              _buildMedicalNote(),
+              const SizedBox(height: 5),
+            ],
 
           ],
 
@@ -361,147 +370,29 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // HEADER
 
   // ===============================================================
 
-
-
   Widget _buildHeader() {
-
     return SizedBox(
-
       height: 58,
-
-      child: Row(
-
-        children: [
-
-          GestureDetector(
-
-            onTap: () {
-
-              Navigator.pop(context);
-
-            },
-
-            child: const SizedBox(
-
-              width: 55,
-
-              height: 55,
-
-              child: Align(
-
-                alignment: Alignment.center,
-
-                child: Icon(
-
-                  Icons.arrow_back_rounded,
-
-                  size: 29,
-
-                  color: Colors.black,
-
-                ),
-
-              ),
-
-            ),
-
-          ),
-
-
-
-          Expanded(
-
-            child: Center(
-
-              child: Text(
-
-                'Konsultasi dengan Dokter',
-
-                textAlign: TextAlign.center,
-
-                style: const TextStyle(
-
-                  fontFamily: 'Fredoka',
-
-                  fontSize: 22,
-
-                  fontWeight: FontWeight.w700,
-
-                  color: Color(0xFF171310),
-
-                ),
-
-              ),
-
-            ),
-
-          ),
-
-
-
-          SizedBox(
-
-            width: 75,
-
-            child: TextButton(
-
-              onPressed:
-
-                  _showFinishConfirmation,
-
-              style: TextButton.styleFrom(
-
-                padding:
-
-                    const EdgeInsets.symmetric(
-
-                  horizontal: 4,
-
-                  vertical: 6,
-
-                ),
-
-              ),
-
-              child: const Text(
-
-                'Akhiri',
-
-                style: TextStyle(
-
-                  fontFamily: 'Nunito',
-
-                  fontSize: 12,
-
-                  fontWeight: FontWeight.w700,
-
-                  color: Color(0xFFB65339),
-
-                ),
-
-              ),
-
-            ),
-
-          ),
-
-        ],
-
-      ),
-
+      child: Row(children: [
+        GestureDetector(onTap: () => Navigator.pop(context), child: const SizedBox(width: 55, height: 55, child: Align(alignment: Alignment.center, child: Icon(Icons.arrow_back_rounded, size: 29, color: Colors.black)))),
+        Expanded(child: Center(child: Text(_isCompleted ? 'Riwayat Chat' : 'Konsultasi dengan Dokter', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Fredoka', fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFF171310))))),
+        const SizedBox(width: 55),
+      ]),
     );
-
   }
 
-
+  String _displayDoctorName() {
+    final name = widget.doctorName.trim();
+    if (name.isEmpty) return 'dr. Dokter';
+    if (name.toLowerCase().startsWith('dr.')) return name;
+    return 'dr. $name';
+  }
 
   // ===============================================================
 
@@ -510,8 +401,6 @@ class _ConsultationChatScreenState
   // TANPA RATING DAN ULASAN
 
   // ===============================================================
-
-
 
   Widget _buildDoctorCard() {
 
@@ -551,11 +440,7 @@ class _ConsultationChatScreenState
 
           _buildDoctorImage(),
 
-
-
           const SizedBox(width: 14),
-
-
 
           Expanded(
 
@@ -569,7 +454,7 @@ class _ConsultationChatScreenState
 
                 Text(
 
-                  widget.doctorName,
+                  _displayDoctorName(),
 
                   maxLines: 1,
 
@@ -593,11 +478,7 @@ class _ConsultationChatScreenState
 
                 ),
 
-
-
                 const SizedBox(height: 2),
-
-
 
                 Text(
 
@@ -621,26 +502,18 @@ class _ConsultationChatScreenState
 
                 ),
 
-
-
                 const SizedBox(height: 2),
-
-
-
-                const Text(
-
-                  'Online',
-
-                  style: TextStyle(
-
+                Text(
+                  _consultationDateText.isNotEmpty
+                      ? _consultationDateText
+                      : (widget.selectedTime.isNotEmpty
+                          ? widget.selectedTime.trim().replaceAll(' WIB', '') + ' WIB'
+                          : 'Konsultasi Aktif'),
+                  style: const TextStyle(
                     fontFamily: 'Nunito',
-
-                    fontSize: 12,
-
-                    color: Color(0xFF18C85A),
-
+                    fontSize: 10,
+                    color: Color(0xFF77716E),
                   ),
-
                 ),
 
               ],
@@ -657,15 +530,11 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // FOTO DOKTER
 
   // ===============================================================
-
-
 
   Widget _buildDoctorImage() {
 
@@ -673,15 +542,11 @@ class _ConsultationChatScreenState
 
         widget.doctorImage.trim();
 
-
-
     if (image.isEmpty) {
 
       return _fallbackDoctorImage();
 
     }
-
-
 
     if (image.startsWith('http')) {
 
@@ -725,23 +590,17 @@ class _ConsultationChatScreenState
 
     }
 
-
-
     try {
 
       final Uint8List bytes =
 
           base64Decode(image);
 
-
-
       if (bytes.isEmpty) {
 
         return _fallbackDoctorImage();
 
       }
-
-
 
       return Container(
 
@@ -789,8 +648,6 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   Widget _fallbackDoctorImage() {
 
     return Container(
@@ -815,8 +672,6 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   Widget _fallbackDoctorIcon() {
 
     return const Icon(
@@ -831,15 +686,11 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // PRIVACY WARNING
 
   // ===============================================================
-
-
 
   Widget _buildPrivacyWarning() {
 
@@ -861,7 +712,7 @@ class _ConsultationChatScreenState
 
       decoration: BoxDecoration(
 
-        color: const Color(0xFFFFE8DC),
+        color: const Color(0xFFFFE4D3),
 
         borderRadius:
 
@@ -883,11 +734,7 @@ class _ConsultationChatScreenState
 
           ),
 
-
-
           const SizedBox(width: 10),
-
-
 
           Expanded(
 
@@ -919,15 +766,11 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // HARI INI
 
   // ===============================================================
-
-
 
   Widget _buildTodayLabel() {
 
@@ -987,15 +830,11 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // EMPTY CHAT
 
   // ===============================================================
-
-
 
   Widget _buildEmptyChat() {
 
@@ -1041,11 +880,7 @@ class _ConsultationChatScreenState
 
             ),
 
-
-
             const SizedBox(height: 14),
-
-
 
             const Text(
 
@@ -1067,11 +902,7 @@ class _ConsultationChatScreenState
 
             ),
 
-
-
             const SizedBox(height: 6),
-
-
 
             const Text(
 
@@ -1105,8 +936,6 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // CHAT BUBBLE
@@ -1114,8 +943,6 @@ class _ConsultationChatScreenState
   // TANPA BORDER
 
   // ===============================================================
-
-
 
   Widget _buildChatBubble(
 
@@ -1127,15 +954,11 @@ class _ConsultationChatScreenState
 
         FirebaseAuth.instance.currentUser;
 
-
-
     final String senderId =
 
         (message['senderId'] ?? '')
 
             .toString();
-
-
 
     final bool isMine =
 
@@ -1143,15 +966,11 @@ class _ConsultationChatScreenState
 
             senderId == currentUser.uid;
 
-
-
     final String text =
 
         (message['message'] ?? '')
 
             .toString();
-
-
 
     final String time =
 
@@ -1160,8 +979,6 @@ class _ConsultationChatScreenState
       message['createdAt'],
 
     );
-
-
 
     return Padding(
 
@@ -1187,13 +1004,9 @@ class _ConsultationChatScreenState
 
             _buildSmallDoctorImage(),
 
-
-
             const SizedBox(width: 8),
 
           ],
-
-
 
           Flexible(
 
@@ -1319,11 +1132,7 @@ class _ConsultationChatScreenState
 
                   ),
 
-
-
                   const SizedBox(height: 2),
-
-
 
                   Row(
 
@@ -1351,8 +1160,6 @@ class _ConsultationChatScreenState
 
                       ),
 
-
-
                       if (isMine) ...[
 
                         const SizedBox(
@@ -1360,8 +1167,6 @@ class _ConsultationChatScreenState
                           width: 3,
 
                         ),
-
-
 
                         const Icon(
 
@@ -1397,23 +1202,17 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // FOTO DOKTER KECIL
 
   // ===============================================================
 
-
-
   Widget _buildSmallDoctorImage() {
 
     final String image =
 
         widget.doctorImage.trim();
-
-
 
     if (image.startsWith('http')) {
 
@@ -1456,8 +1255,6 @@ class _ConsultationChatScreenState
       );
 
     }
-
-
 
     try {
 
@@ -1505,13 +1302,9 @@ class _ConsultationChatScreenState
 
     } catch (_) {}
 
-
-
     return _smallDoctorFallback();
 
   }
-
-
 
   Widget _smallDoctorFallback() {
 
@@ -1545,15 +1338,11 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // MESSAGE INPUT
 
   // ===============================================================
-
-
 
   Widget _buildMessageInput() {
 
@@ -1629,11 +1418,7 @@ class _ConsultationChatScreenState
 
           ),
 
-
-
           const SizedBox(width: 7),
-
-
 
           Expanded(
 
@@ -1715,11 +1500,7 @@ class _ConsultationChatScreenState
 
           ),
 
-
-
           const SizedBox(width: 7),
-
-
 
           GestureDetector(
 
@@ -1789,15 +1570,50 @@ class _ConsultationChatScreenState
 
   }
 
+  // ===============================================================
+  // READ ONLY NOTICE
+  // ===============================================================
 
+  Widget _buildReadOnlyNotice() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(9, 0, 9, 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 9,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.lock_outline_rounded,
+            size: 16,
+            color: Color(0xFFB65339),
+          ),
+          SizedBox(width: 7),
+          Text(
+            'Konsultasi sudah selesai. Chat hanya dapat dilihat.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   // ===============================================================
 
   // MEDICAL NOTE
 
   // ===============================================================
-
-
 
   Widget _buildMedicalNote() {
 
@@ -1849,11 +1665,7 @@ class _ConsultationChatScreenState
 
           ),
 
-
-
           const SizedBox(width: 7),
-
-
 
           Expanded(
 
@@ -1887,15 +1699,11 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // SEND MESSAGE
 
   // ===============================================================
-
-
 
   Future<void> _sendMessage() async {
 
@@ -1903,37 +1711,24 @@ class _ConsultationChatScreenState
 
         messageController.text.trim();
 
-
-
     if (message.isEmpty) {
 
       return;
 
     }
 
-
-
     final User? user =
 
         FirebaseAuth.instance.currentUser;
 
-
-
     if (user == null || _isSending) {
-
       return;
-
     }
-
-
-
-    setState(() {
-
-      _isSending = true;
-
-    });
-
-
+    if (!await _isChatActive()) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Belum waktunya konsultasi.')));
+      return;
+    }
+    setState(() => _isSending = true);
 
     try {
 
@@ -1948,8 +1743,6 @@ class _ConsultationChatScreenState
               .collection('consultations')
 
               .doc(widget.consultationId);
-
-
 
       await consultationReference
 
@@ -1969,8 +1762,6 @@ class _ConsultationChatScreenState
 
       });
 
-
-
       await consultationReference.set(
 
         {
@@ -1984,6 +1775,7 @@ class _ConsultationChatScreenState
           'lastSenderId': user.uid,
 
           'unreadForDoctor':
+
               FieldValue.increment(1),
 
         },
@@ -1991,8 +1783,6 @@ class _ConsultationChatScreenState
         SetOptions(merge: true),
 
       );
-
-
 
       messageController.clear();
 
@@ -2003,8 +1793,6 @@ class _ConsultationChatScreenState
         return;
 
       }
-
-
 
       ScaffoldMessenger.of(context)
 
@@ -2050,251 +1838,11 @@ class _ConsultationChatScreenState
 
   }
 
-
-
   // ===============================================================
 
   // AKHIRI KONSULTASI
 
   // ===============================================================
-
-
-
-  void _showFinishConfirmation() {
-
-    FocusScope.of(context).unfocus();
-
-
-
-    showDialog(
-
-      context: context,
-
-      builder: (dialogContext) {
-
-        return AlertDialog(
-
-          backgroundColor:
-
-              const Color(0xFFFFFCFA),
-
-          shape: RoundedRectangleBorder(
-
-            borderRadius:
-
-                BorderRadius.circular(20),
-
-          ),
-
-          title: const Text(
-
-            'Akhiri Konsultasi?',
-
-            style: TextStyle(
-
-              fontFamily: 'Fredoka',
-
-              fontSize: 20,
-
-              fontWeight:
-
-                  FontWeight.w700,
-
-              color: Color(0xFF493028),
-
-            ),
-
-          ),
-
-          content: const Text(
-
-            'Apakah kamu yakin ingin mengakhiri konsultasi dengan dokter?',
-
-            style: TextStyle(
-
-              fontFamily: 'Nunito',
-
-              fontSize: 13,
-
-              height: 1.4,
-
-              color: Color(0xFF493C37),
-
-            ),
-
-          ),
-
-          actionsPadding:
-
-              const EdgeInsets.fromLTRB(
-
-            16,
-
-            0,
-
-            16,
-
-            14,
-
-          ),
-
-          actions: [
-
-            TextButton(
-
-              onPressed: () {
-
-                Navigator.pop(
-
-                  dialogContext,
-
-                );
-
-              },
-
-              child: const Text(
-
-                'Batal',
-
-                style: TextStyle(
-
-                  fontFamily: 'Nunito',
-
-                  fontSize: 13,
-
-                  fontWeight:
-
-                      FontWeight.w700,
-
-                  color:
-
-                      Color(0xFF77716E),
-
-                ),
-
-              ),
-
-            ),
-
-
-
-            ElevatedButton(
-
-              onPressed: () {
-
-                Navigator.pop(
-
-                  dialogContext,
-
-                );
-
-
-
-                _finishConsultation();
-
-              },
-
-              style:
-
-                  ElevatedButton.styleFrom(
-
-                backgroundColor:
-
-                    const Color(0xFFB65339),
-
-                foregroundColor:
-
-                    Colors.white,
-
-                elevation: 0,
-
-                shape:
-
-                    RoundedRectangleBorder(
-
-                  borderRadius:
-
-                      BorderRadius.circular(
-
-                    20,
-
-                  ),
-
-                ),
-
-              ),
-
-              child: const Text(
-
-                'Akhiri Konsultasi',
-
-                style: TextStyle(
-
-                  fontFamily: 'Nunito',
-
-                  fontSize: 12,
-
-                  fontWeight:
-
-                      FontWeight.w700,
-
-                ),
-
-              ),
-
-            ),
-
-          ],
-
-        );
-
-      },
-
-    );
-
-  }
-
-
-
-  void _finishConsultation() {
-
-    FocusScope.of(context).unfocus();
-
-
-
-    Navigator.pushReplacement(
-
-      context,
-
-      MaterialPageRoute(
-
-        builder: (context) {
-
-          return ConsultationCompleteScreen(
-
-            doctorName:
-
-                widget.doctorName,
-
-            specialty:
-
-                widget.specialty,
-
-            selectedTime:
-
-                widget.selectedTime,
-
-          );
-
-        },
-
-      ),
-
-    );
-
-  }
-
-
 
   // ===============================================================
 
@@ -2302,28 +1850,27 @@ class _ConsultationChatScreenState
 
   // ===============================================================
 
-
-
   void _scrollToBottom() {
+
     if (!scrollController.hasClients) {
+
       return;
+
     }
 
     final double maxScroll =
+
         scrollController.position.maxScrollExtent;
 
     scrollController.jumpTo(maxScroll);
+
   }
-
-
 
   // ===============================================================
 
   // FORMAT WAKTU
 
   // ===============================================================
-
-
 
   String _formatTime(dynamic timestamp) {
 
@@ -2333,13 +1880,9 @@ class _ConsultationChatScreenState
 
     }
 
-
-
     final DateTime date =
 
         timestamp.toDate();
-
-
 
     final String hour =
 
@@ -2349,8 +1892,6 @@ class _ConsultationChatScreenState
 
             .padLeft(2, '0');
 
-
-
     final String minute =
 
         date.minute
@@ -2359,21 +1900,15 @@ class _ConsultationChatScreenState
 
             .padLeft(2, '0');
 
-
-
     return '$hour:$minute';
 
   }
-
-
 
   // ===============================================================
 
   // ERROR
 
   // ===============================================================
-
-
 
   Widget _buildError() {
 

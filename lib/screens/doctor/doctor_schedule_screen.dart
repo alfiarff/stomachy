@@ -6,20 +6,13 @@ class DoctorScheduleScreen extends StatefulWidget {
   const DoctorScheduleScreen({super.key});
 
   @override
-  State<DoctorScheduleScreen> createState() =>
-      _DoctorScheduleScreenState();
+  State<DoctorScheduleScreen> createState() => _DoctorScheduleScreenState();
 }
 
-class _DoctorScheduleScreenState
-    extends State<DoctorScheduleScreen> {
-  final Color backgroundColor =
-      const Color(0xFFFFF5EF);
-
-  final Color primaryBrown =
-      const Color(0xFF5A392F);
-
-  final Color softOrange =
-      const Color(0xFFFFE3D1);
+class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
+  static const Color backgroundColor = Color(0xFFFFF5EF);
+  static const Color softOrange = Color(0xFFFFE3D1);
+  static const Color brown = Color(0xFFB9543A);
 
   final List<String> _days = [
     'Senin',
@@ -32,7 +25,6 @@ class _DoctorScheduleScreenState
   ];
 
   Map<String, Map<String, dynamic>> _schedule = {};
-
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -42,57 +34,39 @@ class _DoctorScheduleScreenState
     _loadSchedule();
   }
 
-  // ===============================================================
-  // LOAD JADWAL
-  // ===============================================================
-
   Future<void> _loadSchedule() async {
     try {
-      final User? user =
-          FirebaseAuth.instance.currentUser;
+      final User? user = FirebaseAuth.instance.currentUser;
 
       if (user == null) {
         if (!mounted) return;
-
         setState(() {
           _isLoading = false;
         });
-
         return;
       }
 
-      final DocumentSnapshot<
-          Map<String, dynamic>> doc =
+      final DocumentSnapshot<Map<String, dynamic>> doc =
           await FirebaseFirestore.instance
               .collection('users')
               .doc(user.uid)
               .get();
 
       if (doc.exists) {
-        final Map<String, dynamic>? data =
-            doc.data();
-
-        final dynamic rawSchedule =
-            data?['doctorSchedule'];
+        final Map<String, dynamic>? data = doc.data();
+        final dynamic rawSchedule = data?['doctorSchedule'];
 
         if (rawSchedule is Map) {
-          final Map<String, Map<String, dynamic>>
-              loadedSchedule = {};
+          final Map<String, Map<String, dynamic>> loadedSchedule = {};
 
           for (final String day in _days) {
-            final dynamic rawDay =
-                rawSchedule[day];
+            final dynamic rawDay = rawSchedule[day];
 
             if (rawDay is Map) {
               loadedSchedule[day] = {
-                'active':
-                    rawDay['active'] == true,
-                'start':
-                    rawDay['start']?.toString() ??
-                        '08:00',
-                'end':
-                    rawDay['end']?.toString() ??
-                        '16:00',
+                'active': rawDay['active'] == true,
+                'start': rawDay['start']?.toString() ?? '08:00',
+                'end': rawDay['end']?.toString() ?? '16:00',
               };
             }
           }
@@ -108,27 +82,25 @@ class _DoctorScheduleScreenState
       if (!mounted) return;
 
       ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Gagal mengambil jadwal dokter.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Gagal mengambil jadwal dokter.',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 11,
+                color: Colors.black,
+              ),
             ),
+            backgroundColor: Colors.white,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(18),
           ),
-          backgroundColor: primaryBrown,
-          behavior:
-              SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(12),
-          ),
-          margin:
-              const EdgeInsets.all(18),
-        ),
-      );
+        );
     } finally {
       if (!mounted) return;
 
@@ -138,17 +110,10 @@ class _DoctorScheduleScreenState
     }
   }
 
-  // ===============================================================
-  // SAVE JADWAL
-  // ===============================================================
-
   Future<void> _saveSchedule() async {
-    final User? user =
-        FirebaseAuth.instance.currentUser;
+    final User? user = FirebaseAuth.instance.currentUser;
 
-    if (user == null) return;
-
-    if (_isSaving) return;
+    if (user == null || _isSaving) return;
 
     setState(() {
       _isSaving = true;
@@ -161,8 +126,7 @@ class _DoctorScheduleScreenState
           .set(
         {
           'doctorSchedule': _schedule,
-          'updatedAt':
-              FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
       );
@@ -170,58 +134,48 @@ class _DoctorScheduleScreenState
       if (!mounted) return;
 
       ScaffoldMessenger.of(context)
-          .hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Jadwal dokter berhasil disimpan.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Jadwal dokter berhasil disimpan.',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 11,
+                color: Colors.black,
+              ),
             ),
+            backgroundColor: Colors.white,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(18),
           ),
-          backgroundColor: primaryBrown,
-          behavior:
-              SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(12),
-          ),
-          margin:
-              const EdgeInsets.all(18),
-        ),
-      );
+        );
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context)
-          .hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Gagal menyimpan jadwal dokter.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Gagal menyimpan jadwal dokter.',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 11,
+                color: Colors.black,
+              ),
             ),
+            backgroundColor: Colors.white,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(18),
           ),
-          backgroundColor: primaryBrown,
-          behavior:
-              SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(12),
-          ),
-          margin:
-              const EdgeInsets.all(18),
-        ),
-      );
+        );
     } finally {
       if (!mounted) return;
 
@@ -231,13 +185,7 @@ class _DoctorScheduleScreenState
     }
   }
 
-  // ===============================================================
-  // GET DAY DATA
-  // ===============================================================
-
-  Map<String, dynamic> _getDayData(
-    String day,
-  ) {
+  Map<String, dynamic> _getDayData(String day) {
     return _schedule[day] ??
         {
           'active': false,
@@ -246,18 +194,9 @@ class _DoctorScheduleScreenState
         };
   }
 
-  // ===============================================================
-  // TOGGLE DAY
-  // ===============================================================
-
-  void _toggleDay(
-    String day,
-    bool value,
-  ) {
+  void _toggleDay(String day, bool value) {
     final Map<String, dynamic> current =
-        Map<String, dynamic>.from(
-      _getDayData(day),
-    );
+        Map<String, dynamic>.from(_getDayData(day));
 
     current['active'] = value;
 
@@ -266,42 +205,29 @@ class _DoctorScheduleScreenState
     });
   }
 
-  // ===============================================================
-  // PICK TIME
-  // ===============================================================
-
   Future<void> _pickTime({
     required String day,
     required bool isStart,
   }) async {
-    final Map<String, dynamic> current =
-        _getDayData(day);
+    final Map<String, dynamic> current = _getDayData(day);
 
-    final String currentTime = isStart
-        ? current['start'].toString()
-        : current['end'].toString();
+    final String currentTime =
+        isStart ? current['start'].toString() : current['end'].toString();
 
-    final List<String> parts =
-        currentTime.split(':');
+    final List<String> parts = currentTime.split(':');
 
-    final TimeOfDay initialTime =
-        TimeOfDay(
+    final TimeOfDay initialTime = TimeOfDay(
       hour: int.tryParse(
-            parts.isNotEmpty
-                ? parts[0]
-                : '8',
+            parts.isNotEmpty ? parts[0] : '8',
           ) ??
           8,
       minute: int.tryParse(
-            parts.length > 1
-                ? parts[1]
-                : '0',
+            parts.length > 1 ? parts[1] : '0',
           ) ??
           0,
     );
 
-    final TimeOfDay? selectedTime =
-        await showTimePicker(
+    final TimeOfDay? selectedTime = await showTimePicker(
       context: context,
       initialTime: initialTime,
       builder: (
@@ -310,11 +236,12 @@ class _DoctorScheduleScreenState
       ) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme:
-                Theme.of(context)
-                    .colorScheme
-                    .copyWith(
-              primary: primaryBrown,
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: brown,
+            ),
+            textTheme: Theme.of(context).textTheme.apply(
+              bodyColor: Colors.black,
+              displayColor: Colors.black,
             ),
           ),
           child: child!,
@@ -325,31 +252,20 @@ class _DoctorScheduleScreenState
     if (selectedTime == null) return;
 
     final String hour =
-        selectedTime.hour
-            .toString()
-            .padLeft(2, '0');
+        selectedTime.hour.toString().padLeft(2, '0');
 
     final String minute =
-        selectedTime.minute
-            .toString()
-            .padLeft(2, '0');
+        selectedTime.minute.toString().padLeft(2, '0');
 
     final Map<String, dynamic> updated =
-        Map<String, dynamic>.from(
-      current,
-    );
+        Map<String, dynamic>.from(current);
 
-    updated[isStart ? 'start' : 'end'] =
-        '$hour:$minute';
+    updated[isStart ? 'start' : 'end'] = '$hour:$minute';
 
     setState(() {
       _schedule[day] = updated;
     });
   }
-
-  // ===============================================================
-  // BUILD
-  // ===============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -358,51 +274,34 @@ class _DoctorScheduleScreenState
       body: SafeArea(
         child: _isLoading
             ? const Center(
-                child:
-                    CircularProgressIndicator(
-                  color: Color(0xFFB9543A),
+                child: CircularProgressIndicator(
+                  color: brown,
                   strokeWidth: 2.5,
                 ),
               )
             : SingleChildScrollView(
-                physics:
-                    const BouncingScrollPhysics(),
-                padding:
-                    const EdgeInsets.fromLTRB(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
                   22,
                   16,
                   22,
                   30,
                 ),
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(),
-
                     const SizedBox(height: 22),
-
                     _buildInformationCard(),
-
                     const SizedBox(height: 18),
-
                     ..._days.map(
-                      (String day) {
-                        return Padding(
-                          padding:
-                              const EdgeInsets.only(
-                            bottom: 14,
-                          ),
-                          child:
-                              _buildDayCard(day),
-                        );
-                      },
+                      (String day) => Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _buildDayCard(day),
+                      ),
                     ),
-
                     const SizedBox(height: 12),
-
                     _buildSaveButton(),
-
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -410,10 +309,6 @@ class _DoctorScheduleScreenState
       ),
     );
   }
-
-  // ===============================================================
-  // HEADER
-  // ===============================================================
 
   Widget _buildHeader() {
     return SizedBox(
@@ -425,27 +320,21 @@ class _DoctorScheduleScreenState
           Align(
             alignment: Alignment.centerLeft,
             child: GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              behavior:
-                  HitTestBehavior.opaque,
+              onTap: () => Navigator.pop(context),
+              behavior: HitTestBehavior.opaque,
               child: const SizedBox(
                 width: 32,
                 height: 32,
                 child: Center(
                   child: Icon(
-                    Icons
-                        .arrow_back_ios_new_rounded,
+                    Icons.arrow_back_ios_new_rounded,
                     size: 21,
-                    color:
-                        Color(0xFF30221E),
+                    color: Colors.black,
                   ),
                 ),
               ),
             ),
           ),
-
           const Center(
             child: Text(
               'Jadwal Konsultasi',
@@ -453,10 +342,8 @@ class _DoctorScheduleScreenState
               style: TextStyle(
                 fontFamily: 'Fredoka',
                 fontSize: 22,
-                fontWeight:
-                    FontWeight.w800,
-                color:
-                    Color(0xFF30221E),
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
               ),
             ),
           ),
@@ -465,76 +352,58 @@ class _DoctorScheduleScreenState
     );
   }
 
-  // ===============================================================
-  // INFORMATION CARD
-  // ===============================================================
-
   Widget _buildInformationCard() {
     return Container(
       width: double.infinity,
-      padding:
-          const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius:
-            BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color:
-                Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 6,
-            offset:
-                const Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 38,
             height: 38,
             decoration: BoxDecoration(
               color: softOrange,
-              borderRadius:
-                  BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
               Icons.calendar_month_rounded,
               size: 21,
-              color: Color(0xFF705044),
+              color: brown,
             ),
           ),
-
           const SizedBox(width: 12),
-
           const Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Atur Jadwal Praktik',
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 12,
-                    fontWeight:
-                        FontWeight.w700,
-                    color:
-                        Color(0xFF30221E),
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
                   ),
                 ),
-
                 SizedBox(height: 4),
-
                 Text(
                   'Tentukan hari dan jam konsultasi yang tersedia untuk pasien.',
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 11,
-                    color:
-                        Color(0xFF776C67),
+                    color: Colors.black,
                   ),
                 ),
               ],
@@ -545,47 +414,29 @@ class _DoctorScheduleScreenState
     );
   }
 
-  // ===============================================================
-  // DAY CARD
-  // ===============================================================
+  Widget _buildDayCard(String day) {
+    final Map<String, dynamic> data = _getDayData(day);
 
-  Widget _buildDayCard(
-    String day,
-  ) {
-    final Map<String, dynamic> data =
-        _getDayData(day);
-
-    final bool active =
-        data['active'] == true;
-
-    final String start =
-        data['start']?.toString() ??
-            '08:00';
-
-    final String end =
-        data['end']?.toString() ??
-            '16:00';
+    final bool active = data['active'] == true;
+    final String start = data['start']?.toString() ?? '08:00';
+    final String end = data['end']?.toString() ?? '16:00';
 
     return Container(
       width: double.infinity,
-      padding:
-          const EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         16,
         12,
         16,
         13,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF9),
-        borderRadius:
-            BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color:
-                Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 6,
-            offset:
-                const Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -599,76 +450,41 @@ class _DoctorScheduleScreenState
                 decoration: BoxDecoration(
                   color: active
                       ? softOrange
-                      : const Color(
-                          0xFFF0ECE9,
-                        ),
-                  borderRadius:
-                      BorderRadius.circular(8),
+                      : const Color(0xFFF0ECE9),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons
-                      .calendar_today_rounded,
+                child: const Icon(
+                  Icons.calendar_today_rounded,
                   size: 18,
-                  color: active
-                      ? const Color(
-                          0xFF705044,
-                        )
-                      : const Color(
-                          0xFF99918D,
-                        ),
+                  color: brown,
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: Text(
                   day,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 12,
-                    fontWeight:
-                        FontWeight.w700,
-                    color: active
-                        ? primaryBrown
-                        : const Color(
-                            0xFF776C67,
-                          ),
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
                   ),
                 ),
               ),
-
               Switch(
                 value: active,
                 onChanged: (bool value) {
-                  _toggleDay(
-                    day,
-                    value,
-                  );
+                  _toggleDay(day, value);
                 },
-                activeColor:
-                    const Color(
-                  0xFF54C467,
-                ),
-                activeTrackColor:
-                    const Color(
-                  0xFFCDEFD2,
-                ),
-                inactiveThumbColor:
-                    const Color(
-                  0xFF9E9E9E,
-                ),
-                inactiveTrackColor:
-                    const Color(
-                  0xFFE5E2E0,
-                ),
+                activeColor: const Color(0xFF54C467),
+                activeTrackColor: const Color(0xFFCDEFD2),
+                inactiveThumbColor: const Color(0xFF9E9E9E),
+                inactiveTrackColor: const Color(0xFFE5E2E0),
               ),
             ],
           ),
-
           if (active) ...[
             const SizedBox(height: 12),
-
             Row(
               children: [
                 Expanded(
@@ -683,9 +499,7 @@ class _DoctorScheduleScreenState
                     },
                   ),
                 ),
-
                 const SizedBox(width: 10),
-
                 Expanded(
                   child: _buildTimeButton(
                     label: 'Selesai',
@@ -702,17 +516,14 @@ class _DoctorScheduleScreenState
             ),
           ] else ...[
             const SizedBox(height: 2),
-
             const Align(
-              alignment:
-                  Alignment.centerLeft,
+              alignment: Alignment.centerLeft,
               child: Text(
                 'Tidak ada jadwal praktik',
                 style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 10,
-                  color:
-                      Color(0xFF9A918C),
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -722,10 +533,6 @@ class _DoctorScheduleScreenState
     );
   }
 
-  // ===============================================================
-  // TIME BUTTON
-  // ===============================================================
-
   Widget _buildTimeButton({
     required String label,
     required String time,
@@ -733,23 +540,18 @@ class _DoctorScheduleScreenState
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius:
-          BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         height: 58,
-        padding:
-            const EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          color:
-              const Color(0xFFFFF5EF),
-          borderRadius:
-              BorderRadius.circular(12),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color:
-                const Color(0xFFF0D9CC),
+            color: const Color(0xFFF0D9CC),
             width: 0.8,
           ),
         ),
@@ -760,49 +562,36 @@ class _DoctorScheduleScreenState
               height: 31,
               decoration: BoxDecoration(
                 color: softOrange,
-                borderRadius:
-                    BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.access_time_rounded,
                 size: 17,
-                color:
-                    Color(0xFF705044),
+                color: brown,
               ),
             ),
-
             const SizedBox(width: 9),
-
             Expanded(
               child: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     label,
-                    style:
-                        const TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 9,
-                      color:
-                          Color(0xFF776C67),
+                      color: Colors.black,
                     ),
                   ),
-
                   const SizedBox(height: 2),
-
                   Text(
                     time,
-                    style:
-                        const TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
-                      fontWeight:
-                          FontWeight.w700,
-                      color:
-                          Color(0xFF493C37),
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -814,53 +603,38 @@ class _DoctorScheduleScreenState
     );
   }
 
-  // ===============================================================
-  // SAVE BUTTON
-  // ===============================================================
-
   Widget _buildSaveButton() {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 53,
       child: ElevatedButton(
-        onPressed:
-            _isSaving
-                ? null
-                : _saveSchedule,
-        style:
-            ElevatedButton.styleFrom(
-          backgroundColor:
-              const Color(0xFFB9543A),
-          disabledBackgroundColor:
-              const Color(0xFFD9B9AD),
-          foregroundColor:
-              Colors.white,
-          elevation: 0,
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(25),
+        onPressed: _isSaving ? null : _saveSchedule,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFB9543A),
+          disabledBackgroundColor: const Color(0xFFD9B9AD),
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shadowColor: Colors.black.withOpacity(0.25),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
           ),
         ),
         child: _isSaving
             ? const SizedBox(
                 width: 19,
                 height: 19,
-                child:
-                    CircularProgressIndicator(
+                child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: Colors.white,
                 ),
               )
             : const Text(
                 'Simpan Jadwal',
-                textAlign:
-                    TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 12,
-                  fontWeight:
-                      FontWeight.w700,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
                 ),
               ),
       ),

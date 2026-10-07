@@ -1,1227 +1,3363 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 
 class DoctorPatientChatScreen extends StatefulWidget {
+
   final Map<String, dynamic> patient;
 
   const DoctorPatientChatScreen({
+
     super.key,
+
     required this.patient,
+
   });
 
   @override
+
   State<DoctorPatientChatScreen> createState() =>
+
       _DoctorPatientChatScreenState();
+
 }
 
 class _DoctorPatientChatScreenState
+
     extends State<DoctorPatientChatScreen> {
+
   final TextEditingController _messageController =
+
       TextEditingController();
 
   final ScrollController _scrollController =
+
       ScrollController();
+
+  static const Color backgroundColor =
+
+      Color(0xFFFFF5EF);
+
+  static const Color brown =
+
+      Color(0xFFB65339);
+
+  static const Color softOrange =
+
+      Color(0xFFFFE3D1);
 
   bool _isSending = false;
 
-  final Color backgroundColor =
-      const Color(0xFFFFF5EF);
+  String get _consultationId =>
 
-  final Color primaryBrown =
-      const Color(0xFFB65339);
+      (widget.patient['consultationId'] ?? '')
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
+          .toString();
 
-  // ===============================================================
-  // DATA PASIEN
-  // ===============================================================
+  String get _patientId =>
+
+      (widget.patient['userId'] ?? '')
+
+          .toString();
 
   String get _patientName {
+
     final String name =
+
         (widget.patient['userName'] ??
+
                 widget.patient['name'] ??
+
                 'Pasien')
+
             .toString()
+
             .trim();
 
-    return name.isEmpty ? 'Pasien' : name;
+    return name.isEmpty
+
+        ? 'Pasien'
+
+        : name;
+
   }
 
-  String get _consultationId {
-    return (widget.patient['consultationId'] ?? '')
-        .toString();
+  String get _consultationDay =>
+
+      (widget.patient['consultationDay'] ?? '')
+
+          .toString();
+
+  String get _consultationTime =>
+
+      (widget.patient['consultationTime'] ?? '')
+
+          .toString();
+
+  String get _status =>
+
+      (widget.patient['status'] ?? '')
+
+          .toString()
+
+          .toLowerCase();
+
+  bool get _isActive =>
+
+      _status == 'active';
+
+  bool get _isCompleted =>
+
+      _status == 'completed';
+
+  @override
+
+  void initState() {
+
+    super.initState();
+
+    WidgetsBinding.instance
+
+        .addPostFrameCallback((_) {
+
+      if (_isActive) {
+
+        _markAsRead();
+
+      }
+
+    });
+
   }
 
-  String get _consultationDay {
-    return (widget.patient['consultationDay'] ?? '')
-        .toString();
-  }
+  @override
 
-  String get _consultationTime {
-    return (widget.patient['consultationTime'] ?? '')
-        .toString();
-  }
+  void dispose() {
 
-  // ===============================================================
-  // STREAM PESAN
-  // ===============================================================
+    _messageController.dispose();
+
+    _scrollController.dispose();
+
+    super.dispose();
+
+  }
 
   Stream<QuerySnapshot<Map<String, dynamic>>>
+
       _messageStream() {
+
     if (_consultationId.isEmpty) {
+
       return const Stream.empty();
+
     }
 
     return FirebaseFirestore.instance
+
         .collection('consultations')
+
         .doc(_consultationId)
+
         .collection('messages')
+
         .orderBy(
+
           'createdAt',
+
           descending: false,
+
         )
+
         .snapshots();
+
   }
 
-  // ===============================================================
-  // BUILD
-  // ===============================================================
+  Future<void> _markAsRead() async {
+
+    if (!_isActive ||
+
+        _consultationId.isEmpty) {
+
+      return;
+
+    }
+
+    try {
+
+      await FirebaseFirestore.instance
+
+          .collection('consultations')
+
+          .doc(_consultationId)
+
+          .set(
+
+        {
+
+          'unreadForDoctor': 0,
+
+          'lastReadByDoctorAt':
+
+              FieldValue.serverTimestamp(),
+
+        },
+
+        SetOptions(merge: true),
+
+      );
+
+    } catch (_) {}
+
+  }
+
+  Future<List<Map<String, dynamic>>>
+
+      _loadPreviousConsultations() async {
+
+    final User? doctor =
+
+        FirebaseAuth.instance.currentUser;
+
+    if (doctor == null ||
+
+        _patientId.isEmpty) {
+
+      return [];
+
+    }
+
+    try {
+
+      // Hanya where doctorId.
+
+      // Jadi tidak membutuhkan composite index.
+
+      final snapshot =
+
+          await FirebaseFirestore.instance
+
+              .collection('consultations')
+
+              .where(
+
+                'doctorId',
+
+                isEqualTo: doctor.uid,
+
+              )
+
+              .get();
+
+      final List<Map<String, dynamic>>
+
+          result = [];
+
+      for (final document
+
+          in snapshot.docs) {
+
+        if (document.id ==
+
+            _consultationId) {
+
+          continue;
+
+        }
+
+        final data =
+
+            document.data();
+
+        final String userId =
+
+            (data['userId'] ?? '')
+
+                .toString();
+
+        final String status =
+
+            (data['status'] ?? '')
+
+                .toString()
+
+                .toLowerCase();
+
+        final String lastMessage =
+
+            (data['lastMessage'] ?? '')
+
+                .toString()
+
+                .trim();
+
+        if (userId != _patientId) {
+
+          continue;
+
+        }
+
+        if (status != 'completed') {
+
+          continue;
+
+        }
+
+        if (lastMessage.isEmpty) {
+
+          continue;
+
+        }
+
+        result.add({
+
+          ...data,
+
+          'consultationId':
+
+              document.id,
+
+        });
+
+      }
+
+      result.sort((a, b) {
+
+        final Timestamp? aTime =
+
+            _timestamp(
+
+                  a['updatedAt'],
+
+                ) ??
+
+                _timestamp(
+
+                  a['createdAt'],
+
+                ) ??
+
+                _timestamp(
+
+                  a['consultationTimestamp'],
+
+                );
+
+        final Timestamp? bTime =
+
+            _timestamp(
+
+                  b['updatedAt'],
+
+                ) ??
+
+                _timestamp(
+
+                  b['createdAt'],
+
+                ) ??
+
+                _timestamp(
+
+                  b['consultationTimestamp'],
+
+                );
+
+        if (aTime == null &&
+
+            bTime == null) {
+
+          return 0;
+
+        }
+
+        if (aTime == null) {
+
+          return 1;
+
+        }
+
+        if (bTime == null) {
+
+          return -1;
+
+        }
+
+        return bTime.compareTo(
+
+          aTime,
+
+        );
+
+      });
+
+      return result;
+
+    } catch (_) {
+
+      return [];
+
+    }
+
+  }
+
+  Timestamp? _timestamp(
+
+    dynamic value,
+
+  ) {
+
+    if (value is Timestamp) {
+
+      return value;
+
+    }
+
+    return null;
+
+  }
+
+  void _openPreviousChat(
+
+    Map<String, dynamic> consultation,
+
+  ) {
+
+    Navigator.push(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder: (_) =>
+
+            DoctorPatientChatScreen(
+
+          patient: consultation,
+
+        ),
+
+      ),
+
+    );
+
+  }
 
   @override
+
   Widget build(BuildContext context) {
+
     return Scaffold(
-      backgroundColor: backgroundColor,
+
+      backgroundColor:
+
+          backgroundColor,
+
       body: SafeArea(
+
         child: Column(
+
           children: [
+
             _buildHeader(),
 
             _buildPatientCard(),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            if (_isActive) ...[
+
+              _buildStatusCard(),
+
+              const SizedBox(height: 10),
+
+            ],
+
+            _buildPreviousHistoryButton(),
+
+            const SizedBox(height: 10),
 
             _buildPrivacyWarning(),
 
-            const SizedBox(height: 12),
-
-            _buildTodayLabel(),
-
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             Expanded(
+
               child: StreamBuilder<
+
                   QuerySnapshot<
+
                       Map<String, dynamic>>>(
+
                 stream: _messageStream(),
+
                 builder: (
+
                   context,
+
                   snapshot,
+
                 ) {
-                  if (_consultationId.isEmpty) {
+
+                  if (_consultationId
+
+                      .isEmpty) {
+
                     return _buildError(
+
                       'ID konsultasi tidak ditemukan.',
+
                     );
+
                   }
 
-                  if (snapshot.connectionState ==
+                  if (snapshot
+
+                          .connectionState ==
+
                       ConnectionState.waiting) {
+
                     return const Center(
+
                       child:
+
                           CircularProgressIndicator(
-                        color: Color(0xFFB65339),
+
+                        color: brown,
+
+                        strokeWidth: 2.5,
+
                       ),
+
                     );
+
                   }
 
                   if (snapshot.hasError) {
+
                     return _buildError(
+
                       'Chat gagal dimuat.',
+
                     );
+
                   }
 
-                  final List<
-                          QueryDocumentSnapshot<
-                              Map<String, dynamic>>>
-                      messages =
-                      snapshot.data?.docs ?? [];
+                  final messages =
+
+                      snapshot.data?.docs ??
+
+                          [];
+
+                  if (_isActive) {
+
+                    WidgetsBinding.instance
+
+                        .addPostFrameCallback(
+
+                      (_) {
+
+                        _markAsRead();
+
+                      },
+
+                    );
+
+                  }
 
                   WidgetsBinding.instance
+
                       .addPostFrameCallback(
+
                     (_) {
+
                       _scrollToBottom();
+
                     },
+
                   );
 
                   if (messages.isEmpty) {
+
                     return _buildEmptyChat();
+
                   }
 
                   return ListView.builder(
+
                     controller:
+
                         _scrollController,
+
                     padding:
+
                         const EdgeInsets.fromLTRB(
+
                       10,
+
                       0,
+
                       10,
+
                       8,
+
                     ),
+
                     physics:
+
                         const BouncingScrollPhysics(),
-                    itemCount: messages.length,
+
+                    itemCount:
+
+                        messages.length,
+
                     itemBuilder:
+
                         (context, index) {
-                      final Map<String, dynamic>
-                          message =
-                          messages[index].data();
 
                       return _buildChatBubble(
-                        message,
+
+                        messages[index]
+
+                            .data(),
+
                       );
+
                     },
+
                   );
+
                 },
+
               ),
+
             ),
 
-            _buildMessageInput(),
+            if (_isActive)
 
-            _buildMedicalNote(),
+              _buildMessageInput(),
+
+            if (_isCompleted)
+
+              _buildReadOnlyNotice(),
+
+            if (_isActive)
+
+              _buildMedicalNote(),
 
             const SizedBox(height: 5),
+
           ],
+
         ),
+
       ),
+
     );
+
   }
 
-  // ===============================================================
-  // HEADER
-  // ===============================================================
-
   Widget _buildHeader() {
+
     return SizedBox(
+
       height: 58,
+
       child: Row(
+
         children: [
+
           GestureDetector(
-            onTap: () {
-              Navigator.pop(context);
-            },
+
+            onTap: () =>
+
+                Navigator.pop(context),
+
             child: const SizedBox(
+
               width: 55,
+
               height: 55,
-              child: Align(
-                alignment: Alignment.center,
+
+              child: Center(
+
                 child: Icon(
+
                   Icons.arrow_back_rounded,
+
                   size: 29,
+
                   color: Colors.black,
+
                 ),
+
               ),
+
             ),
+
           ),
 
           Expanded(
+
             child: Center(
+
               child: Text(
-                'Chat dengan Pasien',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
+
+                _isCompleted
+
+                    ? 'Riwayat Chat'
+
+                    : 'Chat dengan Pasien',
+
+                textAlign:
+
+                    TextAlign.center,
+
+                style:
+
+                    const TextStyle(
+
                   fontFamily: 'Fredoka',
+
                   fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF171310),
+
+                  fontWeight:
+
+                      FontWeight.w700,
+
+                  color: Colors.black,
+
                 ),
+
               ),
+
             ),
+
           ),
 
-          SizedBox(
-            width: 75,
-            child: TextButton(
-              onPressed:
-                  _showFinishConfirmation,
-              style: TextButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 6,
+          if (_isActive)
+
+            SizedBox(
+
+              width: 75,
+
+              child: TextButton(
+
+                onPressed:
+
+                    _showFinishConfirmation,
+
+                child:
+
+                    const Text(
+
+                  'Akhiri',
+
+                  style:
+
+                      TextStyle(
+
+                    fontFamily:
+
+                        'Nunito',
+
+                    fontSize: 11,
+
+                    fontWeight:
+
+                        FontWeight.w700,
+
+                    color: brown,
+
+                  ),
+
                 ),
+
               ),
-              child: const Text(
-                'Akhiri',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFB65339),
-                ),
-              ),
+
+            )
+
+          else
+
+            const SizedBox(
+
+              width: 75,
+
             ),
-          ),
+
         ],
+
       ),
+
     );
+
   }
 
-  // ===============================================================
-  // PATIENT CARD
-  // TANPA RATING DAN ULASAN
-  // ===============================================================
-
   Widget _buildPatientCard() {
+
     return Container(
-      margin: const EdgeInsets.symmetric(
+
+      margin:
+
+          const EdgeInsets.symmetric(
+
         horizontal: 27,
+
       ),
-      padding: const EdgeInsets.fromLTRB(
+
+      padding:
+
+          const EdgeInsets.fromLTRB(
+
         12,
+
         10,
+
         12,
+
         10,
+
       ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCFA),
+
+      decoration:
+
+          BoxDecoration(
+
+        color: Colors.white,
+
         borderRadius:
-            BorderRadius.circular(20),
+
+            BorderRadius.circular(
+
+          20,
+
+        ),
+
       ),
+
       child: Row(
+
         children: [
+
           Container(
+
             width: 62,
+
             height: 62,
+
             decoration:
+
                 const BoxDecoration(
+
               shape: BoxShape.circle,
-              color: Color(0xFFFFE3D1),
+
+              color: softOrange,
+
             ),
+
             child: const Icon(
+
               Icons.person_rounded,
+
               size: 42,
-              color: Color(0xFFB65339),
+
+              color: brown,
+
             ),
+
           ),
 
           const SizedBox(width: 14),
 
           Expanded(
+
             child: Column(
+
               crossAxisAlignment:
+
                   CrossAxisAlignment.start,
+
               children: [
+
                 Text(
+
                   _patientName,
+
                   maxLines: 1,
+
                   overflow:
+
                       TextOverflow.ellipsis,
-                  style: const TextStyle(
+
+                  style:
+
+                      const TextStyle(
+
                     fontFamily: 'Nunito',
+
                     fontSize: 12,
+
                     fontWeight:
+
                         FontWeight.w800,
-                    color: Color(0xFF211914),
+
+                    color:
+
+                        Colors.black,
+
                   ),
+
                 ),
 
                 const SizedBox(height: 2),
 
                 const Text(
+
                   'Pasien',
-                  style: TextStyle(
+
+                  style:
+
+                      TextStyle(
+
                     fontFamily: 'Nunito',
+
                     fontSize: 12,
-                    color: Colors.black,
+
+                    color:
+
+                        Colors.black,
+
                   ),
+
                 ),
 
-                const SizedBox(height: 2),
+                if (_consultationDay
 
-                const Text(
-                  'Online',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    color: Color(0xFF18C85A),
-                  ),
-                ),
+                        .isNotEmpty ||
 
-                if (_consultationTime.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+                    _consultationTime
+
+                        .isNotEmpty) ...[
+
+                  const SizedBox(height: 3),
+
                   Text(
-                    _consultationDay.isNotEmpty
-                        ? 'Jadwal: $_consultationDay, $_consultationTime'
+
+                    _consultationDay
+
+                            .isNotEmpty
+
+                        ? 'Jadwal: $_consultationDay${_consultationTime.isNotEmpty ? ', $_consultationTime' : ''}'
+
                         : 'Jadwal: $_consultationTime',
+
                     maxLines: 1,
+
                     overflow:
+
                         TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
+
+                    style:
+
+                        const TextStyle(
+
+                      fontFamily:
+
+                          'Nunito',
+
                       fontSize: 9,
-                      color: Color(0xFF77716E),
+
+                      color:
+
+                          Colors.black,
+
                     ),
+
                   ),
+
                 ],
+
               ],
+
             ),
+
           ),
+
         ],
+
       ),
+
     );
+
   }
 
-  // ===============================================================
-  // PRIVACY WARNING
-  // ===============================================================
+  Widget _buildStatusCard() {
 
-  Widget _buildPrivacyWarning() {
+    final bool completed =
+
+        _isCompleted;
+
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 28,
+
+      margin:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 27,
+
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 7,
+
+      padding:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 13,
+
+        vertical: 9,
+
       ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFE8DC),
+
+      decoration:
+
+          BoxDecoration(
+
+        color: Colors.white,
+
         borderRadius:
-            BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.lock_outline_rounded,
-            size: 17,
-            color: Color(0xFFB65339),
+
+            BorderRadius.circular(
+
+          13,
+
+        ),
+
+        boxShadow: [
+
+          BoxShadow(
+
+            color:
+
+                Colors.black.withOpacity(
+
+              0.05,
+
+            ),
+
+            blurRadius: 5,
+
+            offset:
+
+                const Offset(0, 2),
+
           ),
 
-          const SizedBox(width: 10),
+        ],
+
+      ),
+
+      child: Row(
+
+        children: [
+
+          Icon(
+
+            completed
+
+                ? Icons.history_rounded
+
+                : Icons.chat_rounded,
+
+            size: 19,
+
+            color: brown,
+
+          ),
+
+          const SizedBox(width: 9),
 
           Expanded(
-            child: Text(
-              'Jangan bagikan informasi pribadi atau kode OTP kepada siapapun.',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 9.5,
-                height: 1.3,
-                color: Colors.grey[800],
-              ),
+
+            child: Column(
+
+              crossAxisAlignment:
+
+                  CrossAxisAlignment.start,
+
+              children: [
+
+                Text(
+
+                  completed
+
+                      ? 'Konsultasi Selesai'
+
+                      : 'Konsultasi Aktif',
+
+                  style:
+
+                      TextStyle(
+
+                    fontFamily:
+
+                        'Nunito',
+
+                    fontSize: 11,
+
+                    fontWeight:
+
+                        FontWeight.w800,
+
+                    color: completed
+
+                        ? Colors.black
+
+                        : const Color(
+
+                            0xFF188447,
+
+                          ),
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 2),
+
+                Text(
+
+                  completed
+
+                      ? 'Riwayat chat dapat dilihat tetapi tidak dapat dilanjutkan.'
+
+                      : 'Kamu dapat membalas pesan pasien.',
+
+                  style:
+
+                      const TextStyle(
+
+                    fontFamily:
+
+                        'Nunito',
+
+                    fontSize: 9.5,
+
+                    color:
+
+                        Colors.black,
+
+                  ),
+
+                ),
+
+              ],
+
             ),
+
           ),
+
         ],
+
       ),
+
     );
+
   }
 
-  // ===============================================================
-  // HARI INI
-  // ===============================================================
+  Widget _buildPreviousHistoryButton() {
 
-  Widget _buildTodayLabel() {
+    return FutureBuilder<
+
+        List<Map<String, dynamic>>>(
+
+      future:
+
+          _loadPreviousConsultations(),
+
+      builder:
+
+          (context, snapshot) {
+
+        final int count =
+
+            snapshot.data?.length ??
+
+                0;
+
+        if (count == 0) {
+
+          return const SizedBox
+
+              .shrink();
+
+        }
+
+        return GestureDetector(
+
+          onTap: () {
+
+            _showPreviousHistory(
+
+              snapshot.data ?? [],
+
+            );
+
+          },
+
+          child: Container(
+
+            margin:
+
+                const EdgeInsets.symmetric(
+
+              horizontal: 27,
+
+            ),
+
+            padding:
+
+                const EdgeInsets.symmetric(
+
+              horizontal: 13,
+
+              vertical: 10,
+
+            ),
+
+            decoration:
+
+                BoxDecoration(
+
+              color: Colors.white,
+
+              borderRadius:
+
+                  BorderRadius.circular(
+
+                13,
+
+              ),
+
+              boxShadow: [
+
+                BoxShadow(
+
+                  color:
+
+                      Colors.black.withOpacity(
+
+                    0.05,
+
+                  ),
+
+                  blurRadius: 5,
+
+                  offset:
+
+                      const Offset(0, 2),
+
+                ),
+
+              ],
+
+            ),
+
+            child: Row(
+
+              children: [
+
+                const Icon(
+
+                  Icons.history_rounded,
+
+                  size: 19,
+
+                  color: brown,
+
+                ),
+
+                const SizedBox(width: 9),
+
+                const Expanded(
+
+                  child: Text(
+
+                    'Riwayat Konsultasi Sebelumnya',
+
+                    style:
+
+                        TextStyle(
+
+                      fontFamily:
+
+                          'Nunito',
+
+                      fontSize: 10.5,
+
+                      fontWeight:
+
+                          FontWeight.w700,
+
+                      color:
+
+                          Colors.black,
+
+                    ),
+
+                  ),
+
+                ),
+
+                Text(
+
+                  '$count',
+
+                  style:
+
+                      const TextStyle(
+
+                    fontFamily:
+
+                        'Nunito',
+
+                    fontSize: 10,
+
+                    fontWeight:
+
+                        FontWeight.w800,
+
+                    color: brown,
+
+                  ),
+
+                ),
+
+                const SizedBox(width: 4),
+
+                const Icon(
+
+                  Icons
+
+                      .chevron_right_rounded,
+
+                  size: 20,
+
+                  color: brown,
+
+                ),
+
+              ],
+
+            ),
+
+          ),
+
+        );
+
+      },
+
+    );
+
+  }
+
+  void _showPreviousHistory(
+
+    List<Map<String, dynamic>> items,
+
+  ) {
+
+    showModalBottomSheet(
+
+      context: context,
+
+      backgroundColor:
+
+          Colors.transparent,
+
+      isScrollControlled: true,
+
+      builder: (sheetContext) {
+
+        return Container(
+
+          constraints:
+
+              BoxConstraints(
+
+            maxHeight:
+
+                MediaQuery.of(
+
+                      sheetContext,
+
+                    )
+
+                    .size
+
+                    .height *
+
+                    0.72,
+
+          ),
+
+          padding:
+
+              const EdgeInsets.fromLTRB(
+
+            20,
+
+            16,
+
+            20,
+
+            20,
+
+          ),
+
+          decoration:
+
+              const BoxDecoration(
+
+            color: backgroundColor,
+
+            borderRadius:
+
+                BorderRadius.vertical(
+
+              top: Radius.circular(24),
+
+            ),
+
+          ),
+
+          child: Column(
+
+            children: [
+
+              Container(
+
+                width: 42,
+
+                height: 4,
+
+                decoration:
+
+                    BoxDecoration(
+
+                  color:
+
+                      Colors.black26,
+
+                  borderRadius:
+
+                      BorderRadius.circular(
+
+                    4,
+
+                  ),
+
+                ),
+
+              ),
+
+              const SizedBox(height: 14),
+
+              const Text(
+
+                'Riwayat Konsultasi',
+
+                style:
+
+                    TextStyle(
+
+                  fontFamily:
+
+                      'Fredoka',
+
+                  fontSize: 20,
+
+                  fontWeight:
+
+                      FontWeight.w700,
+
+                  color:
+
+                      Colors.black,
+
+                ),
+
+              ),
+
+              const SizedBox(height: 14),
+
+              Expanded(
+
+                child: ListView.separated(
+
+                  physics:
+
+                      const BouncingScrollPhysics(),
+
+                  itemCount:
+
+                      items.length,
+
+                  separatorBuilder:
+
+                      (_, __) =>
+
+                          const SizedBox(
+
+                    height: 10,
+
+                  ),
+
+                  itemBuilder:
+
+                      (context, index) {
+
+                    final item =
+
+                        items[index];
+
+                    final String day =
+
+                        (item['consultationDay'] ??
+
+                                '')
+
+                            .toString();
+
+                    final String time =
+
+                        (item['consultationTime'] ??
+
+                                '')
+
+                            .toString();
+
+                    final String message =
+
+                        (item['lastMessage'] ??
+
+                                '')
+
+                            .toString();
+
+                    return GestureDetector(
+
+                      onTap: () {
+
+                        Navigator.pop(
+
+                          sheetContext,
+
+                        );
+
+                        _openPreviousChat(
+
+                          item,
+
+                        );
+
+                      },
+
+                      child: Container(
+
+                        padding:
+
+                            const EdgeInsets.all(
+
+                          13,
+
+                        ),
+
+                        decoration:
+
+                            BoxDecoration(
+
+                          color:
+
+                              Colors.white,
+
+                          borderRadius:
+
+                              BorderRadius.circular(
+
+                            15,
+
+                          ),
+
+                        ),
+
+                        child: Row(
+
+                          children: [
+
+                            const Icon(
+
+                              Icons
+
+                                  .history_rounded,
+
+                              color: brown,
+
+                              size: 22,
+
+                            ),
+
+                            const SizedBox(
+
+                              width: 10,
+
+                            ),
+
+                            Expanded(
+
+                              child:
+
+                                  Column(
+
+                                crossAxisAlignment:
+
+                                    CrossAxisAlignment
+
+                                        .start,
+
+                                children: [
+
+                                  Text(
+
+                                    day.isNotEmpty
+
+                                        ? day
+
+                                        : 'Konsultasi selesai',
+
+                                    style:
+
+                                        const TextStyle(
+
+                                      fontFamily:
+
+                                          'Nunito',
+
+                                      fontSize:
+
+                                          11,
+
+                                      fontWeight:
+
+                                          FontWeight
+
+                                              .w800,
+
+                                      color:
+
+                                          Colors.black,
+
+                                    ),
+
+                                  ),
+
+                                  if (time.isNotEmpty)
+
+                                    Text(
+
+                                      time,
+
+                                      style:
+
+                                          const TextStyle(
+
+                                        fontFamily:
+
+                                            'Nunito',
+
+                                        fontSize:
+
+                                            9,
+
+                                        color:
+
+                                            Colors.black,
+
+                                      ),
+
+                                    ),
+
+                                  const SizedBox(
+
+                                    height: 3,
+
+                                  ),
+
+                                  Text(
+
+                                    message,
+
+                                    maxLines:
+
+                                        1,
+
+                                    overflow:
+
+                                        TextOverflow
+
+                                            .ellipsis,
+
+                                    style:
+
+                                        const TextStyle(
+
+                                      fontFamily:
+
+                                          'Nunito',
+
+                                      fontSize:
+
+                                          9,
+
+                                      color:
+
+                                          Colors.black,
+
+                                    ),
+
+                                  ),
+
+                                ],
+
+                              ),
+
+                            ),
+
+                            const Icon(
+
+                              Icons
+
+                                  .chevron_right_rounded,
+
+                              color: brown,
+
+                            ),
+
+                          ],
+
+                        ),
+
+                      ),
+
+                    );
+
+                  },
+
+                ),
+
+              ),
+
+            ],
+
+          ),
+
+        );
+
+      },
+
+    );
+
+  }
+
+  Widget _buildPrivacyWarning() {
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 7,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFE8DC),
-        borderRadius:
-            BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x25000000),
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: const Text(
-        'Hari Ini',
-        style: TextStyle(
-          fontFamily: 'Nunito',
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF493028),
-        ),
-      ),
-    );
-  }
 
-  // ===============================================================
-  // EMPTY CHAT
-  // ===============================================================
+      margin:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 28,
+
+      ),
+
+      padding:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 12,
+
+        vertical: 7,
+
+      ),
+
+      decoration:
+
+          BoxDecoration(
+
+        color: softOrange,
+
+        borderRadius:
+
+            BorderRadius.circular(
+
+          10,
+
+        ),
+
+      ),
+
+      child: const Row(
+
+        children: [
+
+          Icon(
+
+            Icons.lock_outline_rounded,
+
+            size: 17,
+
+            color: brown,
+
+          ),
+
+          SizedBox(width: 10),
+
+          Expanded(
+
+            child: Text(
+
+              'Jangan bagikan informasi pribadi atau kode OTP kepada siapapun.',
+
+              style:
+
+                  TextStyle(
+
+                fontFamily:
+
+                    'Nunito',
+
+                fontSize: 9.5,
+
+                height: 1.3,
+
+                color:
+
+                    Colors.black,
+
+              ),
+
+            ),
+
+          ),
+
+        ],
+
+      ),
+
+    );
+
+  }
 
   Widget _buildEmptyChat() {
+
     return Center(
+
       child: Padding(
-        padding: const EdgeInsets.all(30),
+
+        padding:
+
+            const EdgeInsets.all(30),
+
         child: Column(
+
           mainAxisAlignment:
+
               MainAxisAlignment.center,
+
           children: [
+
             Container(
+
               width: 72,
+
               height: 72,
+
               decoration:
+
                   const BoxDecoration(
-                color: Color(0xFFFFE3D1),
-                shape: BoxShape.circle,
+
+                color: softOrange,
+
+                shape:
+
+                    BoxShape.circle,
+
               ),
+
               child: const Icon(
-                Icons.chat_bubble_outline_rounded,
+
+                Icons
+
+                    .chat_bubble_outline_rounded,
+
                 size: 35,
-                color: Color(0xFFB65339),
+
+                color: brown,
+
               ),
+
             ),
 
             const SizedBox(height: 14),
 
-            const Text(
-              'Mulai Percakapan',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 14,
-                fontWeight:
-                    FontWeight.w800,
-                color: Color(0xFF30221E),
-              ),
-            ),
+            Text(
 
-            const SizedBox(height: 6),
+              _isCompleted
 
-            const Text(
-              'Kirim pesan untuk memulai\n'
-              'konsultasi dengan pasien.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 11,
-                height: 1.4,
-                color: Color(0xFF77716E),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+                  ? 'Tidak Ada Pesan'
 
-  // ===============================================================
-  // CHAT BUBBLE
-  // PASIEN KIRI
-  // DOKTER KANAN
-  // TANPA BORDER
-  // ===============================================================
+                  : 'Mulai Percakapan',
 
-  Widget _buildChatBubble(
-    Map<String, dynamic> message,
-  ) {
-    final User? currentUser =
-        FirebaseAuth.instance.currentUser;
-
-    final String senderId =
-        (message['senderId'] ?? '')
-            .toString();
-
-    final String senderRole =
-        (message['senderRole'] ?? '')
-            .toString()
-            .toLowerCase();
-
-    final bool isMine =
-        currentUser != null &&
-            senderId == currentUser.uid;
-
-    final bool isDoctorMessage =
-        senderRole == 'doctor' || isMine;
-
-    final String text =
-        (message['message'] ?? '')
-            .toString();
-
-    final String time =
-        _formatTime(
-      message['createdAt'],
-    );
-
-    return Padding(
-      padding:
-          const EdgeInsets.only(bottom: 14),
-      child: Row(
-        mainAxisAlignment:
-            isDoctorMessage
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
-        crossAxisAlignment:
-            CrossAxisAlignment.end,
-        children: [
-          if (!isDoctorMessage) ...[
-            _buildSmallPatientImage(),
-
-            const SizedBox(width: 8),
-          ],
-
-          Flexible(
-            child: Container(
-              constraints:
-                  const BoxConstraints(
-                maxWidth: 310,
-              ),
-              padding:
-                  const EdgeInsets.fromLTRB(
-                13,
-                9,
-                10,
-                6,
-              ),
-              decoration: BoxDecoration(
-                color: isDoctorMessage
-                    ? const Color(0xFFFFE7D8)
-                    : const Color(0xFFFFFCFA),
-                borderRadius:
-                    BorderRadius.only(
-                  topLeft:
-                      const Radius.circular(18),
-                  topRight:
-                      const Radius.circular(18),
-                  bottomLeft:
-                      Radius.circular(
-                    isDoctorMessage
-                        ? 18
-                        : 4,
-                  ),
-                  bottomRight:
-                      Radius.circular(
-                    isDoctorMessage
-                        ? 4
-                        : 18,
-                  ),
-                ),
-                boxShadow:
-                    isDoctorMessage
-                        ? const [
-                            BoxShadow(
-                              color:
-                                  Color(0x28000000),
-                              blurRadius: 4,
-                              offset:
-                                  Offset(0, 3),
-                            ),
-                          ]
-                        : [],
-              ),
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.end,
-                children: [
-                  Align(
-                    alignment:
-                        Alignment.centerLeft,
-                    child: Text(
-                      text,
-                      style:
-                          const TextStyle(
-                        fontFamily:
-                            'Nunito',
-                        fontSize: 12,
-                        height: 1.35,
-                        color:
-                            Color(0xFF211914),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 2),
-
-                  Row(
-                    mainAxisSize:
-                        MainAxisSize.min,
-                    children: [
-                      Text(
-                        time,
-                        style: TextStyle(
-                          fontFamily:
-                              'Nunito',
-                          fontSize: 8,
-                          color:
-                              Colors.grey[600],
-                        ),
-                      ),
-
-                      if (isDoctorMessage) ...[
-                        const SizedBox(width: 3),
-
-                        const Icon(
-                          Icons.done_all_rounded,
-                          size: 12,
-                          color:
-                              Color(0xFFB65339),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===============================================================
-  // FOTO PASIEN KECIL
-  // ===============================================================
-
-  Widget _buildSmallPatientImage() {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration:
-          const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Color(0xFFFFE3D1),
-      ),
-      child: const Icon(
-        Icons.person_rounded,
-        size: 25,
-        color: Color(0xFFB65339),
-      ),
-    );
-  }
-
-  // ===============================================================
-  // INPUT CHAT
-  // ===============================================================
-
-  Widget _buildMessageInput() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        9,
-        0,
-        9,
-        8,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 7,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFD1BC),
-        borderRadius:
-            BorderRadius.circular(13),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration:
-                const BoxDecoration(
-              color: Color(0xFFFFFCFA),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              onPressed: () {},
-              icon: const Icon(
-                Icons.add_rounded,
-                size: 22,
-                color: Color(0xFFE76F51),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 7),
-
-          Expanded(
-            child: TextField(
-              controller:
-                  _messageController,
-              textInputAction:
-                  TextInputAction.send,
-              onSubmitted: (_) {
-                _sendMessage();
-              },
-              decoration:
-                  InputDecoration(
-                hintText:
-                    'Ketik pesan...',
-                hintStyle: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                  color: Colors.grey[500],
-                ),
-                filled: true,
-                fillColor:
-                    const Color(0xFFFFFCFA),
-                border:
-                    OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(18),
-                  borderSide:
-                      BorderSide.none,
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 12,
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 7),
-
-          GestureDetector(
-            onTap:
-                _isSending
-                    ? null
-                    : _sendMessage,
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration:
-                  const BoxDecoration(
-                color: Color(0xFFB65339),
-                shape: BoxShape.circle,
-              ),
-              child: _isSending
-                  ? const Padding(
-                      padding:
-                          EdgeInsets.all(9),
-                      child:
-                          CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.send_rounded,
-                      color: Colors.white,
-                      size: 19,
-                    ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===============================================================
-  // CATATAN
-  // ===============================================================
-
-  Widget _buildMedicalNote() {
-    return Container(
-      margin:
-          const EdgeInsets.symmetric(
-        horizontal: 9,
-      ),
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFE7D8),
-        borderRadius:
-            BorderRadius.circular(10),
-      ),
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            size: 18,
-            color: Color(0xFFB65339),
-          ),
-
-          const SizedBox(width: 7),
-
-          Expanded(
-            child: Text(
-              'Catatan: Saran ini bukan pengganti pemeriksaan langsung. '
-              'Segera periksa ke fasilitas kesehatan terdekat jika keluhan memburuk.',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 8.5,
-                height: 1.35,
-                color: Colors.grey[800],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===============================================================
-  // KIRIM PESAN
-  // ===============================================================
-
-  Future<void> _sendMessage() async {
-    final String message =
-        _messageController.text.trim();
-
-    if (message.isEmpty) {
-      return;
-    }
-
-    final User? doctor =
-        FirebaseAuth.instance.currentUser;
-
-    if (doctor == null) {
-      return;
-    }
-
-    if (_consultationId.isEmpty) {
-      _showMessage(
-        'ID konsultasi tidak ditemukan.',
-      );
-      return;
-    }
-
-    if (_isSending) {
-      return;
-    }
-
-    setState(() {
-      _isSending = true;
-    });
-
-    try {
-      final DocumentReference<
-          Map<String, dynamic>>
-          consultationReference =
-          FirebaseFirestore.instance
-              .collection('consultations')
-              .doc(_consultationId);
-
-      await consultationReference
-          .collection('messages')
-          .add({
-        'senderId': doctor.uid,
-        'senderRole': 'doctor',
-        'message': message,
-        'createdAt':
-            FieldValue.serverTimestamp(),
-      });
-
-      await consultationReference.set(
-        {
-          'updatedAt':
-              FieldValue.serverTimestamp(),
-          'lastMessage': message,
-          'lastSenderId': doctor.uid,
-        },
-        SetOptions(
-          merge: true,
-        ),
-      );
-
-      _messageController.clear();
-
-      await Future.delayed(
-        const Duration(
-          milliseconds: 100,
-        ),
-      );
-
-      _scrollToBottom();
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Pesan gagal dikirim.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
-          ),
-          behavior:
-              SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSending = false;
-        });
-      }
-    }
-  }
-
-  // ===============================================================
-  // AKHIRI KONSULTASI
-  // ===============================================================
-
-  void _showFinishConfirmation() {
-    FocusScope.of(context).unfocus();
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor:
-              const Color(0xFFFFFCFA),
-          shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(20),
-          ),
-          title: const Text(
-            'Akhiri Konsultasi?',
-            style: TextStyle(
-              fontFamily: 'Fredoka',
-              fontSize: 20,
-              fontWeight:
-                  FontWeight.w700,
-              color: Color(0xFF493028),
-            ),
-          ),
-          content: const Text(
-            'Apakah kamu yakin ingin mengakhiri konsultasi dengan pasien?',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 13,
-              height: 1.4,
-              color: Color(0xFF493C37),
-            ),
-          ),
-          actionsPadding:
-              const EdgeInsets.fromLTRB(
-            16,
-            0,
-            16,
-            14,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(
-                  dialogContext,
-                );
-              },
-              child: const Text(
-                'Batal',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 13,
-                  fontWeight:
-                      FontWeight.w700,
-                  color:
-                      Color(0xFF77716E),
-                ),
-              ),
-            ),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(
-                  dialogContext,
-                );
-
-                _finishConsultation();
-              },
               style:
-                  ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(0xFFB65339),
-                foregroundColor:
-                    Colors.white,
-                elevation: 0,
-                shape:
-                    RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(
-                    20,
-                  ),
-                ),
-              ),
-              child: const Text(
-                'Akhiri Konsultasi',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 12,
-                  fontWeight:
-                      FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
-  // ===============================================================
-  // SELESAI
-  // ===============================================================
+                  const TextStyle(
 
-  Future<void> _finishConsultation() async {
-    FocusScope.of(context).unfocus();
+                fontFamily:
 
-    try {
-      if (_consultationId.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('consultations')
-            .doc(_consultationId)
-            .set(
-          {
-            'status': 'completed',
-            'updatedAt':
-                FieldValue.serverTimestamp(),
-          },
-          SetOptions(
-            merge: true,
-          ),
-        );
-      }
-    } catch (_) {}
+                    'Nunito',
 
-    if (!mounted) {
-      return;
-    }
+                fontSize: 14,
 
-    Navigator.pop(context);
-  }
-
-  // ===============================================================
-  // SCROLL
-  // ===============================================================
-
-  void _scrollToBottom() {
-    if (!_scrollController
-        .hasClients) {
-      return;
-    }
-
-    _scrollController.animateTo(
-      _scrollController
-          .position
-          .maxScrollExtent,
-      duration:
-          const Duration(
-        milliseconds: 300,
-      ),
-      curve: Curves.easeOut,
-    );
-  }
-
-  // ===============================================================
-  // FORMAT WAKTU
-  // ===============================================================
-
-  String _formatTime(
-    dynamic timestamp,
-  ) {
-    if (timestamp is! Timestamp) {
-      return '';
-    }
-
-    final DateTime date =
-        timestamp.toDate();
-
-    final String hour =
-        date.hour
-            .toString()
-            .padLeft(2, '0');
-
-    final String minute =
-        date.minute
-            .toString()
-            .padLeft(2, '0');
-
-    return '$hour:$minute';
-  }
-
-  // ===============================================================
-  // ERROR
-  // ===============================================================
-
-  Widget _buildError(String message) {
-    return Center(
-      child: Padding(
-        padding:
-            const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 45,
-              color: Color(0xFFB65339),
-            ),
-
-            const SizedBox(height: 12),
-
-            const Text(
-              'Chat gagal dimuat.',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 13,
                 fontWeight:
-                    FontWeight.w700,
+
+                    FontWeight.w800,
+
+                color:
+
+                    Colors.black,
+
               ),
+
             ),
 
             const SizedBox(height: 6),
 
             Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 10,
-                color: Color(0xFF777777),
+
+              _isCompleted
+
+                  ? 'Tidak ada pesan pada konsultasi ini.'
+
+                  : 'Kirim pesan untuk memulai konsultasi dengan pasien.',
+
+              textAlign:
+
+                  TextAlign.center,
+
+              style:
+
+                  const TextStyle(
+
+                fontFamily:
+
+                    'Nunito',
+
+                fontSize: 11,
+
+                height: 1.4,
+
+                color:
+
+                    Colors.black,
+
               ),
+
             ),
+
           ],
+
         ),
+
       ),
+
     );
+
   }
 
-  // ===============================================================
-  // MESSAGE
-  // ===============================================================
+  Widget _buildChatBubble(
 
-  void _showMessage(String message) {
-    if (!mounted) {
+    Map<String, dynamic> message,
+
+  ) {
+
+    final User? currentUser =
+
+        FirebaseAuth.instance
+
+            .currentUser;
+
+    final String senderId =
+
+        (message['senderId'] ?? '')
+
+            .toString();
+
+    final String role =
+
+        (message['senderRole'] ?? '')
+
+            .toString()
+
+            .toLowerCase();
+
+    final bool isDoctor =
+
+        currentUser != null &&
+
+            senderId ==
+
+                currentUser.uid;
+
+    final bool doctorMessage =
+
+        role == 'doctor' ||
+
+            isDoctor;
+
+    final String text =
+
+        (message['message'] ?? '')
+
+            .toString();
+
+    final String time =
+
+        _formatTime(
+
+      message['createdAt'],
+
+    );
+
+    return Padding(
+
+      padding:
+
+          const EdgeInsets.only(
+
+        bottom: 14,
+
+      ),
+
+      child: Row(
+
+        mainAxisAlignment:
+
+            doctorMessage
+
+                ? MainAxisAlignment.end
+
+                : MainAxisAlignment.start,
+
+        crossAxisAlignment:
+
+            CrossAxisAlignment.end,
+
+        children: [
+
+          if (!doctorMessage) ...[
+
+            _buildSmallPatientImage(),
+
+            const SizedBox(width: 8),
+
+          ],
+
+          Flexible(
+
+            child: Container(
+
+              constraints:
+
+                  const BoxConstraints(
+
+                maxWidth: 310,
+
+              ),
+
+              padding:
+
+                  const EdgeInsets.fromLTRB(
+
+                13,
+
+                9,
+
+                10,
+
+                6,
+
+              ),
+
+              decoration:
+
+                  BoxDecoration(
+
+                color: doctorMessage
+
+                    ? const Color(
+
+                        0xFFFFE7D8,
+
+                      )
+
+                    : Colors.white,
+
+                borderRadius:
+
+                    BorderRadius.only(
+
+                  topLeft:
+
+                      const Radius.circular(
+
+                    18,
+
+                  ),
+
+                  topRight:
+
+                      const Radius.circular(
+
+                    18,
+
+                  ),
+
+                  bottomLeft:
+
+                      Radius.circular(
+
+                    doctorMessage
+
+                        ? 18
+
+                        : 4,
+
+                  ),
+
+                  bottomRight:
+
+                      Radius.circular(
+
+                    doctorMessage
+
+                        ? 4
+
+                        : 18,
+
+                  ),
+
+                ),
+
+              ),
+
+              child: Column(
+
+                crossAxisAlignment:
+
+                    CrossAxisAlignment.end,
+
+                children: [
+
+                  Align(
+
+                    alignment:
+
+                        Alignment.centerLeft,
+
+                    child: Text(
+
+                      text,
+
+                      style:
+
+                          const TextStyle(
+
+                        fontFamily:
+
+                            'Nunito',
+
+                        fontSize: 12,
+
+                        height: 1.35,
+
+                        color:
+
+                            Colors.black,
+
+                      ),
+
+                    ),
+
+                  ),
+
+                  const SizedBox(
+
+                    height: 2,
+
+                  ),
+
+                  Row(
+
+                    mainAxisSize:
+
+                        MainAxisSize.min,
+
+                    children: [
+
+                      Text(
+
+                        time,
+
+                        style:
+
+                            const TextStyle(
+
+                          fontFamily:
+
+                              'Nunito',
+
+                          fontSize: 8,
+
+                          color:
+
+                              Colors.black,
+
+                        ),
+
+                      ),
+
+                      if (doctorMessage) ...[
+
+                        const SizedBox(
+
+                          width: 3,
+
+                        ),
+
+                        const Icon(
+
+                          Icons
+
+                              .done_all_rounded,
+
+                          size: 12,
+
+                          color: brown,
+
+                        ),
+
+                      ],
+
+                    ],
+
+                  ),
+
+                ],
+
+              ),
+
+            ),
+
+          ),
+
+        ],
+
+      ),
+
+    );
+
+  }
+
+  Widget _buildSmallPatientImage() {
+
+    return Container(
+
+      width: 36,
+
+      height: 36,
+
+      decoration:
+
+          const BoxDecoration(
+
+        shape: BoxShape.circle,
+
+        color: softOrange,
+
+      ),
+
+      child: const Icon(
+
+        Icons.person_rounded,
+
+        size: 25,
+
+        color: brown,
+
+      ),
+
+    );
+
+  }
+
+  Widget _buildMessageInput() {
+
+    return Container(
+
+      margin:
+
+          const EdgeInsets.fromLTRB(
+
+        9,
+
+        0,
+
+        9,
+
+        8,
+
+      ),
+
+      padding:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 8,
+
+        vertical: 7,
+
+      ),
+
+      decoration:
+
+          BoxDecoration(
+
+        color: const Color(
+
+          0xFFEFD1BC,
+
+        ),
+
+        borderRadius:
+
+            BorderRadius.circular(
+
+          13,
+
+        ),
+
+      ),
+
+      child: Row(
+
+        children: [
+
+          Container(
+
+            width: 32,
+
+            height: 32,
+
+            decoration:
+
+                const BoxDecoration(
+
+              color: Colors.white,
+
+              shape:
+
+                  BoxShape.circle,
+
+            ),
+
+            child: const Icon(
+
+              Icons.add_rounded,
+
+              size: 22,
+
+              color: brown,
+
+            ),
+
+          ),
+
+          const SizedBox(width: 7),
+
+          Expanded(
+
+            child: TextField(
+
+              controller:
+
+                  _messageController,
+
+              textInputAction:
+
+                  TextInputAction.send,
+
+              onSubmitted: (_) =>
+
+                  _sendMessage(),
+
+              decoration:
+
+                  InputDecoration(
+
+                hintText:
+
+                    'Ketik pesan...',
+
+                hintStyle:
+
+                    const TextStyle(
+
+                  fontFamily:
+
+                      'Nunito',
+
+                  fontSize: 11,
+
+                  color:
+
+                      Colors.black,
+
+                ),
+
+                filled: true,
+
+                fillColor:
+
+                    Colors.white,
+
+                border:
+
+                    OutlineInputBorder(
+
+                  borderRadius:
+
+                      BorderRadius.circular(
+
+                    18,
+
+                  ),
+
+                  borderSide:
+
+                      BorderSide.none,
+
+                ),
+
+                contentPadding:
+
+                    const EdgeInsets
+
+                        .symmetric(
+
+                  horizontal: 12,
+
+                  vertical: 8,
+
+                ),
+
+              ),
+
+              style:
+
+                  const TextStyle(
+
+                fontFamily:
+
+                    'Nunito',
+
+                fontSize: 12,
+
+                color:
+
+                    Colors.black,
+
+              ),
+
+            ),
+
+          ),
+
+          const SizedBox(width: 7),
+
+          GestureDetector(
+
+            onTap: _isSending
+
+                ? null
+
+                : _sendMessage,
+
+            child: Container(
+
+              width: 34,
+
+              height: 34,
+
+              decoration:
+
+                  const BoxDecoration(
+
+                color: brown,
+
+                shape:
+
+                    BoxShape.circle,
+
+              ),
+
+              child: _isSending
+
+                  ? const Padding(
+
+                      padding:
+
+                          EdgeInsets.all(
+
+                        9,
+
+                      ),
+
+                      child:
+
+                          CircularProgressIndicator(
+
+                        strokeWidth: 2,
+
+                        color:
+
+                            Colors.white,
+
+                      ),
+
+                    )
+
+                  : const Icon(
+
+                      Icons
+
+                          .send_rounded,
+
+                      color:
+
+                          Colors.white,
+
+                      size: 19,
+
+                    ),
+
+            ),
+
+          ),
+
+        ],
+
+      ),
+
+    );
+
+  }
+
+  Widget _buildReadOnlyNotice() {
+
+    return Container(
+
+      margin:
+
+          const EdgeInsets.fromLTRB(
+
+        9,
+
+        0,
+
+        9,
+
+        8,
+
+      ),
+
+      padding:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 12,
+
+        vertical: 9,
+
+      ),
+
+      decoration:
+
+          BoxDecoration(
+
+        color: Colors.white,
+
+        borderRadius:
+
+            BorderRadius.circular(
+
+          13,
+
+        ),
+
+      ),
+
+      child: const Row(
+
+        mainAxisAlignment:
+
+            MainAxisAlignment.center,
+
+        children: [
+
+          Icon(
+
+            Icons.lock_outline_rounded,
+
+            size: 16,
+
+            color: brown,
+
+          ),
+
+          SizedBox(width: 7),
+
+          Text(
+
+            'Konsultasi sudah selesai. Chat hanya dapat dilihat.',
+
+            textAlign:
+
+                TextAlign.center,
+
+            style:
+
+                TextStyle(
+
+              fontFamily:
+
+                  'Nunito',
+
+              fontSize: 9.5,
+
+              fontWeight:
+
+                  FontWeight.w700,
+
+              color:
+
+                  Colors.black,
+
+            ),
+
+          ),
+
+        ],
+
+      ),
+
+    );
+
+  }
+
+  Widget _buildMedicalNote() {
+
+    return Container(
+
+      margin:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 9,
+
+      ),
+
+      padding:
+
+          const EdgeInsets.symmetric(
+
+        horizontal: 10,
+
+        vertical: 7,
+
+      ),
+
+      decoration:
+
+          BoxDecoration(
+
+        color: softOrange,
+
+        borderRadius:
+
+            BorderRadius.circular(
+
+          10,
+
+        ),
+
+      ),
+
+      child: const Row(
+
+        crossAxisAlignment:
+
+            CrossAxisAlignment.start,
+
+        children: [
+
+          Icon(
+
+            Icons.info_outline_rounded,
+
+            size: 18,
+
+            color: brown,
+
+          ),
+
+          SizedBox(width: 7),
+
+          Expanded(
+
+            child: Text(
+
+              'Catatan: Saran ini bukan pengganti pemeriksaan langsung. Segera periksa ke fasilitas kesehatan terdekat jika keluhan memburuk.',
+
+              style:
+
+                  TextStyle(
+
+                fontFamily:
+
+                    'Nunito',
+
+                fontSize: 8.5,
+
+                height: 1.35,
+
+                color:
+
+                    Colors.black,
+
+              ),
+
+            ),
+
+          ),
+
+        ],
+
+      ),
+
+    );
+
+  }
+
+  Future<void> _sendMessage() async {
+
+    final String message =
+
+        _messageController.text.trim();
+
+    if (message.isEmpty ||
+
+        _isSending ||
+
+        !_isActive) {
+
       return;
+
     }
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 11,
-          ),
+    final User? doctor =
+
+        FirebaseAuth.instance
+
+            .currentUser;
+
+    if (doctor == null ||
+
+        _consultationId.isEmpty) {
+
+      return;
+
+    }
+
+    setState(() {
+
+      _isSending = true;
+
+    });
+
+    try {
+
+      final reference =
+
+          FirebaseFirestore.instance
+
+              .collection(
+
+                'consultations',
+
+              )
+
+              .doc(
+
+                _consultationId,
+
+              );
+
+      await reference
+
+          .collection('messages')
+
+          .add({
+
+        'senderId':
+
+            doctor.uid,
+
+        'senderRole':
+
+            'doctor',
+
+        'message':
+
+            message,
+
+        'createdAt':
+
+            FieldValue
+
+                .serverTimestamp(),
+
+      });
+
+      await reference.set(
+
+        {
+
+          'updatedAt':
+
+              FieldValue
+
+                  .serverTimestamp(),
+
+          'lastMessage':
+
+              message,
+
+          'lastSenderId':
+
+              doctor.uid,
+
+          'unreadForUser':
+
+              FieldValue
+
+                  .increment(1),
+
+        },
+
+        SetOptions(
+
+          merge: true,
+
         ),
-        behavior:
-            SnackBarBehavior.floating,
-      ),
-    );
+
+      );
+
+      _messageController.clear();
+
+      await Future.delayed(
+
+        const Duration(
+
+          milliseconds: 100,
+
+        ),
+
+      );
+
+      _scrollToBottom();
+
+    } catch (_) {
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+
+          .showSnackBar(
+
+        const SnackBar(
+
+          content: Text(
+
+            'Pesan gagal dikirim.',
+
+            style: TextStyle(
+
+              fontFamily:
+
+                  'Nunito',
+
+              fontSize: 11,
+
+            ),
+
+          ),
+
+          behavior:
+
+              SnackBarBehavior
+
+                  .floating,
+
+        ),
+
+      );
+
+    } finally {
+
+      if (mounted) {
+
+        setState(() {
+
+          _isSending = false;
+
+        });
+
+      }
+
+    }
+
   }
+
+  void _showFinishConfirmation() {
+
+    showDialog(
+
+      context: context,
+
+      builder: (dialogContext) {
+
+        return AlertDialog(
+
+          backgroundColor:
+
+              Colors.white,
+
+          shape:
+
+              RoundedRectangleBorder(
+
+            borderRadius:
+
+                BorderRadius.circular(
+
+              20,
+
+            ),
+
+          ),
+
+          title: const Text(
+
+            'Akhiri Konsultasi?',
+
+            style:
+
+                TextStyle(
+
+              fontFamily:
+
+                  'Fredoka',
+
+              fontSize: 20,
+
+              fontWeight:
+
+                  FontWeight.w700,
+
+              color:
+
+                  Colors.black,
+
+            ),
+
+          ),
+
+          content: const Text(
+
+            'Apakah kamu yakin ingin mengakhiri konsultasi dengan pasien?',
+
+            style:
+
+                TextStyle(
+
+              fontFamily:
+
+                  'Nunito',
+
+              fontSize: 13,
+
+              color:
+
+                  Colors.black,
+
+            ),
+
+          ),
+
+          actions: [
+
+            TextButton(
+
+              onPressed: () =>
+
+                  Navigator.pop(
+
+                dialogContext,
+
+              ),
+
+              child:
+
+                  const Text(
+
+                'Batal',
+
+                style:
+
+                    TextStyle(
+
+                  fontFamily:
+
+                      'Nunito',
+
+                  fontSize: 13,
+
+                  fontWeight:
+
+                      FontWeight.w700,
+
+                  color:
+
+                      Colors.black,
+
+                ),
+
+              ),
+
+            ),
+
+            ElevatedButton(
+
+              onPressed: () {
+
+                Navigator.pop(
+
+                  dialogContext,
+
+                );
+
+                _finishConsultation();
+
+              },
+
+              style:
+
+                  ElevatedButton
+
+                      .styleFrom(
+
+                backgroundColor:
+
+                    brown,
+
+                foregroundColor:
+
+                    Colors.white,
+
+                elevation: 0,
+
+                shape:
+
+                    RoundedRectangleBorder(
+
+                  borderRadius:
+
+                      BorderRadius.circular(
+
+                    20,
+
+                  ),
+
+                ),
+
+              ),
+
+              child:
+
+                  const Text(
+
+                'Akhiri Konsultasi',
+
+                style:
+
+                    TextStyle(
+
+                  fontFamily:
+
+                      'Nunito',
+
+                  fontSize: 12,
+
+                  fontWeight:
+
+                      FontWeight.w700,
+
+                ),
+
+              ),
+
+            ),
+
+          ],
+
+        );
+
+      },
+
+    );
+
+  }
+
+  Future<void>
+
+      _finishConsultation() async {
+
+    try {
+
+      if (_consultationId
+
+          .isNotEmpty) {
+
+        await FirebaseFirestore
+
+            .instance
+
+            .collection(
+
+              'consultations',
+
+            )
+
+            .doc(
+
+              _consultationId,
+
+            )
+
+            .set(
+
+          {
+
+            'status':
+
+                'completed',
+
+            'updatedAt':
+
+                FieldValue
+
+                    .serverTimestamp(),
+
+          },
+
+          SetOptions(
+
+            merge: true,
+
+          ),
+
+        );
+
+      }
+
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    Navigator.pop(context);
+
+  }
+
+  void _scrollToBottom() {
+
+    if (!_scrollController
+
+        .hasClients) {
+
+      return;
+
+    }
+
+    _scrollController.animateTo(
+
+      _scrollController
+
+          .position
+
+          .maxScrollExtent,
+
+      duration:
+
+          const Duration(
+
+        milliseconds: 300,
+
+      ),
+
+      curve:
+
+          Curves.easeOut,
+
+    );
+
+  }
+
+  String _formatTime(
+
+    dynamic timestamp,
+
+  ) {
+
+    if (timestamp
+
+        is! Timestamp) {
+
+      return '';
+
+    }
+
+    final date =
+
+        timestamp.toDate();
+
+    return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
+  }
+
+  Widget _buildError(
+
+    String message,
+
+  ) {
+
+    return Center(
+
+      child: Column(
+
+        mainAxisAlignment:
+
+            MainAxisAlignment.center,
+
+        children: [
+
+          const Icon(
+
+            Icons
+
+                .error_outline_rounded,
+
+            size: 45,
+
+            color: brown,
+
+          ),
+
+          const SizedBox(
+
+            height: 12,
+
+          ),
+
+          const Text(
+
+            'Chat gagal dimuat.',
+
+            style:
+
+                TextStyle(
+
+              fontFamily:
+
+                  'Nunito',
+
+              fontSize: 13,
+
+              fontWeight:
+
+                  FontWeight.w700,
+
+              color:
+
+                  Colors.black,
+
+            ),
+
+          ),
+
+          const SizedBox(
+
+            height: 6,
+
+          ),
+
+          Text(
+
+            message,
+
+            style:
+
+                const TextStyle(
+
+              fontFamily:
+
+                  'Nunito',
+
+              fontSize: 10,
+
+              color:
+
+                  Colors.black,
+
+            ),
+
+          ),
+
+        ],
+
+      ),
+
+    );
+
+  }
+
 }

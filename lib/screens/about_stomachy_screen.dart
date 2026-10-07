@@ -6,7 +6,6 @@ import 'doctor_screen.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/bottom_navigation.dart';
-import '../widgets/stomachy_card.dart';
 
 class AboutStomachyScreen extends StatefulWidget {
   const AboutStomachyScreen({super.key});
@@ -19,9 +18,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
   int _selectedIndex = 4;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
-
-  // Warna brown utama STOMACHY
-  final Color brown = const Color(0xFFB05039);
+  final Color primaryBrown = const Color(0xFF5A392F);
 
   // ===============================================================
   // NAVIGATION
@@ -148,10 +145,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
       height: 42,
       child: Row(
         children: [
-          // =======================================================
           // TOMBOL KEMBALI
-          // =======================================================
-
           GestureDetector(
             onTap: () {
               Navigator.pop(context);
@@ -164,34 +158,28 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                 child: Icon(
                   Icons.arrow_back_rounded,
                   size: 29,
-                  color: Colors.black,
+                  color: Color(0xFF171310),
                 ),
               ),
             ),
           ),
 
-          // =======================================================
           // JUDUL
-          // =======================================================
-
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
                 'Tentang Stomachy',
                 style: TextStyle(
-                  fontFamily: 'Nunito',
+                  fontFamily: 'Fredoka',
                   fontSize: 22,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                   color: Colors.black,
                 ),
               ),
             ),
           ),
 
-          // =======================================================
           // PENYEIMBANG
-          // =======================================================
-
           const SizedBox(
             width: 45,
           ),
@@ -205,14 +193,21 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
   // ===============================================================
 
   Widget _buildAboutCard() {
-    return StomachyCard(
-      color: const Color(0xFFFFFCF9),
-      radius: 16,
+    return Container(
+      width: double.infinity,
       padding: const EdgeInsets.fromLTRB(
         18,
         12,
         18,
         18,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFFF806A),
+          width: 0.8,
+        ),
       ),
       child: Column(
         children: [
@@ -233,7 +228,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                   child: Icon(
                     Icons.image_not_supported_outlined,
                     size: 45,
-                    color: Color(0xFFB05039),
+                    color: Color(0xFFB9543A),
                   ),
                 ),
               );
@@ -248,9 +243,9 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
             'Versi 1.0.0',
             style: TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Colors.black,
+              color: Color(0xFF30221E),
             ),
           ),
 
@@ -281,10 +276,10 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 11,
+                fontSize: 15,
                 height: 1.45,
                 fontWeight: FontWeight.w400,
-                color: Colors.black,
+                color: Color(0xFF30221E),
               ),
             ),
           ),
@@ -306,7 +301,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           const SizedBox(height: 14),
 
           // =======================================================
-          // FITUR GRAFIK
+          // FITUR SKOR
           // =======================================================
 
           _buildFeatureItem(
@@ -358,10 +353,10 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 11,
+                fontSize: 15,
                 height: 1.45,
                 fontWeight: FontWeight.w400,
-                color: Colors.black,
+                color: Color(0xFF30221E),
               ),
             ),
           ),
@@ -382,10 +377,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // =========================================================
         // ICON
-        // =========================================================
-
         Container(
           width: 36,
           height: 36,
@@ -396,16 +388,13 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           child: Icon(
             icon,
             size: 20,
-            color: brown,
+            color: const Color(0xFF705044),
           ),
         ),
 
         const SizedBox(width: 10),
 
-        // =========================================================
         // TEXT
-        // =========================================================
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -414,9 +403,9 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                 title,
                 style: const TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF30221E),
                 ),
               ),
 
@@ -426,10 +415,10 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
                 description,
                 style: const TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 11,
+                  fontSize: 12,
                   height: 1.35,
                   fontWeight: FontWeight.w400,
-                  color: Colors.black,
+                  color: Color(0xFF493C37),
                 ),
               ),
             ],

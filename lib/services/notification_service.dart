@@ -11,10 +11,9 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   static const int kWeeklyScreeningId = 1001;
-
-  // ===============================================================
-  // INIT (dipanggil sekali di main.dart)
-  // ===============================================================
+  static const int _consultationReminderBaseId = 200000;
+  static const int _doctorReplyBaseId = 300000;
+  static const int _patientMessageBaseId = 400000;
 
   static Future<void> init() async {
     tzdata.initializeTimeZones();
@@ -44,19 +43,11 @@ class NotificationService {
     await android?.requestNotificationsPermission();
   }
 
-  // ===============================================================
-  // JADWALKAN PENGINGAT SKRINING MINGGUAN
-  // Setiap SENIN jam 09.00
-  // ===============================================================
-
-  static Future<tz.TZDateTime>
-      scheduleWeeklyScreening() async {
+  static Future<tz.TZDateTime> scheduleWeeklyScreening() async {
     await cancelWeeklyScreening();
 
     final tz.Location location = _resolveLocation();
-
-    final tz.TZDateTime scheduled =
-        _nextMondayAt9(location);
+    final tz.TZDateTime scheduled = _nextMondayAt9(location);
 
     const NotificationDetails details = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -77,8 +68,7 @@ class NotificationService {
       scheduled,
       details,
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation
-              .absoluteTime,
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents:
           DateTimeComponents.dayOfWeekAndTime,
       androidScheduleMode:
@@ -86,27 +76,167 @@ class NotificationService {
     );
 
     debugPrint(
-      'NOTIFIKASI: Pengingat skrining dijadwalkan '
-      'pertama kali pada $scheduled',
+      'NOTIFIKASI: Pengingat skrining dijadwalkan pertama kali pada $scheduled',
     );
 
     return scheduled;
   }
 
-  // ===============================================================
-  // BATALKAN PENGINGAT
-  // ===============================================================
-
   static Future<void> cancelWeeklyScreening() async {
     await _plugin.cancel(kWeeklyScreeningId);
   }
 
-  // ===============================================================
-  // SINKRONISASI DENGAN PENGATURAN DI FIRESTORE
-  // ===============================================================
+  static int _consultationId(String consultationId) {
+    final int hash = consultationId.hashCode.abs();
+    return _consultationReminderBaseId + (hash % 50000);
+  }
 
-  static Future<void>
-      syncWeeklyScreeningFromSettings() async {
+  static int _doctorReplyId(String messageId) {
+    final int hash = messageId.hashCode.abs();
+    return _doctorReplyBaseId + (hash % 50000);
+  }
+
+  static int _patientMessageId(String messageId) {
+    final int hash = messageId.hashCode.abs();
+    return _patientMessageBaseId + (hash % 50000);
+  }
+
+  static Future<void> scheduleConsultationReminder({
+    required String consultationId,
+    required DateTime consultationTime,
+    required String doctorName,
+    required String patientName,
+    required bool forDoctor,
+  }) async {
+    if (consultationId.isEmpty) return;
+
+    final tz.Location location = _resolveLocation();
+    final tz.TZDateTime scheduled =
+        tz.TZDateTime.from(consultationTime, location);
+
+    if (!scheduled.isAfter(tz.TZDateTime.now(location))) {
+      return;
+    }
+
+    final String body = forDoctor
+        ? 'Konsultasi dengan $patientName sudah dimulai.'
+        : 'Konsultasi dengan $doctorName sudah dimulai. Kamu bisa mulai chat sekarang.';
+
+    const NotificationDetails details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'consultation_reminder',
+        'Pengingat Konsultasi',
+        channelDescription:
+            'Pengingat saat konsultasi dengan dokter dimulai',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    await _plugin.zonedSchedule(
+      _consultationId(consultationId),
+      'Waktunya Konsultasi!',
+      body,
+      scheduled,
+      details,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      androidScheduleMode:
+          AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+
+  static Future<void> cancelConsultationReminder(
+    String consultationId,
+  ) async {
+    if (consultationId.isEmpty) return;
+    await _plugin.cancel(_consultationId(consultationId));
+  }
+
+  static Future<void> showDoctorReply({
+    required String messageId,
+    required String doctorName,
+    required String message,
+  }) async {
+    if (messageId.isEmpty || message.trim().isEmpty) return;
+
+    const NotificationDetails details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'doctor_reply',
+        'Balasan Dokter',
+        channelDescription:
+            'Notifikasi saat dokter membalas pesan konsultasi',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    await _plugin.show(
+      _doctorReplyId(messageId),
+      'Dokter Membalas Pesanmu',
+      '$doctorName: ${message.trim()}',
+      details,
+    );
+  }
+
+  static Future<void> showPatientMessage({
+    required String messageId,
+    required String patientName,
+    required String message,
+  }) async {
+    if (messageId.isEmpty || message.trim().isEmpty) return;
+
+    const NotificationDetails details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'patient_message',
+        'Pesan Baru dari Pasien',
+        channelDescription:
+            'Notifikasi saat pasien mengirim pesan konsultasi',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    await _plugin.show(
+      _patientMessageId(messageId),
+      'Pesan Baru dari Pasien',
+      '$patientName: ${message.trim()}',
+      details,
+    );
+  }
+
+  static Future<void> showBookingSuccess({
+    required String consultationId,
+    required String doctorName,
+    required String day,
+    required String time,
+  }) async {
+    if (consultationId.isEmpty) return;
+
+    const NotificationDetails details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'consultation_booking',
+        'Booking Konsultasi',
+        channelDescription:
+            'Notifikasi saat booking konsultasi berhasil',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    await _plugin.show(
+      _consultationId(consultationId) + 50000,
+      'Booking Berhasil',
+      'Konsultasi dengan $doctorName pada $day, $time WIB berhasil dibuat.',
+      details,
+    );
+  }
+
+  static Future<void> syncWeeklyScreeningFromSettings() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
 
@@ -139,10 +269,6 @@ class NotificationService {
     }
   }
 
-  // ===============================================================
-  // ZONA WAKTU PENGGUNA (WIB / WITA / WIT)
-  // ===============================================================
-
   static tz.Location _resolveLocation() {
     final offset = DateTime.now().timeZoneOffset;
 
@@ -157,15 +283,10 @@ class NotificationService {
     return tz.getLocation('Asia/Jakarta');
   }
 
-  // ===============================================================
-  // CARI SENIN BERIKUTNYA JAM 09.00
-  // ===============================================================
-
   static tz.TZDateTime _nextMondayAt9(
     tz.Location location,
   ) {
-    final tz.TZDateTime now =
-        tz.TZDateTime.now(location);
+    final tz.TZDateTime now = tz.TZDateTime.now(location);
 
     tz.TZDateTime scheduled = tz.TZDateTime(
       location,

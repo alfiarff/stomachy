@@ -282,8 +282,7 @@ class _DoctorPatientChatScreenState
                     Icons
                         .arrow_back_ios_new_rounded,
                     size: 25,
-                    color:
-                        color: Colors.black,
+                    color: Colors.black,
                   ),
                 ),
               ),
