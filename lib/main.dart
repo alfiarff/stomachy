@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 import 'services/notification_service.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/admin/admin_home_screen.dart';
 import 'screens/doctor/doctorr_home_screen.dart';
 
@@ -37,8 +39,7 @@ class StomachyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: 'Nunito',
-        scaffoldBackgroundColor:
-            const Color(0xFFFFF5ED),
+        scaffoldBackgroundColor: const Color(0xFFFFF5ED),
       ),
 
       home: const SplashScreen(),
@@ -46,18 +47,20 @@ class StomachyApp extends StatelessWidget {
   }
 }
 
+// ===============================================================
+// SPLASH SCREEN
+// ===============================================================
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({
     super.key,
   });
 
   @override
-  State<SplashScreen> createState() =>
-      _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState
-    extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -67,38 +70,70 @@ class _SplashScreenState
       () async {
         if (!mounted) return;
 
-        await NotificationService
-            .syncWeeklyScreeningFromSettings();
+        await NotificationService.syncWeeklyScreeningFromSettings();
 
         if (!mounted) return;
 
-        await _navigateBasedOnRole();
+        await _navigateBasedOnAppState();
       },
     );
   }
 
   // =============================================================
-  // NAVIGASI BERDASARKAN ROLE
+  // NAVIGASI BERDASARKAN STATUS APLIKASI
   //
-  // Belum login      -> Landing
-  // role admin       -> Beranda Admin
-  // role doctor      -> Beranda Dokter
-  // role user/kosong -> Beranda User
+  // Belum pernah melewati Landing -> Landing
+  // Sudah pernah melewati Landing + belum login -> Login
+  // Sudah login -> berdasarkan role
   // =============================================================
 
-  Future<void> _navigateBasedOnRole() async {
+  Future<void> _navigateBasedOnAppState() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final bool hasSeenLanding =
+        prefs.getBool('has_seen_landing') ?? false;
+
     final user = FirebaseAuth.instance.currentUser;
 
-    if (user == null) {
+    // ===========================================================
+    // 1. USER BELUM PERNAH MELEWATI LANDING
+    // ===========================================================
+
+    if (!hasSeenLanding) {
+      if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              const LandingScreen(),
+          builder: (context) => const LandingScreen(),
         ),
       );
+
       return;
     }
+
+    // ===========================================================
+    // 2. SUDAH PERNAH MELEWATI LANDING,
+    //    TAPI BELUM LOGIN
+    // ===========================================================
+
+    if (user == null) {
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const LoginScreen(),
+        ),
+      );
+
+      return;
+    }
+
+    // ===========================================================
+    // 3. USER MASIH LOGIN
+    //    CEK ROLE
+    // ===========================================================
 
     Widget target = const HomeScreen();
 
@@ -118,12 +153,18 @@ class _SplashScreenState
 
       if (role == 'admin') {
         target = const AdminHomeScreen();
-      } else if (role == 'doctor' ||
-          role == 'dokter') {
+      } else if (role == 'doctor' || role == 'dokter') {
         target = const DoctorHomeScreen();
+      } else {
+        // user / pengguna / kosong
+        target = const HomeScreen();
       }
     } catch (e) {
       debugPrint('SPLASH: gagal ambil role = $e');
+
+      // Kalau gagal membaca role,
+      // tetap arahkan ke Home sebagai default.
+      target = const HomeScreen();
     }
 
     if (!mounted) return;
@@ -136,12 +177,14 @@ class _SplashScreenState
     );
   }
 
+  // =============================================================
+  // BUILD SPLASH
+  // =============================================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFFFF5ED),
-
+      backgroundColor: const Color(0xFFFFF5ED),
       body: Center(
         child: Image.asset(
           'assets/images/logo_utama_stomachy.png',

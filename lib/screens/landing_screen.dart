@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'login_screen.dart';
 
@@ -49,11 +50,16 @@ class _LandingScreenState extends State<LandingScreen> {
     super.dispose();
   }
 
-  // =============================================================
-  // PINDAH KE HALAMAN REGISTRASI
-  // =============================================================
-  void _goToLogin() {
-    Navigator.push(
+  Future<void> _goToLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Tandai bahwa pengguna sudah melewati
+    // Landing Page / onboarding awal.
+    await prefs.setBool('has_seen_landing', true);
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => const LoginScreen(),

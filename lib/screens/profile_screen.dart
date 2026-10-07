@@ -8,7 +8,7 @@ import 'home_screen.dart';
 import 'screening_screen.dart';
 import 'doctor_screen.dart';
 import 'edukasi_screen.dart';
-import 'landing_screen.dart';
+import 'login_screen.dart';
 
 import '../widgets/bottom_navigation.dart';
 import '../widgets/stomachy_card.dart';
@@ -769,7 +769,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const LandingScreen(),
+                                    const LoginScreen(),
                               ),
                               (route) => false,
                             );
