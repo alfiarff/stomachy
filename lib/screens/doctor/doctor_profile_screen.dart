@@ -41,11 +41,8 @@ class DoctorProfileScreen extends StatefulWidget {
 class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
   final int _selectedIndex = 3;
-
   final Color backgroundColor = const Color(0xFFFFF5EF);
-
   final Color primaryBrown = const Color(0xFF5A392F);
-
   final Color softOrange = const Color(0xFFFFE3D1);
 
   @override
@@ -808,7 +805,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
                   size: 21,
 
-                  color: const Color(0xFF705044),
+                  color: brown,
 
                 ),
 

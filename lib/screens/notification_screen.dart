@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/notification_service.dart';
+
 // ===============================================================
 // PENYIMPANAN NOTIFIKASI LOKAL (SharedPreferences)
 //
@@ -834,6 +836,64 @@ class _NotificationScreenState
 
         const SizedBox(height: 10),
 
+        // TEST NOTIFIKASI ANDROID
+        SizedBox(
+          width: 210,
+          height: 46,
+          child: ElevatedButton(
+            onPressed: () async {
+              try {
+                await NotificationService.showPatientMessage(
+                  messageId:
+                      'test-${DateTime.now().millisecondsSinceEpoch}',
+                  patientName: 'Test Pasien',
+                  message: 'Tes notif dokter dari Samsung A04',
+                );
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    content: Text(
+                      'Notifikasi Android berhasil dipanggil 🔔',
+                    ),
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    content: Text(
+                      'Gagal membuat notif: $e',
+                    ),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFB9543A),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+            child: const Text(
+              'TEST NOTIF ANDROID 🔔',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+        
         // NOTIFIKASI LAMA (2 HARI)
         SizedBox(
           width: 210,

@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:flutter/material.dart';
+
+import '../../services/notification_service.dart';
+import '../notification_screen.dart';
 
 class DoctorPatientChatScreen extends StatefulWidget {
 
@@ -49,6 +50,9 @@ class _DoctorPatientChatScreenState
       Color(0xFFFFE3D1);
 
   bool _isSending = false;
+
+  bool _notificationBaselineReady = false;
+  final Set<String> _notifiedPatientMessageIds = {};
 
   String get _consultationId =>
 
@@ -172,6 +176,85 @@ class _DoctorPatientChatScreenState
 
         .snapshots();
 
+  }
+
+  Future<void> _checkForNewPatientMessages(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> messages,
+  ) async {
+    final User? currentUser =
+        FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) return;
+
+    // Saat pertama kali stream dimuat,
+    // semua pesan yang sudah ada dianggap sebagai pesan lama.
+    if (!_notificationBaselineReady) {
+      for (final document in messages) {
+        _notifiedPatientMessageIds.add(document.id);
+      }
+
+      _notificationBaselineReady = true;
+      return;
+    }
+
+    for (final document in messages) {
+      if (_notifiedPatientMessageIds.contains(document.id)) {
+        continue;
+      }
+
+      _notifiedPatientMessageIds.add(document.id);
+
+      final data = document.data();
+
+      final String senderId =
+          (data['senderId'] ?? '').toString();
+
+      final String senderRole =
+          (data['senderRole'] ?? '')
+              .toString()
+              .trim()
+              .toLowerCase();
+
+      final String message =
+          (data['message'] ?? '')
+              .toString()
+              .trim();
+
+      // Hanya proses pesan dari pasien.
+      if (senderRole != 'user' &&
+          senderRole != 'patient' &&
+          senderRole != 'pasien') {
+        continue;
+      }
+
+      // Jangan membuat notif untuk pesan dari diri sendiri.
+      if (senderId == currentUser.uid) {
+        continue;
+      }
+
+      if (message.isEmpty) {
+        continue;
+      }
+
+      try {
+        await NotificationService.showPatientMessage(
+          messageId: document.id,
+          patientName: _patientName,
+          message: message,
+        );
+
+        await AppNotification.create(
+          uid: currentUser.uid,
+          type: 'chat',
+          title: 'Pesan Baru dari $_patientName',
+          body: message,
+        );
+      } catch (e) {
+        debugPrint(
+          'NOTIF CHAT DOKTER: gagal membuat notifikasi = $e',
+        );
+      }
+    }
   }
 
   Future<void> _markAsRead() async {
@@ -549,6 +632,8 @@ class _DoctorPatientChatScreenState
                       snapshot.data?.docs ??
 
                           [];
+
+                  _checkForNewPatientMessages(messages);
 
                   if (_isActive) {
 
