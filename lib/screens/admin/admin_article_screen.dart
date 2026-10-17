@@ -25,11 +25,14 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
   static const Color bodyText = Color(0xFF6B5147);
 
   // ===============================================================
-  // CONTROLLER FORM TAMBAH ARTIKEL
+  // CONTROLLER FORM ARTIKEL (DIPAKAI UNTUK TAMBAH & EDIT)
   // ===============================================================
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _summaryController = TextEditingController();
   bool _isPublished = true;
+
+  // Menyimpan artikel yang sedang di-edit (null = mode tambah)
+  AdminArticle? _editingArticle;
 
   @override
   void dispose() {
@@ -178,7 +181,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       width: double.infinity,
       height: 46,
       child: ElevatedButton.icon(
-        onPressed: _showAddArticleForm,
+        onPressed: () => _showArticleForm(editArticle: null),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFA9583C),
           foregroundColor: Colors.white,
@@ -338,36 +341,19 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              // ============== EDIT ==============
               _buildActionButton(
                 icon: Icons.edit_outlined,
                 label: 'Edit',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      behavior: SnackBarBehavior.floating,
-                      content: Text(
-                        'Fitur edit artikel sedang dalam pengembangan.',
-                      ),
-                    ),
-                  );
-                },
+                onTap: () => _showArticleForm(editArticle: article),
               ),
               const SizedBox(width: 8),
+
+              // ============== HAPUS ==============
               _buildActionButton(
                 icon: Icons.delete_outline_rounded,
                 label: 'Hapus',
-                onTap: () {
-                  setState(() {
-                    AdminContentService.articles.remove(article);
-                  });
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      behavior: SnackBarBehavior.floating,
-                      content: Text('Artikel dihapus.'),
-                    ),
-                  );
-                },
+                onTap: () => _showDeleteConfirmation(article),
               ),
             ],
           ),
@@ -414,14 +400,28 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
   }
 
   // ===============================================================
-  // FORM TAMBAH ARTIKEL (BOTTOM SHEET)
+  // FORM ARTIKEL (BOTTOM SHEET)
+  //
+  // Dipakai untuk TAMBAH dan EDIT.
+  // - editArticle == null  → mode TAMBAH
+  // - editArticle != null  → mode EDIT (form pre-isi)
   // ===============================================================
 
-  void _showAddArticleForm() {
-    // Reset form setiap kali dibuka
-    _titleController.clear();
-    _summaryController.clear();
-    _isPublished = true;
+  void _showArticleForm({required AdminArticle? editArticle}) {
+    // Simpan artikel yang sedang di-edit
+    _editingArticle = editArticle;
+
+    if (editArticle != null) {
+      // Mode EDIT: pre-isi form dengan data artikel
+      _titleController.text = editArticle.title;
+      _summaryController.text = editArticle.summary;
+      _isPublished = editArticle.isPublished;
+    } else {
+      // Mode TAMBAH: kosongkan form
+      _titleController.clear();
+      _summaryController.clear();
+      _isPublished = true;
+    }
 
     showModalBottomSheet(
       context: context,
@@ -458,9 +458,13 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Tambah Artikel Baru',
-                      style: TextStyle(
+
+                    // Judul form (dinamis: Tambah / Edit)
+                    Text(
+                      _editingArticle == null
+                          ? 'Tambah Artikel Baru'
+                          : 'Edit Artikel',
+                      style: const TextStyle(
                         fontFamily: 'Fredoka',
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -588,9 +592,11 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                             borderRadius: BorderRadius.circular(23),
                           ),
                         ),
-                        child: const Text(
-                          'Simpan Artikel',
-                          style: TextStyle(
+                        child: Text(
+                          _editingArticle == null
+                              ? 'Simpan Artikel'
+                              : 'Simpan Perubahan',
+                          style: const TextStyle(
                             fontFamily: 'Nunito',
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
@@ -609,7 +615,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
   }
 
   // ===============================================================
-  // SUBMIT (SIMPAN) ARTIKEL BARU
+  // SUBMIT (TAMBAH / EDIT ARTIKEL)
   // ===============================================================
 
   void _submitArticle() {
@@ -637,19 +643,34 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       return;
     }
 
-    // ----- SIMPAN KE LIST -----
+    // ----- SIMPAN / UPDATE -----
     setState(() {
-      AdminContentService.articles.insert(
-        0, // insert ke urutan paling atas
-        AdminArticle(
-          title: title,
-          summary: summary,
-          // Sementara pakai asset default. Nanti bisa kamu ganti
-          // dengan fitur upload gambar.
-          imageAsset: 'assets/images/artikel_tidur.png',
-          isPublished: _isPublished,
-        ),
-      );
+      if (_editingArticle != null) {
+        // Mode EDIT: cari artikel lama, ganti dengan yang baru
+        final index =
+            AdminContentService.articles.indexOf(_editingArticle!);
+
+        if (index != -1) {
+          AdminContentService.articles[index] = AdminArticle(
+            title: title,
+            summary: summary,
+            // Gambar tetap pakai yang lama (belum ada fitur upload)
+            imageAsset: _editingArticle!.imageAsset,
+            isPublished: _isPublished,
+          );
+        }
+      } else {
+        // Mode TAMBAH: insert artikel baru di paling atas
+        AdminContentService.articles.insert(
+          0,
+          AdminArticle(
+            title: title,
+            summary: summary,
+            imageAsset: 'assets/images/artikel_tidur.png',
+            isPublished: _isPublished,
+          ),
+        );
+      }
     });
 
     // ----- TUTUP BOTTOM SHEET -----
@@ -660,11 +681,163 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       SnackBar(
         behavior: SnackBarBehavior.floating,
         content: Text(
-          _isPublished
-              ? 'Artikel berhasil ditayangkan!'
-              : 'Artikel disimpan sebagai draf.',
+          _editingArticle != null
+              ? 'Perubahan artikel berhasil disimpan!'
+              : (_isPublished
+                  ? 'Artikel berhasil ditayangkan!'
+                  : 'Artikel disimpan sebagai draf.'),
         ),
       ),
+    );
+
+    // Reset state editing
+    _editingArticle = null;
+  }
+
+  // ===============================================================
+  // KONFIRMASI HAPUS ARTIKEL
+  // ===============================================================
+
+  void _showDeleteConfirmation(AdminArticle article) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.65),
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 45),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 25),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon tempat sampah di tengah
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFE7D8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    size: 32,
+                    color: Color(0xFFB9543A),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Hapus Artikel?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFB9543A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                const Text(
+                  'Apakah Anda yakin ingin menghapus artikel ini?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    color: Color(0xFF493C37),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // Tombol: Tidak / Ya, Hapus
+                Row(
+                  children: [
+                    // ===== TOMBOL TIDAK =====
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            side: const BorderSide(
+                              color: Color(0xFFB05039),
+                              width: 0.9,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Tidak',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFB05039),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+
+                    // ===== TOMBOL YA, HAPUS =====
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              AdminContentService.articles.remove(article);
+                            });
+
+                            Navigator.pop(dialogContext);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                behavior: SnackBarBehavior.floating,
+                                content: Text('Artikel berhasil dihapus.'),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFB05039),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Ya, Hapus',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
