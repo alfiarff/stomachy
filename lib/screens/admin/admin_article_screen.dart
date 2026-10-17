@@ -5,7 +5,7 @@ import '../../widgets/admin_bottom_navigation.dart';
 
 import 'admin_home_screen.dart';
 import 'admin_content_screen.dart';
-import 'admin_profile_screen.dart';     
+import 'admin_profile_screen.dart';
 
 // ===============================================================
 // KELOLA ARTIKEL (ADMIN)
@@ -15,12 +15,10 @@ class AdminArticleScreen extends StatefulWidget {
   const AdminArticleScreen({super.key});
 
   @override
-  State<AdminArticleScreen> createState() =>
-      _AdminArticleScreenState();
+  State<AdminArticleScreen> createState() => _AdminArticleScreenState();
 }
 
-class _AdminArticleScreenState
-    extends State<AdminArticleScreen> {
+class _AdminArticleScreenState extends State<AdminArticleScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
 
   static const Color headingDark = Color(0xFF251814);
@@ -93,12 +91,7 @@ class _AdminArticleScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            15,
-            10,
-            15,
-            95,
-          ),
+          padding: const EdgeInsets.fromLTRB(15, 10, 15, 95),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -116,8 +109,7 @@ class _AdminArticleScreenState
                 for (int i = 0; i < articles.length; i++) ...[
                   _buildArticleCard(articles[i]),
 
-                  if (i != articles.length - 1)
-                    const SizedBox(height: 14),
+                  if (i != articles.length - 1) const SizedBox(height: 14),
                 ],
 
               const SizedBox(height: 15),
@@ -125,7 +117,6 @@ class _AdminArticleScreenState
           ),
         ),
       ),
-
       bottomNavigationBar: AdminBottomNavigation(
         selectedIndex: 1,
         onItemSelected: _onNavigationTap,
@@ -159,7 +150,6 @@ class _AdminArticleScreenState
               ),
             ),
           ),
-
           Expanded(
             child: Center(
               child: Text(
@@ -173,7 +163,6 @@ class _AdminArticleScreenState
               ),
             ),
           ),
-
           const SizedBox(width: 42),
         ],
       ),
@@ -185,20 +174,11 @@ class _AdminArticleScreenState
   // ===============================================================
 
   Widget _buildAddButton() {
-  return SizedBox(
-    width: double.infinity,
-    height: 46,
-    child: ElevatedButton.icon(
-      onPressed: _showAddArticleForm,
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              behavior: SnackBarBehavior.floating,
-              content: Text(
-                'Fitur tambah artikel sedang dalam pengembangan.',
-              ),
-            ),
-          );
-        },
+    return SizedBox(
+      width: double.infinity,
+      height: 46,
+      child: ElevatedButton.icon(
+        onPressed: _showAddArticleForm,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFA9583C),
           foregroundColor: Colors.white,
@@ -247,10 +227,7 @@ class _AdminArticleScreenState
           // ================================================
 
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 9,
-              vertical: 4,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
               color: article.isPublished
                   ? const Color(0xFFE5F3E8)
@@ -270,13 +247,9 @@ class _AdminArticleScreenState
                     shape: BoxShape.circle,
                   ),
                 ),
-
                 const SizedBox(width: 6),
-
                 Text(
-                  article.isPublished
-                      ? 'Tayang Sekarang'
-                      : 'Draf',
+                  article.isPublished ? 'Tayang Sekarang' : 'Draf',
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 10,
@@ -307,8 +280,7 @@ class _AdminArticleScreenState
                   child: Image.asset(
                     article.imageAsset,
                     fit: BoxFit.contain,
-                    errorBuilder:
-                        (context, error, stackTrace) {
+                    errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: const Color(0xFFFFE7D8),
                         child: const Icon(
@@ -321,13 +293,10 @@ class _AdminArticleScreenState
                   ),
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       article.title,
@@ -341,9 +310,7 @@ class _AdminArticleScreenState
                         color: headingDark,
                       ),
                     ),
-
                     const SizedBox(height: 5),
-
                     Text(
                       article.summary,
                       maxLines: 2,
@@ -385,16 +352,13 @@ class _AdminArticleScreenState
                   );
                 },
               ),
-
               const SizedBox(width: 8),
-
               _buildActionButton(
                 icon: Icons.delete_outline_rounded,
                 label: 'Hapus',
                 onTap: () {
                   setState(() {
-                    AdminContentService.articles
-                        .remove(article);
+                    AdminContentService.articles.remove(article);
                   });
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -420,10 +384,7 @@ class _AdminArticleScreenState
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 7,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: const Color(0xFFFFEEE5),
           borderRadius: BorderRadius.circular(20),
@@ -436,9 +397,7 @@ class _AdminArticleScreenState
               size: 15,
               color: const Color(0xFFB9543A),
             ),
-
             const SizedBox(width: 5),
-
             Text(
               label,
               style: const TextStyle(
@@ -499,7 +458,6 @@ class _AdminArticleScreenState
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     const Text(
                       'Tambah Artikel Baru',
                       style: TextStyle(
@@ -529,7 +487,8 @@ class _AdminArticleScreenState
                       maxLines: 2,
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
-                        hintText: 'Contoh: Tips Tidur Nyenyak untuk Penderita GERD',
+                        hintText:
+                            'Contoh: Tips Tidur Nyenyak untuk Penderita GERD',
                         hintStyle: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFFB6A8A2),
@@ -649,7 +608,7 @@ class _AdminArticleScreenState
     );
   }
 
-    // ===============================================================
+  // ===============================================================
   // SUBMIT (SIMPAN) ARTIKEL BARU
   // ===============================================================
 
@@ -708,7 +667,7 @@ class _AdminArticleScreenState
       ),
     );
   }
-  
+
   // ===============================================================
   // EMPTY STATE
   // ===============================================================
@@ -731,9 +690,7 @@ class _AdminArticleScreenState
             size: 45,
             color: Color(0xFFB9543A),
           ),
-
           SizedBox(height: 12),
-
           Text(
             'Belum ada artikel',
             style: TextStyle(
