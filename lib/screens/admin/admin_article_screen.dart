@@ -5,7 +5,7 @@ import '../../widgets/admin_bottom_navigation.dart';
 
 import 'admin_home_screen.dart';
 import 'admin_content_screen.dart';
-import 'admin_profile_screen.dart';
+import 'admin_profile_screen.dart';     
 
 // ===============================================================
 // KELOLA ARTIKEL (ADMIN)
@@ -25,6 +25,20 @@ class _AdminArticleScreenState
 
   static const Color headingDark = Color(0xFF251814);
   static const Color bodyText = Color(0xFF6B5147);
+
+  // ===============================================================
+  // CONTROLLER FORM TAMBAH ARTIKEL
+  // ===============================================================
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _summaryController = TextEditingController();
+  bool _isPublished = true;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _summaryController.dispose();
+    super.dispose();
+  }
 
   // ===============================================================
   // NAVIGATION
@@ -171,11 +185,11 @@ class _AdminArticleScreenState
   // ===============================================================
 
   Widget _buildAddButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 46,
-      child: ElevatedButton.icon(
-        onPressed: () {
+  return SizedBox(
+    width: double.infinity,
+    height: 46,
+    child: ElevatedButton.icon(
+      onPressed: _showAddArticleForm,
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               behavior: SnackBarBehavior.floating,
@@ -440,6 +454,261 @@ class _AdminArticleScreenState
     );
   }
 
+  // ===============================================================
+  // FORM TAMBAH ARTIKEL (BOTTOM SHEET)
+  // ===============================================================
+
+  void _showAddArticleForm() {
+    // Reset form setiap kali dibuka
+    _titleController.clear();
+    _summaryController.clear();
+    _isPublished = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext sheetContext) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(22),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar (garis kecil di atas sheet)
+                    Center(
+                      child: Container(
+                        width: 42,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE0CBBE),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    const Text(
+                      'Tambah Artikel Baru',
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF251814),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ==============================
+                    // JUDUL
+                    // ==============================
+                    const Text(
+                      'Judul Artikel',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF493C37),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _titleController,
+                      maxLines: 2,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        hintText: 'Contoh: Tips Tidur Nyenyak untuk Penderita GERD',
+                        hintStyle: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFFB6A8A2),
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFFFF5EF),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // ==============================
+                    // RINGKASAN
+                    // ==============================
+                    const Text(
+                      'Ringkasan',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF493C37),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _summaryController,
+                      maxLines: 3,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        hintText: 'Tulis ringkasan singkat artikel...',
+                        hintStyle: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFFB6A8A2),
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFFFF5EF),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // ==============================
+                    // STATUS TAYANG (SWITCH)
+                    // ==============================
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Tayangkan Sekarang',
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF251814),
+                          ),
+                        ),
+                        Switch(
+                          value: _isPublished,
+                          activeColor: const Color(0xFFA9583C),
+                          onChanged: (value) {
+                            setSheetState(() {
+                              _isPublished = value;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ==============================
+                    // TOMBOL SIMPAN
+                    // ==============================
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton(
+                        onPressed: _submitArticle,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFA9583C),
+                          foregroundColor: Colors.white,
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(23),
+                          ),
+                        ),
+                        child: const Text(
+                          'Simpan Artikel',
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+    // ===============================================================
+  // SUBMIT (SIMPAN) ARTIKEL BARU
+  // ===============================================================
+
+  void _submitArticle() {
+    final title = _titleController.text.trim();
+    final summary = _summaryController.text.trim();
+
+    // ----- VALIDASI -----
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Judul artikel tidak boleh kosong.'),
+        ),
+      );
+      return;
+    }
+
+    if (summary.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Ringkasan artikel tidak boleh kosong.'),
+        ),
+      );
+      return;
+    }
+
+    // ----- SIMPAN KE LIST -----
+    setState(() {
+      AdminContentService.articles.insert(
+        0, // insert ke urutan paling atas
+        AdminArticle(
+          title: title,
+          summary: summary,
+          // Sementara pakai asset default. Nanti bisa kamu ganti
+          // dengan fitur upload gambar.
+          imageAsset: 'assets/images/artikel_tidur.png',
+          isPublished: _isPublished,
+        ),
+      );
+    });
+
+    // ----- TUTUP BOTTOM SHEET -----
+    Navigator.pop(context);
+
+    // ----- NOTIFIKASI -----
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text(
+          _isPublished
+              ? 'Artikel berhasil ditayangkan!'
+              : 'Artikel disimpan sebagai draf.',
+        ),
+      ),
+    );
+  }
+  
   // ===============================================================
   // EMPTY STATE
   // ===============================================================
