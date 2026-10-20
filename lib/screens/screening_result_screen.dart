@@ -586,7 +586,7 @@ class _ScreeningResultScreenState
                   fontSize: 22,
                   fontWeight:
                       FontWeight.w800,
-                  color: primaryBrown,
+                  color: Colors.black,
                 ),
               ),
             ),

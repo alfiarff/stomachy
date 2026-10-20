@@ -169,10 +169,10 @@ class _HasilSkriningTidakBerisikoScreenState
               child: Text(
                 'Hasil Skrining',
                 style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 17,
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: primaryBrown,
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -208,7 +208,7 @@ class _HasilSkriningTidakBerisikoScreenState
             width: 150,
             height: 150,
             child: Image.asset(
-              'assets/images/mascot_happy.png.png',
+              'assets/images/maskot_tidak_berisiko.png',
               fit: BoxFit.contain,
             ),
           ),
@@ -223,7 +223,7 @@ class _HasilSkriningTidakBerisikoScreenState
             textAlign: TextAlign.center,
             text: const TextSpan(
               style: TextStyle(
-                fontFamily: 'Nunito',
+                fontFamily: 'Fredoka',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: primaryBrown,
@@ -250,7 +250,7 @@ class _HasilSkriningTidakBerisikoScreenState
           const Text(
             'GERD',
             style: TextStyle(
-              fontFamily: 'Nunito',
+              fontFamily: 'Fredoka',
               fontSize: 25,
               fontWeight: FontWeight.w500,
               color: greenColor,
@@ -295,7 +295,7 @@ class _HasilSkriningTidakBerisikoScreenState
           child: Text(
             'Saran untuk tetap sehat',
             style: TextStyle(
-              fontFamily: 'Nunito',
+              fontFamily: 'Fredoka',
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: primaryBrown,
@@ -357,7 +357,7 @@ class _HasilSkriningTidakBerisikoScreenState
             child: Text(
               text,
               style: const TextStyle(
-                fontFamily: 'Nunito',
+                fontFamily: 'Fredoka',
                 fontSize: 8.5,
                 fontWeight: FontWeight.w500,
                 color: Color(0xFF332823),
