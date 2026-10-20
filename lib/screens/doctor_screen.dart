@@ -9,17 +9,28 @@ import 'profile_screen.dart';
 import 'doctor_detail_screen.dart';
 import 'user_consultations_screen.dart';
 
+
 class DoctorScreen extends StatefulWidget {
-  const DoctorScreen({super.key});
+  final int initialTab;
+
+  const DoctorScreen({
+    super.key,
+    this.initialTab = 0,
+  });
 
   @override
   State<DoctorScreen> createState() => _DoctorScreenState();
 }
-
 class _DoctorScreenState extends State<DoctorScreen> {
-  int _selectedIndex = 2;
-  int _pageIndex = 0;
-  String _searchQuery = '';
+int _selectedIndex = 2;
+late int _pageIndex;
+String _searchQuery = '';
+
+@override
+void initState() {
+  super.initState();
+  _pageIndex = widget.initialTab;
+}
 
   static const Color backgroundColor = Color(0xFFFFF5ED);
   static const Color brown = Color(0xFFB05039);
