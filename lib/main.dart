@@ -156,6 +156,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
       debugPrint('SPLASH: role = $role');
 
+      // Mulai watcher notifikasi chat (aman walau dipanggil berulang)
+      await NotificationService.startChatWatcher();
+
       if (role == 'admin') {
         target = const AdminHomeScreen();
       } else if (role == 'doctor' || role == 'dokter') {

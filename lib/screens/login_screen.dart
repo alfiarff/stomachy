@@ -4,8 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-
-
 import 'home_screen.dart';
 
 import 'doctor/doctorr_home_screen.dart';
@@ -16,408 +14,213 @@ import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
 import '../services/google_auth_service.dart';
-
-
+import '../services/notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
-
   const LoginScreen({super.key});
 
-
-
   @override
-
   State<LoginScreen> createState() => _LoginScreenState();
-
 }
 
-
-
 class _LoginScreenState extends State<LoginScreen> {
-
   // ===============================================================
-
   // CONTROLLER
-
   // ===============================================================
-
-
 
   final TextEditingController emailController =
-
       TextEditingController();
-
-
 
   final TextEditingController passwordController =
-
       TextEditingController();
 
-
-
   // ===============================================================
-
   // STATE
-
   // ===============================================================
-
-
 
   bool obscurePassword = true;
-
   bool isLoading = false;
 
-
-
   // ===============================================================
-
   // DISPOSE
-
   // ===============================================================
-
-
 
   @override
-
   void dispose() {
-
     emailController.dispose();
-
     passwordController.dispose();
-
     super.dispose();
-
   }
 
-
-
   // ===============================================================
-
   // LOGIN FIREBASE
-
   // ===============================================================
-
-
 
   Future<void> _login() async {
-
     if (isLoading) return;
 
-
-
     final email = emailController.text.trim();
-
     final password = passwordController.text;
 
-
-
     // =============================================================
-
     // VALIDASI
-
     // =============================================================
-
-
 
     if (email.isEmpty || password.isEmpty) {
-
       _showMessage(
-
         'Email dan kata sandi wajib diisi.',
-
       );
-
       return;
-
     }
 
-
-
     setState(() {
-
       isLoading = true;
-
     });
 
-
-
     try {
-
       // ===========================================================
-
       // LOGIN FIREBASE AUTHENTICATION
-
       // ===========================================================
-
-
 
       final credential =
-
           await FirebaseAuth.instance.signInWithEmailAndPassword(
-
         email: email,
-
         password: password,
-
       );
-
-
 
       final user = credential.user;
 
-
-
       if (user == null) {
-
         throw Exception(
-
           'Data pengguna tidak ditemukan.',
-
         );
-
       }
 
-
-
       // ===========================================================
-
       // AMBIL DATA USER DARI FIRESTORE
-
       // ===========================================================
-
-
 
       final userDoc = await FirebaseFirestore.instance
-
           .collection('users')
-
           .doc(user.uid)
-
           .get();
 
-
-
       // ===========================================================
-
       // CEK DATA USER
-
       // ===========================================================
-
-
 
       if (!userDoc.exists) {
-
         await FirebaseAuth.instance.signOut();
-
-
 
         if (!mounted) return;
 
-
-
         _showMessage(
-
           'Data akun belum terdaftar di sistem.',
-
         );
 
-
-
         return;
-
       }
-
-
 
       final data = userDoc.data();
 
-
-
       // ===========================================================
-
       // AMBIL ROLE
-
       // ===========================================================
-
-
 
       final String role =
-
           data?['role']?.toString().trim().toLowerCase() ?? '';
 
-
-
       // DEBUG
-
       debugPrint('================================');
-
       debugPrint('LOGIN BERHASIL');
-
       debugPrint('UID   : ${user.uid}');
-
       debugPrint('EMAIL : ${user.email}');
-
       debugPrint('ROLE  : $role');
-
       debugPrint('================================');
-
-
 
       if (!mounted) return;
 
-
-
       // ===========================================================
-
       // ARAHKAN SESUAI ROLE
-
       // ===========================================================
-
-
 
       await _navigateByRole(role);
-
     } on FirebaseAuthException catch (e) {
-
       if (!mounted) return;
-
-
 
       String message = 'Login gagal.';
 
-
-
       switch (e.code) {
-
         case 'invalid-email':
-
           message = 'Format email tidak valid.';
-
           break;
-
-
 
         case 'user-not-found':
-
           message =
-
               'Akun dengan email tersebut tidak ditemukan.';
-
           break;
-
-
 
         case 'wrong-password':
-
           message = 'Kata sandi salah.';
-
           break;
-
-
 
         case 'invalid-credential':
-
           message =
-
               'Email atau kata sandi salah.';
-
           break;
-
-
 
         case 'user-disabled':
-
           message =
-
               'Akun ini telah dinonaktifkan.';
-
           break;
-
-
 
         case 'too-many-requests':
-
           message =
-
               'Terlalu banyak percobaan login. Coba lagi nanti.';
-
           break;
-
-
 
         case 'network-request-failed':
-
           message =
-
               'Tidak ada koneksi internet. Coba lagi.';
-
           break;
-
       }
-
-
 
       _showMessage(message);
-
     } catch (e) {
-
       if (!mounted) return;
 
-
-
       debugPrint(
-
         'ERROR LOGIN: $e',
-
       );
-
-
 
       _showMessage(
-
         'Terjadi kesalahan. Silakan coba lagi.',
-
       );
-
     } finally {
-
       if (mounted) {
-
         setState(() {
-
           isLoading = false;
-
         });
-
       }
-
     }
-
   }
 
-
-
   // ===============================================================
-
   // NAVIGASI BERDASARKAN ROLE
-
   // ===============================================================
-
-
 
   Future<void> _navigateByRole(String role) async {
-
     if (!mounted) return;
 
-
-
+    // =============================================================
+    // AKTIFKAN GLOBAL CHAT WATCHER
+    //
+    // Dipanggil di sini supaya notifikasi chat muncul di SEMUA
+    // halaman sejak user berhasil login (berlaku untuk login email
+    // maupun login Google, karena keduanya lewat method ini).
     // =============================================================
 
-    // ROLE DOKTER
-
-    // =============================================================
-
-
+    await NotificationService.startChatWatcher();
 
     // =============================================================
     // ROLE ADMIN
@@ -441,7 +244,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (role == 'doctor' ||
         role == 'dokter') {
-
       Navigator.pushAndRemoveUntil(
 
         context,
@@ -458,28 +260,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       );
 
-
-
       return;
-
     }
 
-
-
     // =============================================================
-
     // ROLE USER
-
     // =============================================================
-
-
 
     if (role == 'user' ||
-
         role == 'pengguna' ||
-
         role.isEmpty) {
-
       Navigator.pushAndRemoveUntil(
 
         context,
@@ -496,135 +286,69 @@ class _LoginScreenState extends State<LoginScreen> {
 
       );
 
-
-
       return;
-
     }
 
-
-
     // =============================================================
-
     // ROLE TIDAK DIKENAL
-
     // =============================================================
-
-
 
     await FirebaseAuth.instance.signOut();
 
-
-
     if (!mounted) return;
 
-
-
     _showMessage(
-
       'Role akun tidak dikenali. Hubungi administrator.',
-
     );
-
   }
 
-
-
   // ===============================================================
-
   // LOGIN GOOGLE
-
   // ===============================================================
-
-
 
   Future<void> _loginWithGoogle() async {
-
     if (isLoading) return;
 
-
-
     setState(() {
-
       isLoading = true;
-
     });
 
-
-
     try {
-
       // ===========================================================
-
       // LOGIN GOOGLE
-
       // ===========================================================
-
-
 
       final credential =
-
           await GoogleAuthService.signInWithGoogle();
-
-
 
       final user = credential.user;
 
-
-
       if (user == null) {
-
         throw Exception(
-
           'Akun Google tidak ditemukan.',
-
         );
-
       }
 
-
-
       // ===========================================================
-
       // AMBIL DATA USER DULU
-
       // ===========================================================
-
-
 
       final userRef = FirebaseFirestore.instance
-
           .collection('users')
-
           .doc(user.uid);
 
-
-
       final existingDoc =
-
           await userRef.get();
 
-
-
       // ===========================================================
-
       // CEK ROLE YANG SUDAH ADA
-
       // ===========================================================
-
-
 
       String role = '';
 
-
-
       if (existingDoc.exists) {
-
         final existingData =
-
             existingDoc.data();
-
-
 
         role = existingData?['role']
 
@@ -635,264 +359,139 @@ class _LoginScreenState extends State<LoginScreen> {
                 .toLowerCase() ??
 
             '';
-
       }
 
-
-
       // ===========================================================
-
       // SIMPAN DATA GOOGLE
-
       //
-
       // PENTING:
-
       // role TIDAK DITIMPA.
-
       // ===========================================================
-
-
 
       await userRef.set(
-
         {
-
           'name': user.displayName ?? '',
-
           'email': user.email ?? '',
-
         },
-
         SetOptions(
-
           merge: true,
-
         ),
-
       );
 
-
-
       // ===========================================================
-
       // DEBUG
-
       // ===========================================================
 
-
-
       debugPrint('================================');
-
       debugPrint('GOOGLE LOGIN BERHASIL');
-
       debugPrint('UID   : ${user.uid}');
-
       debugPrint('EMAIL : ${user.email}');
-
       debugPrint('ROLE  : $role');
-
       debugPrint('================================');
-
-
 
       if (!mounted) return;
 
-
-
       // ===========================================================
-
       // ARAHKAN SESUAI ROLE
-
       // ===========================================================
-
-
 
       await _navigateByRole(role);
-
     } on FirebaseAuthException catch (e) {
-
       if (!mounted) return;
-
-
 
       String message =
-
           'Google gagal masuk.';
 
-
-
       switch (e.code) {
-
         case 'account-exists-with-different-credential':
-
           message =
-
               'Email Google ini sudah terdaftar dengan metode login lain.';
-
           break;
-
-
 
         case 'network-request-failed':
-
           message =
-
               'Tidak ada koneksi internet. Coba lagi.';
-
           break;
-
-
 
         case 'user-disabled':
-
           message =
-
               'Akun ini telah dinonaktifkan.';
-
           break;
-
-
 
         case 'invalid-credential':
-
           message =
-
               'Kredensial Google tidak valid. Silakan coba lagi.';
-
           break;
-
       }
-
-
 
       _showMessage(message);
-
     } catch (e) {
-
       if (!mounted) return;
 
-
-
       debugPrint(
-
         'ERROR GOOGLE LOGIN: $e',
-
       );
-
-
 
       _showMessage(
-
         'Google gagal masuk. Silakan coba lagi.',
-
       );
-
     } finally {
-
       if (mounted) {
-
         setState(() {
-
           isLoading = false;
-
         });
-
       }
-
     }
-
   }
 
-
-
   // ===============================================================
-
   // PESAN
-
   // ===============================================================
-
-
 
   void _showMessage(String message) {
-
     if (!mounted) return;
 
-
-
     ScaffoldMessenger.of(context)
-
       ..hideCurrentSnackBar()
-
       ..showSnackBar(
-
         SnackBar(
-
           content: Text(
-
             message,
-
             style: const TextStyle(
-
               fontFamily: 'Nunito',
-
             ),
-
           ),
-
           behavior: SnackBarBehavior.floating,
-
         ),
-
       );
-
   }
 
-
-
   // ===============================================================
-
   // BUILD
-
   // ===============================================================
-
-
 
   @override
-
   Widget build(BuildContext context) {
-
     final size = MediaQuery.of(context).size;
 
-
-
     return Scaffold(
-
       backgroundColor: const Color(0xFFFFF4EC),
-
-
 
       body: SafeArea(
 
         child: SingleChildScrollView(
 
           physics:
-
               const BouncingScrollPhysics(),
-
-
 
           child: Padding(
 
             padding: EdgeInsets.symmetric(
 
               horizontal:
-
                   size.width * 0.09,
 
             ),
-
-
 
             child: Column(
 
@@ -904,17 +503,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // =================================================
 
-
-
                 SizedBox(
 
                   height:
-
                       size.height * 0.035,
 
                 ),
-
-
 
                 // =================================================
 
@@ -922,25 +516,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // =================================================
 
-
-
                 Image.asset(
 
                   'assets/images/logo_utama_stomachy.png',
 
                   width:
-
                       size.width * 0.48,
 
                   height:
-
                       size.height * 0.19,
 
                   fit: BoxFit.contain,
 
                 ),
-
-
 
                 // =================================================
 
@@ -948,62 +536,44 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // =================================================
 
-
-
                 Container(
 
                   width: double.infinity,
 
-
-
                   padding:
-
                       EdgeInsets.symmetric(
 
                     horizontal:
-
                         size.width * 0.025,
 
                     vertical:
-
                         size.height * 0.012,
 
                   ),
 
-
-
                   decoration:
-
                       BoxDecoration(
 
                     color:
-
                         const Color(0xFFFFE6D5),
 
-
-
                     borderRadius:
-
                         BorderRadius.circular(
 
                       10,
 
                     ),
 
-
-
                     boxShadow: const [
 
                       BoxShadow(
 
                         color:
-
                             Color(0x22000000),
 
                         blurRadius: 3,
 
                         offset:
-
                             Offset(0, 2),
 
                       ),
@@ -1011,8 +581,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
 
                   ),
-
-
 
                   child: Row(
 
@@ -1040,8 +608,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       ),
 
-
-
                       SizedBox(
 
                         width:
@@ -1052,8 +618,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       ),
 
-
-
                       Expanded(
 
                         child: Text(
@@ -1063,7 +627,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                           style:
-
                               TextStyle(
 
                             fontFamily:
@@ -1100,25 +663,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 ),
 
-
-
                 // =================================================
 
                 // JARAK
 
                 // =================================================
 
-
-
                 SizedBox(
 
                   height:
-
                       size.height * 0.025,
 
                 ),
-
-
 
                 // =================================================
 
@@ -1126,16 +682,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // =================================================
 
-
-
                 Container(
 
                   width: double.infinity,
 
-
-
                   padding:
-
                       EdgeInsets.fromLTRB(
 
                     size.width * 0.05,
@@ -1148,40 +699,29 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   ),
 
-
-
                   decoration:
-
                       BoxDecoration(
 
                     color:
-
                         const Color(0xFFFFFCF9),
 
-
-
                     borderRadius:
-
                         BorderRadius.circular(
 
                       25,
 
                     ),
 
-
-
                     boxShadow: const [
 
                       BoxShadow(
 
                         color:
-
                             Color(0x33000000),
 
                         blurRadius: 5,
 
                         offset:
-
                             Offset(0, 4),
 
                       ),
@@ -1189,8 +729,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
 
                   ),
-
-
 
                   child: Column(
 
@@ -1202,8 +740,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // =========================================
 
-
-
                       Text(
 
                         'Selamat Datang Kembali!',
@@ -1211,13 +747,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                         textAlign:
-
                             TextAlign.center,
 
 
 
                         style:
-
                             TextStyle(
 
                           fontFamily:
@@ -1235,7 +769,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               FontWeight.w700,
 
                           color:
-
                               const Color(
 
                             0xFF171310,
@@ -1251,7 +784,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
 
                         height:
-
                             size.height *
 
                                 0.004,
@@ -1266,8 +798,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // =========================================
 
-
-
                       Text(
 
                         'Masuk untuk melanjutkan ke STOMACHY!',
@@ -1275,13 +805,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                         textAlign:
-
                             TextAlign.center,
 
 
 
                         style:
-
                             TextStyle(
 
                           fontFamily:
@@ -1295,7 +823,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   0.023,
 
                           color:
-
                               Colors.grey[600],
 
                         ),
@@ -1307,7 +834,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
 
                         height:
-
                             size.height *
 
                                 0.018,
@@ -1321,8 +847,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       // EMAIL
 
                       // =========================================
-
-
 
                       _buildTextField(
 
@@ -1351,7 +875,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
 
                         height:
-
                             size.height *
 
                                 0.012,
@@ -1366,8 +889,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // =========================================
 
-
-
                       _buildPasswordField(
 
                         size,
@@ -1379,7 +900,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
 
                         height:
-
                             size.height *
 
                                 0.008,
@@ -1394,12 +914,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // =========================================
 
-
-
                       Align(
 
                         alignment:
-
                             Alignment
 
                                 .centerRight,
@@ -1407,11 +924,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                         child:
-
                             GestureDetector(
 
                           onTap:
-
                               isLoading
 
                                   ? null
@@ -1447,7 +962,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                             style:
-
                                 TextStyle(
 
                               fontFamily:
@@ -1465,7 +979,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   FontWeight.w700,
 
                               color:
-
                                   const Color(
 
                                 0xFFC5674E,
@@ -1485,7 +998,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
 
                         height:
-
                             size.height *
 
                                 0.018,
@@ -1500,16 +1012,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // =========================================
 
-
-
                       SizedBox(
 
                         width:
-
                             double.infinity,
 
                         height:
-
                             size.height *
 
                                 0.045,
@@ -1517,11 +1025,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                         child:
-
                             ElevatedButton(
 
                           onPressed:
-
                               isLoading
 
                                   ? null
@@ -1531,7 +1037,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                           style:
-
                               ElevatedButton
 
                                   .styleFrom(
@@ -1540,9 +1045,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                 const Color(
 
-                              0xFFB7D1B0,
+                                  0xFFB7D1B0,
 
-                            ),
+                                ),
 
 
 
@@ -1550,9 +1055,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                 const Color(
 
-                              0xFFD5DFD2,
+                                  0xFFD5DFD2,
 
-                            ),
+                                ),
 
 
 
@@ -1567,25 +1072,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                             shape:
-
                                 RoundedRectangleBorder(
 
-                              borderRadius:
+                                  borderRadius:
 
-                                  BorderRadius.circular(
+                                      BorderRadius.circular(
 
-                                30,
+                                    30,
 
-                              ),
+                                  ),
 
-                            ),
+                                ),
 
                           ),
 
 
 
                           child:
-
                               isLoading
 
                                   ? const SizedBox(
@@ -1613,7 +1116,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                                       style:
-
                                           TextStyle(
 
                                         fontFamily:
@@ -1643,7 +1145,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
 
                         height:
-
                             size.height *
 
                                 0.025,
@@ -1658,8 +1159,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // =========================================
 
-
-
                       _buildDividerText(
 
                         size,
@@ -1671,7 +1170,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
 
                         height:
-
                             size.height *
 
                                 0.018,
@@ -1685,8 +1183,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       // GOOGLE
 
                       // =========================================
-
-
 
                       Row(
 
@@ -1727,7 +1223,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
 
                         height:
-
                             size.height *
 
                                 0.018,
@@ -1741,8 +1236,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       // DAFTAR
 
                       // =========================================
-
-
 
                       Row(
 
@@ -1763,7 +1256,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                             style:
-
                                 TextStyle(
 
                               fontFamily:
@@ -1777,7 +1269,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                       0.021,
 
                               color:
-
                                   Colors.grey[700],
 
                             ),
@@ -1789,7 +1280,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           GestureDetector(
 
                             onTap:
-
                                 isLoading
 
                                     ? null
@@ -1825,7 +1315,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
                               style:
-
                                   TextStyle(
 
                                 fontFamily:
@@ -1843,12 +1332,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     FontWeight.w700,
 
                                 color:
-
                                     const Color(
 
-                                  0xFFC5674E,
+                                      0xFFC5674E,
 
-                                ),
+                                    ),
 
                               ),
 
@@ -1866,20 +1354,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 ),
 
-
-
                 // =================================================
 
                 // JARAK BAWAH
 
                 // =================================================
 
-
-
                 SizedBox(
 
                   height:
-
                       size.height * 0.035,
 
                 ),
@@ -1898,15 +1381,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   }
 
-
-
   // ===============================================================
 
   // TEXT FIELD
 
   // ===============================================================
-
-
 
   Widget _buildTextField({
 
@@ -2076,15 +1555,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   }
 
-
-
   // ===============================================================
 
   // PASSWORD FIELD
 
   // ===============================================================
-
-
 
   Widget _buildPasswordField(
 
@@ -2213,12 +1688,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
             color:
-
                 const Color(
 
-              0xFF8B817C,
+                  0xFF8B817C,
 
-            ),
+                ),
 
           ),
 
@@ -2318,15 +1792,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   }
 
-
-
   // ===============================================================
 
   // DIVIDER
 
   // ===============================================================
-
-
 
   Widget _buildDividerText(
 
@@ -2341,18 +1811,16 @@ class _LoginScreenState extends State<LoginScreen> {
         Expanded(
 
           child:
-
               Container(
 
             height: 0.5,
 
             color:
-
                 const Color(
 
-              0xFFD4D0CC,
+                  0xFFD4D0CC,
 
-            ),
+                ),
 
           ),
 
@@ -2363,7 +1831,6 @@ class _LoginScreenState extends State<LoginScreen> {
         Padding(
 
           padding:
-
               const EdgeInsets
 
                   .symmetric(
@@ -2381,7 +1848,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
             style:
-
                 TextStyle(
 
               fontFamily:
@@ -2395,7 +1861,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       0.021,
 
               color:
-
                   Colors.grey[600],
 
             ),
@@ -2409,18 +1874,16 @@ class _LoginScreenState extends State<LoginScreen> {
         Expanded(
 
           child:
-
               Container(
 
             height: 0.5,
 
             color:
-
                 const Color(
 
-              0xFFD4D0CC,
+                  0xFFD4D0CC,
 
-            ),
+                ),
 
           ),
 
@@ -2432,15 +1895,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   }
 
-
-
   // ===============================================================
 
   // SOCIAL BUTTON
 
   // ===============================================================
-
-
 
   Widget _socialButton({
 
@@ -2459,17 +1918,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
       child:
-
           ElevatedButton(
 
         onPressed:
-
             onPressed,
 
 
 
         style:
-
             ElevatedButton
 
                 .styleFrom(
@@ -2478,9 +1934,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const Color(
 
-            0xFFFFF8F4,
+                0xFFFFF8F4,
 
-          ),
+              ),
 
 
 
@@ -2488,9 +1944,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const Color(
 
-            0xFFF0EAE6,
+                0xFFF0EAE6,
 
-          ),
+              ),
 
 
 
@@ -2498,9 +1954,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const Color(
 
-            0xFFB85E47,
+                0xFFB85E47,
 
-          ),
+              ),
 
 
 
@@ -2508,9 +1964,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const Color(
 
-            0xFFB8AAA3,
+                0xFFB8AAA3,
 
-          ),
+              ),
 
 
 
@@ -2519,17 +1975,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
           padding:
-
               EdgeInsets.zero,
 
 
 
           shape:
-
               RoundedRectangleBorder(
 
             borderRadius:
-
                 BorderRadius.circular(
 
               13,
@@ -2543,7 +1996,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
         child:
-
             Icon(
 
           icon,
@@ -2557,5 +2009,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
   }
-
 }
