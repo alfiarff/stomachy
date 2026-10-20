@@ -12,6 +12,7 @@ import 'login_screen.dart';
 
 import '../widgets/bottom_navigation.dart';
 import '../widgets/stomachy_card.dart';
+import '../services/notification_service.dart';
 
 import 'personal_information_screen.dart';
 import 'about_stomachy_screen.dart';
@@ -759,6 +760,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 30,
                         child: ElevatedButton(
                           onPressed: () async {
+                            await NotificationService.stopChatWatcher();
                             await FirebaseAuth.instance.signOut();
 
                             if (!dialogContext.mounted) return;

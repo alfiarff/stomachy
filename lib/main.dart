@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen> {
   //
   // Belum pernah melewati Landing -> Landing
   // Sudah pernah melewati Landing + belum login -> Login
-  // Sudah login -> berdasarkan role
+  // Sudah login -> aktifkan watcher chat + berdasarkan role
   // =============================================================
 
   Future<void> _navigateBasedOnAppState() async {
@@ -132,8 +132,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // ===========================================================
     // 3. USER MASIH LOGIN
-    //    CEK ROLE
+    //
+    // Aktifkan Global Chat Watcher agar notifikasi chat muncul
+    // di SEMUA halaman, bukan hanya di dalam layar chat.
+    // Aman dipanggil walau watcher sudah berjalan.
     // ===========================================================
+
+    await NotificationService.startChatWatcher();
 
     Widget target = const HomeScreen();
 

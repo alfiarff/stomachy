@@ -1,9 +1,21 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import '../notification_screen.dart';
 import '../../services/notification_service.dart';
+import '../notification_screen.dart';
+
+// ===============================================================
+// HALAMAN NOTIFIKASI DOKTER
+//
+// Sengaja dibuat seragam dengan halaman notifikasi user:
+// - Sumber data  : AppNotification (penyimpanan lokal per-uid)
+// - Struktur     : "Belum Dibaca" (< 24 jam) + "Sebelumnya"
+// - Badge beranda: dihitung dari sumber yang sama
+//                  (getRecentUnreadCount)
+//
+// Dengan begitu angka badge di beranda dokter selalu konsisten
+// dengan isi halaman ini.
+// ===============================================================
 
 class DoctorNotificationScreen extends StatefulWidget {
   const DoctorNotificationScreen({super.key});
@@ -30,16 +42,7 @@ class _DoctorNotificationScreenState
   }
 
   // ===============================================================
-  // LOAD NOTIFIKASI DOKTER
-  //
-  // UI dan aturan pembagian notifikasi dibuat sama dengan
-  // NotificationScreen milik user.
-  //
-  // Tambahan khusus dokter:
-  // - Membaca data konsultasi dokter dari Firestore
-  // - Membuat notifikasi booking/konsultasi ke AppNotification
-  // - Setelah tersimpan, notifikasi ditampilkan dengan sistem
-  //   yang sama seperti notifikasi lainnya.
+  // LOAD NOTIFIKASI + TANDAI SEMUA DIBACA
   // ===============================================================
 
   Future<void> _loadNotifications() async {
@@ -54,184 +57,41 @@ class _DoctorNotificationScreenState
       return;
     }
 
-    try {
-      // =========================================================
-      // 1. AMBIL NOTIFIKASI YANG SUDAH TERSIMPAN
-      // =========================================================
+    final items = await AppNotification.getAll(user.uid);
 
-      final items = await AppNotification.getAll(user.uid);
+    // Belum dibaca DAN belum lewat 24 jam
+    final List<LocalNotification> unread = items
+        .where(
+          (item) =>
+              !item.isRead &&
+              AppNotification.isFresh(item),
+        )
+        .toList();
 
-      // =========================================================
-      // 2. CEK KONSULTASI DOKTER
-      //
-      // Hanya untuk kebutuhan khusus role dokter.
-      // Notifikasi dibuat jika belum pernah dibuat sebelumnya.
-      // =========================================================
+    // Sudah dibaca ATAU sudah lewat 24 jam
+    final List<LocalNotification> read = items
+        .where(
+          (item) =>
+              item.isRead ||
+              !AppNotification.isFresh(item),
+        )
+        .toList();
 
-      final snapshot = await FirebaseFirestore.instance
-          .collection('consultations')
-          .where('doctorId', isEqualTo: user.uid)
-          .get();
+    if (!mounted) return;
 
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
+    setState(() {
+      _unread = unread;
+      _read = read;
+      _isLoading = false;
+    });
 
-        final String status =
-            (data['status'] ?? '').toString().trim().toLowerCase();
-
-        final String patient =
-            (data['userName'] ?? 'Pasien').toString();
-
-        final String day =
-            (data['consultationDay'] ?? '').toString();
-
-        final String time =
-            (data['consultationTime'] ?? '').toString();
-
-        if (status != 'booked' && status != 'active') {
-          continue;
-        }
-
-        final String notificationId =
-            'consultation_${doc.id}_$status';
-
-        // Jangan membuat notif yang sama berulang kali.
-        final bool alreadyExists =
-            items.any((item) => item.id == notificationId);
-
-        if (alreadyExists) {
-          continue;
-        }
-
-        final dynamic timestamp =
-            data['consultationTimestamp'];
-
-        DateTime createdAt = DateTime.now();
-
-        if (timestamp is Timestamp) {
-          createdAt = timestamp.toDate();
-        }
-
-        await AppNotification.create(
-          uid: user.uid,
-          type: status == 'active'
-              ? 'reminder'
-              : 'consultation',
-          title: status == 'active'
-              ? 'Waktunya Konsultasi!'
-              : 'Booking Konsultasi',
-          body: status == 'active'
-              ? 'Konsultasi dengan $patient pada '
-                  '$day, $time WIB sudah dimulai.'
-              : 'Pasien $patient memiliki booking pada '
-                  '$day, $time WIB.',
-          createdAt: createdAt,
-          notificationId: notificationId,
-        );
-      }
-
-      // =========================================================
-      // 3. AMBIL ULANG SETELAH NOTIFIKASI KONSULTASI DITAMBAHKAN
-      // =========================================================
-
-      final updatedItems =
-        await AppNotification.getAll(user.uid);
-
-      updatedItems.sort(
-      (a, b) => b.createdAt.compareTo(a.createdAt),
-      );
-
-      // =========================================================
-      // 4. BELUM DIBACA
-      //
-      // Sama persis dengan NotificationScreen user:
-      // belum dibaca + masih dalam 24 jam.
-      // =========================================================
-
-      final List<LocalNotification> unread =
-          updatedItems
-              .where(
-                (item) =>
-                    !item.isRead &&
-                    AppNotification.isFresh(item),
-              )
-              .toList();
-
-      // =========================================================
-      // 5. SEBELUMNYA
-      //
-      // Sudah dibaca ATAU sudah lewat 24 jam.
-      // =========================================================
-
-      final List<LocalNotification> read =
-          updatedItems
-              .where(
-                (item) =>
-                    item.isRead ||
-                    !AppNotification.isFresh(item),
-              )
-              .toList();
-
-      if (!mounted) return;
-
-      setState(() {
-        _unread = unread;
-        _read = read;
-        _isLoading = false;
-      });
-
-      // =========================================================
-      // 6. SETELAH HALAMAN DIBUKA → SEMUA DITANDAI DIBACA
-      // =========================================================
-
-      await AppNotification.markAllAsRead(user.uid);
-    } catch (e) {
-      debugPrint(
-        'DOCTOR NOTIFICATION LOAD ERROR: $e',
-      );
-
-      // Kalau query Firestore gagal, notifikasi lokal
-      // tetap ditampilkan.
-      final items =
-          await AppNotification.getAll(user.uid);
-
-      items.sort(
-        (a, b) => b.createdAt.compareTo(a.createdAt),
-      );
-
-      final List<LocalNotification> unread =
-          items
-              .where(
-                (item) =>
-                    !item.isRead &&
-                    AppNotification.isFresh(item),
-              )
-              .toList();
-
-      final List<LocalNotification> read =
-          items
-              .where(
-                (item) =>
-                    item.isRead ||
-                    !AppNotification.isFresh(item),
-              )
-              .toList();
-
-      if (!mounted) return;
-
-      setState(() {
-        _unread = unread;
-        _read = read;
-        _isLoading = false;
-      });
-
-      await AppNotification.markAllAsRead(user.uid);
-    }
+    // Tandai semua sebagai dibaca
+    // -> badge di beranda dokter otomatis hilang
+    await AppNotification.markAllAsRead(user.uid);
   }
 
   // ===============================================================
   // FORMAT WAKTU
-  // SAMA DENGAN NOTIFICATION SCREEN USER
   // ===============================================================
 
   String _formatLabel(
@@ -241,7 +101,6 @@ class _DoctorNotificationScreenState
     if (isUnread) {
       final hour =
           date.hour.toString().padLeft(2, '0');
-
       final minute =
           date.minute.toString().padLeft(2, '0');
 
@@ -249,7 +108,6 @@ class _DoctorNotificationScreenState
     }
 
     final now = DateTime.now();
-
     final today = DateTime(
       now.year,
       now.month,
@@ -304,7 +162,6 @@ class _DoctorNotificationScreenState
 
   // ===============================================================
   // STYLE PER TIPE NOTIFIKASI
-  // SAMA DENGAN USER
   // ===============================================================
 
   ({String emoji, Color bg}) _typeStyle(
@@ -313,7 +170,7 @@ class _DoctorNotificationScreenState
     switch (type) {
       case 'chat':
         return (
-          emoji: '👨‍⚕️',
+          emoji: '🧑‍🦰',
           bg: const Color(0xFFDFF2E4),
         );
 
@@ -347,18 +204,6 @@ class _DoctorNotificationScreenState
           bg: const Color(0xFFFCE0DB),
         );
 
-      case 'consultation':
-        return (
-          emoji: '📅',
-          bg: const Color(0xFFE9E2F8),
-        );
-
-      case 'reminder':
-        return (
-          emoji: '⏰',
-          bg: const Color(0xFFFCE0DB),
-        );
-
       default:
         return (
           emoji: '🔔',
@@ -375,6 +220,7 @@ class _DoctorNotificationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+
       body: SafeArea(
         child: _isLoading
             ? const Center(
@@ -389,7 +235,6 @@ class _DoctorNotificationScreenState
 
   // ===============================================================
   // KONTEN UTAMA
-  // SAMA DENGAN USER
   // ===============================================================
 
   Widget _buildContent() {
@@ -413,9 +258,9 @@ class _DoctorNotificationScreenState
         children: [
           _buildHeader(),
 
-          // =====================================================
+          // ================================================
           // BELUM DIBACA
-          // =====================================================
+          // ================================================
 
           if (_unread.isNotEmpty) ...[
             const SizedBox(height: 24),
@@ -432,9 +277,7 @@ class _DoctorNotificationScreenState
 
             const SizedBox(height: 12),
 
-            for (int i = 0;
-                i < _unread.length;
-                i++) ...[
+            for (int i = 0; i < _unread.length; i++) ...[
               _buildNotificationCard(
                 item: _unread[i],
                 isUnread: true,
@@ -445,9 +288,9 @@ class _DoctorNotificationScreenState
             ],
           ],
 
-          // =====================================================
+          // ================================================
           // SEBELUMNYA
-          // =====================================================
+          // ================================================
 
           if (_read.isNotEmpty) ...[
             const SizedBox(height: 22),
@@ -464,9 +307,7 @@ class _DoctorNotificationScreenState
 
             const SizedBox(height: 12),
 
-            for (int i = 0;
-                i < _read.length;
-                i++) ...[
+            for (int i = 0; i < _read.length; i++) ...[
               _buildNotificationCard(
                 item: _read[i],
                 isUnread: false,
@@ -479,7 +320,10 @@ class _DoctorNotificationScreenState
 
           const SizedBox(height: 26),
 
-          // Tombol tes tetap dipisahkan dari UI utama.
+          // ================================================
+          // TOMBOL TES (SELALU TERLIHAT)
+          // ================================================
+
           _buildTestButtons(),
 
           const SizedBox(height: 20),
@@ -490,7 +334,6 @@ class _DoctorNotificationScreenState
 
   // ===============================================================
   // HEADER
-  // SAMA DENGAN USER
   // ===============================================================
 
   Widget _buildHeader() {
@@ -538,7 +381,6 @@ class _DoctorNotificationScreenState
 
   // ===============================================================
   // KARTU NOTIFIKASI
-  // SAMA DENGAN USER
   // ===============================================================
 
   Widget _buildNotificationCard({
@@ -565,8 +407,7 @@ class _DoctorNotificationScreenState
         ],
       ),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: 42,
@@ -595,16 +436,14 @@ class _DoctorNotificationScreenState
                 Text(
                   item.title,
                   maxLines: 1,
-                  overflow:
-                      TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 13,
                     fontWeight: isUnread
                         ? FontWeight.w800
                         : FontWeight.w700,
-                    color:
-                        const Color(0xFF30221E),
+                    color: const Color(0xFF30221E),
                   ),
                 ),
 
@@ -613,8 +452,7 @@ class _DoctorNotificationScreenState
                 Text(
                   item.body,
                   maxLines: 1,
-                  overflow:
-                      TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 11.5,
@@ -622,8 +460,7 @@ class _DoctorNotificationScreenState
                     fontWeight: isUnread
                         ? FontWeight.w600
                         : FontWeight.w400,
-                    color:
-                        const Color(0xFF675B57),
+                    color: const Color(0xFF675B57),
                   ),
                 ),
               ],
@@ -651,7 +488,6 @@ class _DoctorNotificationScreenState
 
   // ===============================================================
   // EMPTY STATE
-  // SAMA DENGAN USER
   // ===============================================================
 
   Widget _buildEmptyState() {
@@ -661,8 +497,7 @@ class _DoctorNotificationScreenState
           horizontal: 34,
         ),
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               width: 120,
@@ -697,9 +532,7 @@ class _DoctorNotificationScreenState
             const SizedBox(height: 10),
 
             const Text(
-              'Notifikasi pesan baru dari pasien, '
-              'booking konsultasi, pengingat dan '
-              'notifikasi lainnya akan muncul disini.',
+              'Notifikasi pesan baru dari pasien akan muncul disini.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Nunito',
@@ -719,19 +552,13 @@ class _DoctorNotificationScreenState
   }
 
   // ===============================================================
-  // TOMBOL TES
-  //
-  // SEMENTARA UNTUK PENGUJIAN.
-  // NANTI BISA DIHAPUS SETELAH SEMUA TEST SELESAI.
+  // ⚠️ TOMBOL TES SEMENTARA — HAPUS SETELAH SELESAI TES!
   // ===============================================================
 
   Widget _buildTestButtons() {
     return Column(
       children: [
-        // =========================================================
-        // NOTIFIKASI BARU
-        // =========================================================
-
+        // NOTIFIKASI BARU (SEKARANG)
         SizedBox(
           width: 210,
           height: 46,
@@ -745,19 +572,19 @@ class _DoctorNotificationScreenState
               await AppNotification.create(
                 uid: user.uid,
                 type: 'chat',
-                title:
-                    'Pesan Baru dari Pasien',
+                title: 'Pasien Rina mengirim pesan',
                 body:
-                    'Ini adalah notifikasi baru untuk dokter.',
+                    '"Dok, perut saya sakit setelah makan..."',
               );
 
               if (!mounted) return;
 
+              // Reload supaya langsung kelihatan
               setState(() {
                 _isLoading = true;
               });
 
-              await _loadNotifications();
+              _loadNotifications();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor:
@@ -782,32 +609,25 @@ class _DoctorNotificationScreenState
 
         const SizedBox(height: 10),
 
-        // =========================================================
         // TEST NOTIFIKASI ANDROID
-        // =========================================================
-
         SizedBox(
           width: 210,
           height: 46,
           child: ElevatedButton(
             onPressed: () async {
               try {
-                await NotificationService
-                    .showPatientMessage(
+                await NotificationService.showPatientMessage(
                   messageId:
                       'test-${DateTime.now().millisecondsSinceEpoch}',
                   patientName: 'Test Pasien',
-                  message:
-                      'Tes notif dokter dari Samsung A04',
+                  message: 'Tes notif pasien dari HP dokter',
                 );
 
                 if (!mounted) return;
 
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    behavior:
-                        SnackBarBehavior.floating,
+                    behavior: SnackBarBehavior.floating,
                     content: Text(
                       'Notifikasi Android berhasil dipanggil 🔔',
                     ),
@@ -816,11 +636,9 @@ class _DoctorNotificationScreenState
               } catch (e) {
                 if (!mounted) return;
 
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    behavior:
-                        SnackBarBehavior.floating,
+                    behavior: SnackBarBehavior.floating,
                     content: Text(
                       'Gagal membuat notif: $e',
                     ),
@@ -829,8 +647,7 @@ class _DoctorNotificationScreenState
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  const Color(0xFFB9543A),
+              backgroundColor: const Color(0xFFB9543A),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -851,10 +668,7 @@ class _DoctorNotificationScreenState
 
         const SizedBox(height: 10),
 
-        // =========================================================
-        // NOTIFIKASI LAMA
-        // =========================================================
-
+        // NOTIFIKASI LAMA (2 HARI)
         SizedBox(
           width: 210,
           height: 46,
@@ -867,13 +681,11 @@ class _DoctorNotificationScreenState
 
               await AppNotification.create(
                 uid: user.uid,
-                type: 'reminder',
-                title:
-                    'Pengingat Konsultasi',
+                type: 'chat',
+                title: 'Pasien Budi mengirim pesan',
                 body:
-                    'Jangan lupa memeriksa jadwal konsultasi pasien.',
-                createdAt:
-                    DateTime.now().subtract(
+                    'Mau tanya soal pola makan, Dok',
+                createdAt: DateTime.now().subtract(
                   const Duration(days: 2),
                 ),
               );
@@ -884,7 +696,7 @@ class _DoctorNotificationScreenState
                 _isLoading = true;
               });
 
-              await _loadNotifications();
+              _loadNotifications();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor:
@@ -909,10 +721,7 @@ class _DoctorNotificationScreenState
 
         const SizedBox(height: 10),
 
-        // =========================================================
-        // HAPUS SEMUA
-        // =========================================================
-
+        // HAPUS SEMUA (RESET)
         SizedBox(
           width: 210,
           height: 46,
@@ -937,8 +746,7 @@ class _DoctorNotificationScreenState
               ScaffoldMessenger.of(context)
                   .showSnackBar(
                 const SnackBar(
-                  behavior:
-                      SnackBarBehavior.floating,
+                  behavior: SnackBarBehavior.floating,
                   content: Text(
                     'Semua notifikasi dihapus.',
                   ),

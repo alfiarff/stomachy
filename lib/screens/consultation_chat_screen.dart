@@ -1,25 +1,17 @@
 import 'dart:convert';
 
 import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:flutter/material.dart';
-
 import '../services/notification_service.dart';
 import 'notification_screen.dart';
 
 class ConsultationChatScreen extends StatefulWidget {
   final String consultationId;
-
   final String doctorName;
-
   final String specialty;
-
   final String doctorImage;
-
   final String selectedTime;
 
   const ConsultationChatScreen({
@@ -290,6 +282,20 @@ class _ConsultationChatScreenState
       // saat proses berjalan, pesan ini tidak dibuat ulang.
       _notifiedDoctorMessageIds.add(doc.id);
 
+      // -----------------------------------------------------------
+      // CEgah notifikasi dobel dengan Global Chat Watcher.
+      //
+      // Jika watcher sudah memproses pesan ini (atau sebaliknya,
+      // layar chat memproses lebih dulu), pesan yang sama tidak
+      // akan pernah membuat dua notifikasi.
+      // -----------------------------------------------------------
+
+      if (!NotificationService.registerChatMessageIfNew(
+        doc.id,
+      )) {
+        continue;
+      }
+
       _createDoctorMessageNotification(
         messageId: doc.id,
         message: message,
@@ -328,6 +334,10 @@ class _ConsultationChatScreenState
 
       // -----------------------------------------------------------
       // 2. SIMPAN KE RIWAYAT NOTIFIKASI DALAM APLIKASI
+      //
+      // notificationId harus sama dengan yang dipakai watcher
+      // ('chat_$messageId') supaya AppNotification bisa mencegah
+      // entri dobel untuk pesan yang sama.
       // -----------------------------------------------------------
 
       await AppNotification.create(
@@ -335,6 +345,7 @@ class _ConsultationChatScreenState
         type: 'chat',
         title: 'Dokter Membalas Pesanmu',
         body: '$doctorName: "$message"',
+        notificationId: 'chat_$messageId',
       );
 
       debugPrint(
@@ -1360,6 +1371,9 @@ class _ConsultationChatScreenState
 
   // ===============================================================
   // SEND MESSAGE
+  //
+  // PENTING: lastMessageId wajib ditulis supaya Global Chat
+  // Watcher di HP dokter tahu pesan mana yang baru.
   // ===============================================================
 
   Future<void> _sendMessage() async {
@@ -1401,9 +1415,12 @@ class _ConsultationChatScreenState
               .collection('consultations')
               .doc(widget.consultationId);
 
-      await consultationReference
-          .collection('messages')
-          .add({
+      final DocumentReference<
+              Map<String, dynamic>>
+          messageDoc =
+          await consultationReference
+              .collection('messages')
+              .add({
         'senderId': user.uid,
         'senderRole': 'user',
         'message': message,
@@ -1417,6 +1434,7 @@ class _ConsultationChatScreenState
               FieldValue.serverTimestamp(),
           'lastMessage': message,
           'lastSenderId': user.uid,
+          'lastMessageId': messageDoc.id,
           'unreadForDoctor':
               FieldValue.increment(1),
         },

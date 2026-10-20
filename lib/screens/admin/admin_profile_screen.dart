@@ -9,6 +9,7 @@ import '../personal_information_screen.dart';
 import '../change_password_screen.dart';
 
 import '../../widgets/admin_bottom_navigation.dart';
+import '../../services/notification_service.dart';
 
 import 'admin_home_screen.dart';
 import 'admin_article_screen.dart';
@@ -618,6 +619,7 @@ class _AdminProfileScreenState
                         height: 36,
                         child: ElevatedButton(
                           onPressed: () async {
+                            await NotificationService.stopChatWatcher();
                             await FirebaseAuth.instance.signOut();
 
                             if (!dialogContext.mounted) return;

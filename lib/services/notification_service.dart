@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -7,6 +9,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import '../screens/notification_screen.dart';
+
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -15,6 +19,224 @@ class NotificationService {
   static const int _consultationReminderBaseId = 200000;
   static const int _doctorReplyBaseId = 300000;
   static const int _patientMessageBaseId = 400000;
+
+  // =============================================================
+  // GLOBAL CHAT WATCHER
+  //
+  // Mendengarkan koleksi 'consultations' selama user sedang login.
+  // Bekerja di SEMUA halaman (beranda, edukasi, profil, dll),
+  // baik untuk role user maupun dokter.
+  //
+  // Cara kerja:
+  // 1. Saat konsultasi pertama kali terlihat -> baseline
+  //    (pesan lama tidak memunculkan notifikasi).
+  // 2. Jika lastMessageId berubah dan pesan terakhir BUKAN dari
+  //    akun ini -> tampilkan notifikasi HP + simpan notifikasi
+  //    in-app.
+  //
+  // PENTING: lastMessageId ditulis oleh kedua layar chat saat
+  // mengirim pesan (wajib, lihat file perbaikan chat screens).
+  // =============================================================
+
+  static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _watcherSubAsPatient;
+
+  static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _watcherSubAsDoctor;
+
+  static String? _watcherUid;
+
+  // Konsultasi yang sudah pernah terlihat watcher pada sesi ini.
+  static final Set<String> _knownConsultationIds = <String>{};
+
+  // Registri bersama: ID pesan yang sudah diproses sebagai
+  // notifikasi. Dipakai juga oleh halaman chat supaya satu pesan
+  // tidak pernah membuat dua notifikasi.
+  static final Set<String> _shownChatMessageIds = <String>{};
+
+  /// Coba klaim sebuah pesan untuk diproses sebagai notifikasi.
+  /// Mengembalikan true jika pemanggil berhak membuat notifikasi,
+  /// false jika pesan sudah pernah diproses (oleh watcher atau
+  /// oleh halaman chat).
+  static bool registerChatMessageIfNew(String messageId) {
+    if (messageId.isEmpty) return false;
+
+    if (_shownChatMessageIds.length > 2000) {
+      _shownChatMessageIds.clear();
+    }
+
+    if (_shownChatMessageIds.contains(messageId)) return false;
+
+    _shownChatMessageIds.add(messageId);
+    return true;
+  }
+
+  static bool isChatMessageShown(String messageId) {
+    return _shownChatMessageIds.contains(messageId);
+  }
+
+  static void markChatMessageShown(String messageId) {
+    if (messageId.isEmpty) return;
+    _shownChatMessageIds.add(messageId);
+  }
+
+  /// Mulai mendengarkan notifikasi chat untuk user yang sedang
+  /// login. Aman dipanggil berkali-kali: jika sudah berjalan untuk
+  /// user yang sama, tidak akan dobel. Jika berganti akun, watcher
+  /// lama otomatis dihentikan lalu dipasang ulang.
+  static Future<void> startChatWatcher() async {
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return;
+
+    final bool alreadyRunning = _watcherUid == user.uid &&
+        (_watcherSubAsPatient != null || _watcherSubAsDoctor != null);
+
+    if (alreadyRunning) return;
+
+    await stopChatWatcher();
+
+    _watcherUid = user.uid;
+
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // Dengarkan konsultasi di posisi PASIEN (untuk akun user).
+    _watcherSubAsPatient = firestore
+        .collection('consultations')
+        .where('userId', isEqualTo: user.uid)
+        .snapshots()
+        .listen(_handleConsultationSnapshot);
+
+    // Dengarkan konsultasi di posisi DOKTER (untuk akun dokter).
+    _watcherSubAsDoctor = firestore
+        .collection('consultations')
+        .where('doctorId', isEqualTo: user.uid)
+        .snapshots()
+        .listen(_handleConsultationSnapshot);
+
+    debugPrint('WATCHER: aktif untuk user ${user.uid}');
+  }
+
+  /// Hentikan watcher (dipakai saat logout).
+  static Future<void> stopChatWatcher() async {
+    await _watcherSubAsPatient?.cancel();
+    await _watcherSubAsDoctor?.cancel();
+
+    _watcherSubAsPatient = null;
+    _watcherSubAsDoctor = null;
+    _watcherUid = null;
+    _knownConsultationIds.clear();
+
+    debugPrint('WATCHER: dihentikan.');
+  }
+
+  static Future<void> _handleConsultationSnapshot(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return;
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+
+      final String lastMessage =
+          (data['lastMessage'] ?? '').toString().trim();
+
+      final String lastSenderId =
+          (data['lastSenderId'] ?? '').toString();
+
+      final String lastMessageId =
+          (data['lastMessageId'] ?? '').toString();
+
+      // ---------------------------------------------------------
+      // BASELINE PER KONSULTASI
+      //
+      // Konsultasi yang baru pertama kali terlihat watcher pada
+      // sesi ini dianggap kondisi awal. Pesan yang sudah ada di
+      // dalamnya tidak memunculkan notifikasi.
+      // ---------------------------------------------------------
+
+      if (!_knownConsultationIds.contains(doc.id)) {
+        _knownConsultationIds.add(doc.id);
+
+        if (lastMessageId.isNotEmpty) {
+          _shownChatMessageIds.add(lastMessageId);
+        }
+
+        continue;
+      }
+
+      if (lastMessage.isEmpty) continue;
+
+      // Pesan lama (dikirim dari build sebelum pembaruan ini)
+      // tidak memiliki lastMessageId -> tidak bisa diproses.
+      if (lastMessageId.isEmpty) continue;
+
+      // Pesan terakhir berasal dari akun ini sendiri.
+      if (lastSenderId == user.uid) {
+        _shownChatMessageIds.add(lastMessageId);
+        continue;
+      }
+
+      // Sudah pernah diproses (oleh watcher atau halaman chat).
+      if (_shownChatMessageIds.contains(lastMessageId)) continue;
+      _shownChatMessageIds.add(lastMessageId);
+
+      final String doctorId = (data['doctorId'] ?? '').toString();
+      final bool iAmDoctor = doctorId == user.uid;
+
+      String counterpartName = iAmDoctor
+          ? (data['userName'] ?? data['name'] ?? '').toString().trim()
+          : (data['doctorName'] ?? '').toString().trim();
+
+      if (counterpartName.isEmpty) {
+        counterpartName = iAmDoctor ? 'Pasien' : 'Dokter';
+      }
+
+      try {
+        if (iAmDoctor) {
+          await showPatientMessage(
+            messageId: lastMessageId,
+            patientName: counterpartName,
+            message: lastMessage,
+          );
+
+          await AppNotification.create(
+            uid: user.uid,
+            type: 'chat',
+            title: 'Pesan Baru dari $counterpartName',
+            body: lastMessage,
+            notificationId: 'chat_$lastMessageId',
+          );
+        } else {
+          await showDoctorReply(
+            messageId: lastMessageId,
+            doctorName: counterpartName,
+            message: lastMessage,
+          );
+
+          await AppNotification.create(
+            uid: user.uid,
+            type: 'chat',
+            title: 'Dokter Membalas Pesanmu',
+            body: '$counterpartName: "$lastMessage"',
+            notificationId: 'chat_$lastMessageId',
+          );
+        }
+
+        debugPrint(
+          'WATCHER: notifikasi chat dibuat (messageId: $lastMessageId)',
+        );
+      } catch (e) {
+        debugPrint('WATCHER: gagal membuat notifikasi chat = $e');
+      }
+    }
+  }
+
+  // =============================================================
+  // INISIALISASI
+  // =============================================================
 
   static Future<void> init() async {
     tzdata.initializeTimeZones();
@@ -118,6 +340,10 @@ class NotificationService {
     }
   }
 
+  // =============================================================
+  // PENGINGAT SKRINING MINGGUAN
+  // =============================================================
+
   static Future<tz.TZDateTime> scheduleWeeklyScreening() async {
     await cancelWeeklyScreening();
 
@@ -161,6 +387,10 @@ class NotificationService {
     await _plugin.cancel(kWeeklyScreeningId);
   }
 
+  // =============================================================
+  // ID NOTIFIKASI
+  // =============================================================
+
   static int _consultationId(String consultationId) {
     final int hash = consultationId.hashCode.abs();
     return _consultationReminderBaseId + (hash % 50000);
@@ -175,6 +405,10 @@ class NotificationService {
     final int hash = messageId.hashCode.abs();
     return _patientMessageBaseId + (hash % 50000);
   }
+
+  // =============================================================
+  // PENGINGAT JADWAL KONSULTASI
+  // =============================================================
 
   static Future<void> scheduleConsultationReminder({
     required String consultationId,
@@ -228,6 +462,10 @@ class NotificationService {
     if (consultationId.isEmpty) return;
     await _plugin.cancel(_consultationId(consultationId));
   }
+
+  // =============================================================
+  // NOTIFIKASI CHAT LANGSUNG
+  // =============================================================
 
   static Future<void> showDoctorReply({
     required String messageId,
@@ -311,6 +549,10 @@ class NotificationService {
     );
   }
 
+  // =============================================================
+  // SINKRONISASI PENGATURAN
+  // =============================================================
+
   static Future<void> syncWeeklyScreeningFromSettings() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -343,6 +585,10 @@ class NotificationService {
       );
     }
   }
+
+  // =============================================================
+  // HELPER TIMEZONE
+  // =============================================================
 
   static tz.Location _resolveLocation() {
     final offset = DateTime.now().timeZoneOffset;

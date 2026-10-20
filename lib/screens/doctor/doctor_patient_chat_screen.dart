@@ -236,23 +236,28 @@ class _DoctorPatientChatScreenState
         continue;
       }
 
+      // Cegah notifikasi dobel dengan Global Chat Watcher:
+      // jika watcher sudah memproses pesan ini, lewati.
+      if (!NotificationService.registerChatMessageIfNew(
+        document.id,
+      )) {
+        continue;
+      }
+
       try {
-        final uniqueId =
-            'patient_message_${_consultationId}_${document.id}';
+        await NotificationService.showPatientMessage(
+          messageId: document.id,
+          patientName: _patientName,
+          message: message,
+        );
 
-      await NotificationService.showPatientMessage(
-        messageId: uniqueId,
-        patientName: _patientName,
-        message: message,
-      );
-
-      await AppNotification.create(
-        uid: currentUser.uid,
-        type: 'chat',
-        title: 'Pesan Baru dari $_patientName',
-        body: message,
-        notificationId: uniqueId,
-      );
+        await AppNotification.create(
+          uid: currentUser.uid,
+          type: 'chat',
+          title: 'Pesan Baru dari $_patientName',
+          body: message,
+          notificationId: 'chat_${document.id}',
+        );
       } catch (e) {
         debugPrint(
           'NOTIF CHAT DOKTER: gagal membuat notifikasi = $e',
@@ -2858,184 +2863,85 @@ class _DoctorPatientChatScreenState
   }
 
   Future<void> _sendMessage() async {
-
-    final String message =
-
-        _messageController.text.trim();
+    final String message = _messageController.text.trim();
 
     if (message.isEmpty ||
-
         _isSending ||
-
         !_isActive) {
-
       return;
-
     }
 
     final User? doctor =
-
-        FirebaseAuth.instance
-
-            .currentUser;
+        FirebaseAuth.instance.currentUser;
 
     if (doctor == null ||
-
         _consultationId.isEmpty) {
-
       return;
-
     }
 
     setState(() {
-
       _isSending = true;
-
     });
 
     try {
-
       final reference =
-
           FirebaseFirestore.instance
+              .collection('consultations')
+              .doc(_consultationId);
 
-              .collection(
-
-                'consultations',
-
-              )
-
-              .doc(
-
-                _consultationId,
-
-              );
-
-      await reference
-
-          .collection('messages')
-
-          .add({
-
-        'senderId':
-
-            doctor.uid,
-
-        'senderRole':
-
-            'doctor',
-
-        'message':
-
-            message,
-
-        'createdAt':
-
-            FieldValue
-
-                .serverTimestamp(),
-
+      final messageDoc =
+          await reference
+              .collection('messages')
+              .add({
+        'senderId': doctor.uid,
+        'senderRole': 'doctor',
+        'message': message,
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
       await reference.set(
-
         {
-
-          'updatedAt':
-
-              FieldValue
-
-                  .serverTimestamp(),
-
-          'lastMessage':
-
-              message,
-
-          'lastSenderId':
-
-              doctor.uid,
-
-          'unreadForUser':
-
-              FieldValue
-
-                  .increment(1),
-
+          'updatedAt': FieldValue.serverTimestamp(),
+          'lastMessage': message,
+          'lastSenderId': doctor.uid,
+          'lastMessageId': messageDoc.id,
+          'unreadForUser': FieldValue.increment(1),
         },
-
-        SetOptions(
-
-          merge: true,
-
-        ),
-
+        SetOptions(merge: true),
       );
 
       _messageController.clear();
 
       await Future.delayed(
-
-        const Duration(
-
-          milliseconds: 100,
-
-        ),
-
+        const Duration(milliseconds: 100),
       );
 
       _scrollToBottom();
-
     } catch (_) {
-
       if (!mounted) return;
 
       ScaffoldMessenger.of(context)
-
           .showSnackBar(
-
         const SnackBar(
-
           content: Text(
-
             'Pesan gagal dikirim.',
-
             style: TextStyle(
-
-              fontFamily:
-
-                  'Nunito',
-
+              fontFamily: 'Nunito',
               fontSize: 11,
-
             ),
-
           ),
-
-          behavior:
-
-              SnackBarBehavior
-
-                  .floating,
-
+          behavior: SnackBarBehavior.floating,
         ),
-
       );
-
     } finally {
-
       if (mounted) {
-
         setState(() {
-
           _isSending = false;
-
         });
-
       }
-
     }
-
   }
+
 
   void _showFinishConfirmation() {
 

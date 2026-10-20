@@ -25,6 +25,7 @@ import '../about_stomachy_screen.dart';
 import '../change_password_screen.dart';
 
 import '../login_screen.dart';
+import '../../services/notification_service.dart';
 
 const Color brown = Color(0xFFB05039);
 
@@ -1147,6 +1148,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
                             try {
 
+                              await NotificationService.stopChatWatcher();
                               await FirebaseAuth.instance.signOut();
 
                               if (!mounted) return;

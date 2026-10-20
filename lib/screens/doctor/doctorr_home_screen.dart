@@ -4,12 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/doctor_bottom_navigation.dart';
+import '../notification_screen.dart';
 import 'doctor_chat_screen.dart';
 import 'doctor_notification_screen.dart';
 import 'doctor_patient_chat_screen.dart';
 import 'doctor_patients_screen.dart';
 import 'doctor_profile_screen.dart';
-
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -173,7 +173,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(unreadCount),
+                  _buildHeader(),
                   const SizedBox(height: 18),
                   _buildGreeting(unreadCount),
                   const SizedBox(height: 18),
@@ -191,12 +191,21 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
-  Widget _buildHeader(int unreadCount) {
+  // ===============================================================
+  // HEADER
+  //
+  // Lonceng notifikasi memakai widget _DoctorNotificationBell
+  // yang angka badge-nya dihitung dari AppNotification
+  // (sumber yang sama dengan halaman notifikasi dokter),
+  // BUKAN dari unreadForDoctor. Supaya badge dan isi halaman
+  // notifikasi selalu konsisten.
+  // ===============================================================
+
+  Widget _buildHeader() {
     final User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
       return _buildHeaderContent(
-        unreadCount: unreadCount,
         photoBase64: null,
         googlePhotoUrl: '',
       );
@@ -217,7 +226,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
         }
 
         return _buildHeaderContent(
-          unreadCount: unreadCount,
           photoBase64: photoValue.isNotEmpty ? photoValue : null,
           googlePhotoUrl: googlePhotoUrl,
         );
@@ -226,7 +234,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   }
 
   Widget _buildHeaderContent({
-    required int unreadCount,
     required String? photoBase64,
     required String googlePhotoUrl,
   }) {
@@ -245,46 +252,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               ),
             ),
           ),
-          GestureDetector(
-            onTap: _openNotifications,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const SizedBox(
-                  width: 42,
-                  height: 42,
-                  child: Icon(
-                    Icons.notifications_none_rounded,
-                    size: 27,
-                    color: Color(0xFFB05039),
-                  ),
-                ),
-                if (unreadCount > 0)
-                  Positioned(
-                    right: -3,
-                    top: -4,
-                    child: Container(
-                      width: 19,
-                      height: 19,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFAA4E39),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        unreadCount > 9 ? '9+' : unreadCount.toString(),
-                        style: const TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+          const _DoctorNotificationBell(),
           const SizedBox(width: 10),
           GestureDetector(
             onTap: () async {
@@ -544,6 +512,133 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ===============================================================
+// TOMBOL LONCENG NOTIFIKASI DOKTER
+//
+// Badge dihitung dari AppNotification.getRecentUnreadCount
+// (belum dibaca & < 24 jam) — sumber yang sama dengan halaman
+// DoctorNotificationScreen, jadi angkanya selalu cocok.
+// ===============================================================
+
+class _DoctorNotificationBell extends StatefulWidget {
+  const _DoctorNotificationBell();
+
+  @override
+  State<_DoctorNotificationBell> createState() =>
+      _DoctorNotificationBellState();
+}
+
+class _DoctorNotificationBellState
+    extends State<_DoctorNotificationBell> {
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshCount();
+  }
+
+  Future<void> _refreshCount() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      if (mounted) {
+        setState(() {
+          _unreadCount = 0;
+        });
+      }
+      return;
+    }
+
+    final int count =
+        await AppNotification.getRecentUnreadCount(
+      user.uid,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _unreadCount = count;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasUnread = _unreadCount > 0;
+
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const DoctorNotificationScreen(),
+          ),
+        );
+
+        _refreshCount();
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          SizedBox(
+            width: 42,
+            height: 42,
+            child: Icon(
+              hasUnread
+                  ? Icons.notifications_rounded
+                  : Icons.notifications_none_rounded,
+              size: 27,
+              color: const Color(0xFFB05039),
+            ),
+          ),
+
+          if (hasUnread)
+            Positioned(
+              right: -3,
+              top: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 2,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 19,
+                  minHeight: 19,
+                ),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFAA4E39),
+                  shape: _unreadCount > 9
+                      ? BoxShape.rectangle
+                      : BoxShape.circle,
+                  borderRadius: _unreadCount > 9
+                      ? BorderRadius.circular(10)
+                      : null,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 1.2,
+                  ),
+                ),
+                child: Text(
+                  _unreadCount > 9 ? '9+' : '$_unreadCount',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 9,
+                    height: 1.0,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
