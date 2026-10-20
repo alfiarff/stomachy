@@ -19,6 +19,7 @@ class AppNotification {
       'stomachy_notifications_';
 
   static String _key(String uid) => '$_keyPrefix$uid';
+  static Future<void> _createQueue = Future<void>.value();
 
   // -------------------------------------------------------------
   // BUAT NOTIFIKASI BARU
@@ -32,42 +33,49 @@ class AppNotification {
     required String body,
     DateTime? createdAt,
     String? notificationId,
-  }) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final items = await getAll(uid);
+  }) {
+    final operation = _createQueue.then((_) async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final items = await getAll(uid);
 
-      // Cegah satu pesan yang sama tersimpan dua kali.
-      if (notificationId != null &&
-          items.any((item) => item.id == notificationId)) {
-        return;
+        // Cegah notifikasi dengan ID yang sama tersimpan dua kali.
+        if (notificationId != null &&
+            items.any((item) => item.id == notificationId)) {
+          return;
+        }
+
+        items.insert(
+          0,
+          LocalNotification(
+            id: notificationId ??
+                DateTime.now().microsecondsSinceEpoch.toString(),
+            type: type,
+            title: title,
+            body: body,
+            createdAt: createdAt ?? DateTime.now(),
+            isRead: false,
+          ),
+        );
+
+        await prefs.setString(
+          _key(uid),
+          jsonEncode(
+            items.take(50).map((item) => item.toMap()).toList(),
+          ),
+        );
+
+        debugPrint('NOTIFIKASI TERSIMPAN: $title');
+      } catch (e) {
+        debugPrint('NOTIFIKASI CREATE ERROR: $e');
       }
+    });
 
-      items.insert(
-        0,
-        LocalNotification(
-          id: notificationId ??
-              DateTime.now().microsecondsSinceEpoch.toString(),
-          type: type,
-          title: title,
-          body: body,
-          createdAt: createdAt ?? DateTime.now(),
-          isRead: false,
-        ),
-      );
-
-      await prefs.setString(
-        _key(uid),
-        jsonEncode(
-          items.take(50).map((item) => item.toMap()).toList(),
-        ),
-      );
-    } catch (e) {
-      debugPrint('NOTIFIKASI CREATE ERROR: $e');
-    }
+    // Tunggu operasi penyimpanan sebelumnya selesai.
+    _createQueue = operation;
+    return operation;
   }
-
-
+  
   // -------------------------------------------------------------
   // AMBIL SEMUA NOTIFIKASI (TERBARU DI ATAS)
   // -------------------------------------------------------------

@@ -237,18 +237,22 @@ class _DoctorPatientChatScreenState
       }
 
       try {
-        await NotificationService.showPatientMessage(
-          messageId: document.id,
-          patientName: _patientName,
-          message: message,
-        );
+        final uniqueId =
+            'patient_message_${_consultationId}_${document.id}';
 
-        await AppNotification.create(
-          uid: currentUser.uid,
-          type: 'chat',
-          title: 'Pesan Baru dari $_patientName',
-          body: message,
-        );
+      await NotificationService.showPatientMessage(
+        messageId: uniqueId,
+        patientName: _patientName,
+        message: message,
+      );
+
+      await AppNotification.create(
+        uid: currentUser.uid,
+        type: 'chat',
+        title: 'Pesan Baru dari $_patientName',
+        body: message,
+        notificationId: uniqueId,
+      );
       } catch (e) {
         debugPrint(
           'NOTIF CHAT DOKTER: gagal membuat notifikasi = $e',
