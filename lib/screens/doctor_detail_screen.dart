@@ -541,112 +541,123 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   // BUAT BOOKING - STATUS: PENDING
   // ===============================================================
   // BUAT BOOKING DENGAN STATUS BOOKED DAN CEK SLOT TANPA COMPOSITE INDEX
-  Future<void> _createBooking() async {
-    if (_selectedDay == null || _selectedTime == null) return;
-    final User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      _showMessage('Silakan login terlebih dahulu.');
+  
+Future<void> _createBooking() async {
+  if (_selectedDay == null || _selectedTime == null) return;
+
+  final User? user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) {
+    _showMessage('Silakan login terlebih dahulu.');
+    return;
+  }
+
+  if (_isCreatingConsultation) return;
+
+  setState(() => _isCreatingConsultation = true);
+
+  try {
+    final DateTime consultationDate =
+        _getNextOccurrence(_selectedDay!, _selectedTime!);
+    final Timestamp selectedTimestamp =
+        Timestamp.fromDate(consultationDate);
+
+    final firestore = FirebaseFirestore.instance;
+
+    // Cek booking milik pengguna yang sedang login.
+    final userBookings = await firestore
+        .collection('consultations')
+        .where('userId', isEqualTo: user.uid)
+        .get();
+
+    final bool duplicate = userBookings.docs.any((doc) {
+      final data = doc.data();
+      final status = (data['status'] ?? '').toString().toLowerCase();
+      final ts = data['consultationTimestamp'];
+
+      return data['doctorId']?.toString() == widget.doctor.id &&
+          (status == 'booked' || status == 'active') &&
+          ts is Timestamp &&
+          ts.toDate().isAtSameMomentAs(consultationDate);
+    });
+
+    if (duplicate) {
+      if (!mounted) return;
+      setState(() => _isCreatingConsultation = false);
+      _showMessage('Kamu sudah memiliki booking pada jadwal ini.');
       return;
     }
-    if (_isCreatingConsultation) return;
-    setState(() => _isCreatingConsultation = true);
+
+    // Ambil data pengguna.
+    final userDocument =
+        await firestore.collection('users').doc(user.uid).get();
+    final userData = userDocument.data() ?? {};
+
+    final String userName =
+        (userData['name'] ?? user.displayName ?? 'Pasien')
+            .toString()
+            .trim();
+
+    final String doctorName =
+        _getDoctorValue('name', widget.doctor.name);
+    final String specialty =
+        _getDoctorValue('specialization', widget.doctor.specialty);
+    final String doctorImage =
+        widget.doctor.photoBase64 ?? widget.doctor.photoUrl ?? '';
+
+    // Simpan booking.
+    final consultationReference =
+        firestore.collection('consultations').doc();
+
+    await consultationReference.set({
+      'userId': user.uid,
+      'doctorId': widget.doctor.id,
+      'userName': userName.isEmpty ? 'Pasien' : userName,
+      'doctorName': doctorName,
+      'specialty': specialty,
+      'doctorImage': doctorImage,
+      'consultationDay': _selectedDay,
+      'consultationTime': _selectedTime,
+      'consultationDate':
+          '${consultationDate.year.toString().padLeft(4, '0')}-'
+          '${consultationDate.month.toString().padLeft(2, '0')}-'
+          '${consultationDate.day.toString().padLeft(2, '0')}',
+      'consultationTimestamp': selectedTimestamp,
+      'status': 'booked',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+      'lastMessage': '',
+      'lastSenderId': '',
+      'unreadForDoctor': 0,
+      'unreadForUser': 0,
+    });
+
+    // Buat notifikasi.
     try {
-      final DateTime consultationDate =
-          _getNextOccurrence(_selectedDay!, _selectedTime!);
-      final Timestamp selectedTimestamp = Timestamp.fromDate(consultationDate);
-      final doctorBookings = await FirebaseFirestore.instance
-          .collection('consultations')
-          .where('doctorId', isEqualTo: widget.doctor.id)
-          .get();
-      final bool slotFull = doctorBookings.docs.any((doc) {
-        final data = doc.data();
-        final status = (data['status'] ?? '').toString().toLowerCase();
-        if (status != 'booked' && status != 'active') return false;
-        final ts = data['consultationTimestamp'];
-        if (ts is Timestamp) {
-          return ts.toDate().isAtSameMomentAs(consultationDate);
-        }
-        return (data['consultationDay'] ?? '').toString() == _selectedDay &&
-            (data['consultationTime'] ?? '').toString() == _selectedTime;
-      });
-      if (slotFull) {
-        if (!mounted) return;
-        setState(() => _isCreatingConsultation = false);
-        _showMessage('Jadwal sudah penuh. Pilih waktu lain.');
-        return;
-      }
-      final userBookings = await FirebaseFirestore.instance
-          .collection('consultations')
-          .where('userId', isEqualTo: user.uid)
-          .get();
-      final bool duplicate = userBookings.docs.any((doc) {
-        final data = doc.data();
-        final status = (data['status'] ?? '').toString().toLowerCase();
-        final ts = data['consultationTimestamp'];
-        return data['doctorId']?.toString() == widget.doctor.id &&
-            (status == 'booked' || status == 'active') &&
-            ts is Timestamp &&
-            ts.toDate().isAtSameMomentAs(consultationDate);
-      });
-      if (duplicate) {
-        if (!mounted) return;
-        setState(() => _isCreatingConsultation = false);
-        _showMessage('Kamu sudah memiliki booking pada jadwal ini.');
-        return;
-      }
-      final userDocument = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      final userData = userDocument.data() ?? {};
-      final String userName =
-          (userData['name'] ?? user.displayName ?? 'Pasien').toString().trim();
-      final String doctorName =
-          _getDoctorValue('name', widget.doctor.name);
-      final String specialty =
-          _getDoctorValue('specialization', widget.doctor.specialty);
-      final String doctorImage =
-          widget.doctor.photoBase64 ?? widget.doctor.photoUrl ?? '';
-      final consultationReference =
-          FirebaseFirestore.instance.collection('consultations').doc();
-      await consultationReference.set({
-        'userId': user.uid,
-        'doctorId': widget.doctor.id,
-        'userName': userName.isEmpty ? 'Pasien' : userName,
-        'doctorName': doctorName,
-        'specialty': specialty,
-        'doctorImage': doctorImage,
-        'consultationDay': _selectedDay,
-        'consultationTime': _selectedTime,
-        'consultationDate':
-            '${consultationDate.year.toString().padLeft(4, '0')}-${consultationDate.month.toString().padLeft(2, '0')}-${consultationDate.day.toString().padLeft(2, '0')}',
-        'consultationTimestamp': selectedTimestamp,
-        'status': 'booked',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'lastMessage': '',
-        'lastSenderId': '',
-        'unreadForDoctor': 0,
-        'unreadForUser': 0,
-      });
-      try {
-        await AppNotification.create(
-          uid: user.uid,
-          type: 'consultation',
-          title: 'Booking Berhasil',
-          body:
-              'Konsultasi dengan $doctorName pada $_selectedDay, $_selectedTime WIB berhasil dibuat.',
-        );
-      } catch (_) {}
-      if (!mounted) return;
-      setState(() => _isCreatingConsultation = false);
-      _showBookingSuccessDialog();
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _isCreatingConsultation = false);
-      _showMessage('Gagal membuat booking. Silakan coba lagi.');
+      await AppNotification.create(
+        uid: user.uid,
+        type: 'consultation',
+        title: 'Booking Berhasil',
+        body:
+            'Konsultasi dengan $doctorName pada $_selectedDay, $_selectedTime WIB berhasil dibuat.',
+      );
+    } catch (e) {
+      debugPrint('Notifikasi booking gagal: $e');
     }
+
+    if (!mounted) return;
+    setState(() => _isCreatingConsultation = false);
+    _showBookingSuccessDialog();
+  } catch (e, stackTrace) {
+    debugPrint('ERROR BOOKING: $e');
+    debugPrintStack(stackTrace: stackTrace);
+
+    if (!mounted) return;
+    setState(() => _isCreatingConsultation = false);
+    _showMessage('Booking gagal: $e');
   }
+}
+
   DateTime _getNextOccurrence(String dayName, String timeStr) {
     final now = DateTime.now();
     const dayMap = {
@@ -681,7 +692,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
           backgroundColor: const Color(0xFFFFFCFA),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text(
-            'Booking Berhasil! 🎉',
+            'Booking Berhasil!',
             style: TextStyle(
               fontFamily: 'Fredoka',
               fontSize: 20,
@@ -704,11 +715,14 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
               onPressed: () {
                 Navigator.pop(dialogContext);
                 // NAVIGASI KE KONSULTASI SAYA
-                Navigator.push(
+                Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const UserConsultationsScreen(),
+                    builder: (context) => const DoctorScreen(
+                      initialTab: 1,
+                    ),
                   ),
+                  (route) => route.isFirst,
                 );
               },
               style: ElevatedButton.styleFrom(
