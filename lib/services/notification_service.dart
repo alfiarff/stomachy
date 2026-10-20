@@ -20,6 +20,23 @@ class NotificationService {
   static const int _doctorReplyBaseId = 300000;
   static const int _patientMessageBaseId = 400000;
 
+    // =============================================================
+  // SINYAL PEMBARUAN BADGE LONCENG
+  //
+  // Setiap kali watcher menemukan pesan baru dan membuat
+  // notifikasi in-app, sinyal ini dinaikkan. Lonceng di beranda
+  // (user & dokter) mendengarkan sinyal ini lalu memuat ulang
+  // angka badge-nya, sehingga angka langsung muncul tanpa perlu
+  // pindah halaman atau buka-tutup aplikasi.
+  // =============================================================
+
+  static final ValueNotifier<int> badgeSignal =
+      ValueNotifier<int>(0);
+
+  static void _notifyBadgeChanged() {
+    badgeSignal.value = badgeSignal.value + 1;
+  }
+
   // =============================================================
   // GLOBAL CHAT WATCHER
   //
@@ -224,6 +241,9 @@ class NotificationService {
             notificationId: 'chat_$lastMessageId',
           );
         }
+
+        // Beri tahu semua lonceng badge bahwa ada notifikasi baru.
+        _notifyBadgeChanged();
 
         debugPrint(
           'WATCHER: notifikasi chat dibuat (messageId: $lastMessageId)',

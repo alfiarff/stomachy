@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'screening_screen.dart';
 import 'doctor_screen.dart';
 import 'screening_history_screen.dart';
-import '../widgets/bottom_navigation.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
 import 'artikel_tidur_screen.dart';
 import 'notification_screen.dart';
+
+import '../widgets/bottom_navigation.dart';
+import '../services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1005,6 +1006,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // ===============================================================
 // TOMBOL LONCENG NOTIFIKASI
+//
+// Angka badge dimuat ulang setiap:
+// 1. Widget pertama kali tampil
+// 2. Kembali dari halaman notifikasi
+// 3. Ada sinyal notifikasi baru dari NotificationService
+//    -> angka langsung update tanpa pindah halaman.
 // ===============================================================
 
 class _NotificationBell extends StatefulWidget {
@@ -1023,6 +1030,22 @@ class _NotificationBellState
   void initState() {
     super.initState();
     _refreshCount();
+
+    NotificationService.badgeSignal.addListener(
+      _onBadgeSignal,
+    );
+  }
+
+  void _onBadgeSignal() {
+    _refreshCount();
+  }
+
+  @override
+  void dispose() {
+    NotificationService.badgeSignal.removeListener(
+      _onBadgeSignal,
+    );
+    super.dispose();
   }
 
   Future<void> _refreshCount() async {
@@ -1068,63 +1091,54 @@ class _NotificationBellState
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF5EF),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Icon(
-                hasUnread
-                    ? BootstrapIcons.bell_fill
-                    : BootstrapIcons.bell,
-                size: 24,
-                color: const Color(0xFFB9543A),
-              ),
+          SizedBox(
+            width: 42,
+            height: 42,
+            child: Icon(
+              hasUnread
+                  ? Icons.notifications_rounded
+                  : Icons.notifications_none_rounded,
+              size: 27,
+              color: const Color(0xFFB05039),
             ),
           ),
 
           if (hasUnread)
             Positioned(
               right: -3,
-              top: -3,
+              top: -4,
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 5,
+                  horizontal: 4,
                   vertical: 2,
                 ),
                 constraints: const BoxConstraints(
-                  minWidth: 17,
-                  minHeight: 17,
+                  minWidth: 19,
+                  minHeight: 19,
                 ),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE93636),
+                  color: const Color(0xFFAA4E39),
                   shape: _unreadCount > 9
                       ? BoxShape.rectangle
                       : BoxShape.circle,
                   borderRadius: _unreadCount > 9
-                      ? BorderRadius.circular(9)
+                      ? BorderRadius.circular(10)
                       : null,
                   border: Border.all(
                     color: Colors.white,
                     width: 1.2,
                   ),
                 ),
-                child: Center(
-                  child: Text(
-                    _unreadCount > 9
-                        ? '9+'
-                        : '$_unreadCount',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 9,
-                      height: 1.0,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
+                child: Text(
+                  _unreadCount > 9 ? '9+' : '$_unreadCount',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 9,
+                    height: 1.0,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
                 ),
               ),
