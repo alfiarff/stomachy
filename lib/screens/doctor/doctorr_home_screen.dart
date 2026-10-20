@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,8 +9,7 @@ import 'doctor_notification_screen.dart';
 import 'doctor_patient_chat_screen.dart';
 import 'doctor_patients_screen.dart';
 import 'doctor_profile_screen.dart';
-import '../../services/notification_service.dart';
-import '../notification_screen.dart';
+
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -19,20 +19,10 @@ class DoctorHomeScreen extends StatefulWidget {
 
 class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   int _selectedIndex = 0;
-  int _notificationUnreadCount = 0;
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color brown = const Color(0xFFB05039);
   String _doctorName = 'Dokter';
   Timer? _activationTimer;
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
-      _doctorConsultationSubscription;
-
-  final Map<String,
-      StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>
-      _patientMessageSubscriptions = {};
-
-  final Map<String, Set<String>> _seenPatientMessageIds = {};
-  final Set<String> _initializedMessageStreams = {};
 
   @override
   void initState() {
@@ -43,35 +33,12 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       (_) => _activateDueConsultations(),
     );
     _activateDueConsultations();
-    _startDoctorMessageListener();
-    _refreshNotificationCount();
   }
 
   @override
   void dispose() {
     _activationTimer?.cancel();
-    _doctorConsultationSubscription?.cancel();
-
-    for (final subscription in _patientMessageSubscriptions.values) {
-      subscription.cancel();
-    }
-
-    _patientMessageSubscriptions.clear();
     super.dispose();
-  }
-
-  Future<void> _refreshNotificationCount() async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return;
-
-  final count =
-      await AppNotification.getRecentUnreadCount(user.uid);
-
-  if (!mounted) return;
-
-  setState(() {
-    _notificationUnreadCount = count;
-  });
   }
 
   Future<void> _loadDoctorName() async {
@@ -89,133 +56,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       final user = FirebaseAuth.instance.currentUser;
       setState(() => _doctorName = user?.displayName?.trim().isNotEmpty == true ? user!.displayName!.trim() : 'Dokter');
     }
-  }
-
-  void _startDoctorMessageListener() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    _doctorConsultationSubscription = FirebaseFirestore.instance
-        .collection('consultations')
-        .where('doctorId', isEqualTo: user.uid)
-        .snapshots()
-        .listen(
-      (snapshot) {
-        final activeIds = snapshot.docs.map((doc) => doc.id).toSet();
-
-        // Hentikan listener untuk konsultasi yang sudah tidak ada.
-        final removedIds = _patientMessageSubscriptions.keys
-            .where((id) => !activeIds.contains(id))
-            .toList();
-
-        for (final id in removedIds) {
-          _patientMessageSubscriptions.remove(id)?.cancel();
-          _seenPatientMessageIds.remove(id);
-          _initializedMessageStreams.remove(id);
-        }
-
-        for (final consultation in snapshot.docs) {
-          if (_patientMessageSubscriptions.containsKey(consultation.id)) {
-            continue;
-          }
-
-          final consultationId = consultation.id;
-          final consultationData = consultation.data();
-          final patientName =
-              (consultationData['userName'] ??
-                      consultationData['name'] ??
-                      'Pasien')
-                  .toString();
-
-          _seenPatientMessageIds[consultationId] = {};
-
-          final subscription = consultation.reference
-              .collection('messages')
-              .snapshots()
-              .listen(
-            (messagesSnapshot) {
-              final seen = _seenPatientMessageIds[consultationId];
-              if (seen == null) return;
-
-              // Snapshot pertama menjadi baseline:
-              // pesan lama tidak memicu notifikasi baru.
-              if (!_initializedMessageStreams.contains(consultationId)) {
-                seen.addAll(messagesSnapshot.docs.map((doc) => doc.id));
-                _initializedMessageStreams.add(consultationId);
-                return;
-              }
-
-              for (final messageDoc in messagesSnapshot.docs) {
-                if (seen.contains(messageDoc.id)) continue;
-
-                seen.add(messageDoc.id);
-
-                final data = messageDoc.data();
-                final role =
-                    (data['senderRole'] ?? '').toString().toLowerCase();
-                final senderId = (data['senderId'] ?? '').toString();
-                final message =
-                    (data['message'] ?? '').toString().trim();
-
-                final isPatientMessage = [
-                  'user',
-                  'patient',
-                  'pasien',
-                ].contains(role);
-
-                if (!isPatientMessage ||
-                    senderId == user.uid ||
-                    message.isEmpty) {
-                  continue;
-                }
-
-                _notifyNewPatientMessage(
-                  consultationId: consultationId,
-                  messageId: messageDoc.id,
-                  patientName: patientName,
-                  message: message,
-                  doctorUid: user.uid,
-                );
-              }
-            },
-            onError: (Object error) {
-              debugPrint(
-                'LISTENER PESAN PASIEN ERROR: $error',
-              );
-            },
-          );
-
-          _patientMessageSubscriptions[consultationId] = subscription;
-        }
-      },
-      onError: (Object error) {
-        debugPrint('LISTENER KONSULTASI ERROR: $error');
-      },
-    );
-  }
-
-  Future<void> _notifyNewPatientMessage({
-    required String consultationId,
-    required String messageId,
-    required String patientName,
-    required String message,
-    required String doctorUid,
-  }) async {
-    final uniqueId = 'patient_message_${consultationId}_$messageId';
-
-    await NotificationService.showPatientMessage(
-      messageId: uniqueId,
-      patientName: patientName,
-      message: message,
-    );
-
-    await AppNotification.create(
-      uid: doctorUid,
-      type: 'chat',
-      title: 'Pesan Baru dari $patientName',
-      body: message,
-      notificationId: uniqueId,
-    );
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _consultationStream() {
@@ -305,15 +145,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     }
   }
 
-  Future<void> _openNotifications() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const DoctorNotificationScreen(),
-      ),
-    );
-
-    await _refreshNotificationCount();
+  void _openNotifications() {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const DoctorNotificationScreen()));
   }
 
   void _openProfile() {
@@ -359,9 +192,48 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   }
 
   Widget _buildHeader(int unreadCount) {
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return _buildHeaderContent(
+        unreadCount: unreadCount,
+        photoBase64: null,
+        googlePhotoUrl: '',
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data();
+        final photoValue = data?['photoBase64']?.toString().trim() ?? '';
+        String googlePhotoUrl = user.photoURL ?? '';
+
+        if (googlePhotoUrl.startsWith('data:')) {
+          googlePhotoUrl = '';
+        }
+
+        return _buildHeaderContent(
+          unreadCount: unreadCount,
+          photoBase64: photoValue.isNotEmpty ? photoValue : null,
+          googlePhotoUrl: googlePhotoUrl,
+        );
+      },
+    );
+  }
+
+  Widget _buildHeaderContent({
+    required int unreadCount,
+    required String? photoBase64,
+    required String googlePhotoUrl,
+  }) {
     return SizedBox(
       height: 75,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Align(
@@ -387,7 +259,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                     color: Color(0xFFB05039),
                   ),
                 ),
-                if (_notificationUnreadCount > 0)
+                if (unreadCount > 0)
                   Positioned(
                     right: -3,
                     top: -4,
@@ -400,13 +272,12 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: Text(
-                        _notificationUnreadCount > 9
-                            ? '9+'
-                            : _notificationUnreadCount.toString(),
+                        unreadCount > 9 ? '9+' : unreadCount.toString(),
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
+                          fontFamily: 'Nunito',
+                          fontSize: 9,
                           fontWeight: FontWeight.w800,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -416,19 +287,77 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           ),
           const SizedBox(width: 10),
           GestureDetector(
-            onTap: _openProfile,
-            child: const SizedBox(
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DoctorProfileScreen(),
+                ),
+              );
+              if (!mounted) return;
+              setState(() {});
+            },
+            child: Container(
               width: 42,
               height: 42,
-              child: Icon(
-                Icons.account_circle_rounded,
-                size: 39,
-                color: Color(0xFFB05039),
+              clipBehavior: Clip.antiAlias,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFE5D8),
+                shape: BoxShape.circle,
+              ),
+              child: _buildDoctorProfilePhoto(
+                photoBase64: photoBase64,
+                googlePhotoUrl: googlePhotoUrl,
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDoctorProfilePhoto({
+    required String? photoBase64,
+    required String googlePhotoUrl,
+  }) {
+    if (photoBase64 != null && photoBase64.isNotEmpty) {
+      try {
+        String encodedPhoto = photoBase64;
+        // Mendukung Base64 biasa maupun data URI: data:image/...;base64,...
+        if (encodedPhoto.startsWith('data:') && encodedPhoto.contains(',')) {
+          encodedPhoto = encodedPhoto.substring(encodedPhoto.indexOf(',') + 1);
+        }
+
+        return Image.memory(
+          base64Decode(encodedPhoto),
+          width: 42,
+          height: 42,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _defaultDoctorProfileIcon(),
+        );
+      } catch (_) {
+        // Jika Base64 tidak valid, coba foto Firebase Authentication.
+      }
+    }
+
+    if (googlePhotoUrl.isNotEmpty) {
+      return Image.network(
+        googlePhotoUrl,
+        width: 42,
+        height: 42,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _defaultDoctorProfileIcon(),
+      );
+    }
+
+    return _defaultDoctorProfileIcon();
+  }
+
+  Widget _defaultDoctorProfileIcon() {
+    return const Icon(
+      Icons.account_circle_rounded,
+      size: 39,
+      color: Color(0xFFB05039),
     );
   }
 
