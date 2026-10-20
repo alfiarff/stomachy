@@ -24,10 +24,7 @@ class AdminContentDetailScreen extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeroImage(),
-                    _buildContentBody(),
-                  ],
+                  children: [_buildHeroImage(), _buildContentBody()],
                 ),
               ),
             ),
@@ -193,11 +190,7 @@ class AdminContentDetailScreen extends StatelessWidget {
           const SizedBox(height: 18),
 
           // DIVIDER
-          const Divider(
-            color: Color(0xFFE0CBBE),
-            thickness: 1,
-            height: 1,
-          ),
+          const Divider(color: Color(0xFFE0CBBE), thickness: 1, height: 1),
 
           const SizedBox(height: 18),
 
@@ -236,7 +229,8 @@ class AdminContentDetailScreen extends StatelessWidget {
       }
 
       // Heading: baris HURUF BESAR SEMUA
-      final isAllCaps = trimmed.toUpperCase() == trimmed &&
+      final isAllCaps =
+          trimmed.toUpperCase() == trimmed &&
           trimmed.length > 3 &&
           !trimmed.contains(RegExp(r'[.]$')) &&
           !trimmed.startsWith('-') &&
@@ -287,11 +281,7 @@ class AdminContentDetailScreen extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.only(top: 6),
-            child: Icon(
-              Icons.circle,
-              size: 5,
-              color: Color(0xFFA9583C),
-            ),
+            child: Icon(Icons.circle, size: 5, color: Color(0xFFA9583C)),
           ),
           const SizedBox(width: 10),
           Expanded(

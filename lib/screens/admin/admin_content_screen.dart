@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../services/admin_content_service.dart';
 import '../../widgets/admin_bottom_navigation.dart';
@@ -216,8 +216,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     final type = _selectedTab == 0
         ? 'edukasi'
         : _selectedTab == 1
-            ? 'makanan'
-            : 'olahraga';
+        ? 'makanan'
+        : 'olahraga';
 
     return StreamBuilder<List<AdminContentItem>>(
       stream: AdminContentService.getContentsStream(type),
@@ -248,7 +248,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     );
   }
 
-    Widget _buildContentCard(AdminContentItem item) {
+  Widget _buildContentCard(AdminContentItem item) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -277,8 +277,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
           children: [
             if (item.category.isNotEmpty)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF0D7),
                   borderRadius: BorderRadius.circular(20),
@@ -395,13 +394,13 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     final type = _selectedTab == 0
         ? 'edukasi'
         : _selectedTab == 1
-            ? 'makanan'
-            : 'olahraga';
+        ? 'makanan'
+        : 'olahraga';
     final defaultCategory = _selectedTab == 0
         ? 'Materi Dasar'
         : _selectedTab == 1
-            ? 'Karbohidrat'
-            : 'Relaksasi';
+        ? 'Karbohidrat'
+        : 'Relaksasi';
 
     if (editItem != null) {
       _titleController.text = editItem.title;
@@ -430,9 +429,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                 ),
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(22),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
                 ),
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 child: SingleChildScrollView(
@@ -511,7 +508,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                         maxLines: 6,
                         textCapitalization: TextCapitalization.sentences,
                         decoration: _inputDecoration(
-                            'Tulis isi lengkap konten di sini...'),
+                          'Tulis isi lengkap konten di sini...',
+                        ),
                       ),
                       const SizedBox(height: 20),
                       SizedBox(
@@ -565,8 +563,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFB6A8A2)),
       filled: true,
       fillColor: const Color(0xFFFFF5EF),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -581,8 +578,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     final type = _selectedTab == 0
         ? 'edukasi'
         : _selectedTab == 1
-            ? 'makanan'
-            : 'olahraga';
+        ? 'makanan'
+        : 'olahraga';
     final imageAsset = 'assets/images/edukasi_gerd.png';
 
     if (title.isEmpty) {
@@ -723,7 +720,9 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.zero,
                             side: const BorderSide(
-                                color: Color(0xFFB05039), width: 0.9),
+                              color: Color(0xFFB05039),
+                              width: 0.9,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -883,6 +882,3 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     );
   }
 }
-
-
-

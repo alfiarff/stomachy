@@ -46,11 +46,11 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
         return;
       }
 
-      final DocumentSnapshot<Map<String, dynamic>> doc =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .get();
+      final DocumentSnapshot<Map<String, dynamic>> doc = await FirebaseFirestore
+          .instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
 
       if (doc.exists) {
         final Map<String, dynamic>? data = doc.data();
@@ -120,16 +120,10 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
     });
 
     try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set(
-        {
-          'doctorSchedule': _schedule,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'doctorSchedule': _schedule,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       if (!mounted) return;
 
@@ -187,16 +181,13 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
 
   Map<String, dynamic> _getDayData(String day) {
     return _schedule[day] ??
-        {
-          'active': false,
-          'start': '08:00',
-          'end': '16:00',
-        };
+        {'active': false, 'start': '08:00', 'end': '16:00'};
   }
 
   void _toggleDay(String day, bool value) {
-    final Map<String, dynamic> current =
-        Map<String, dynamic>.from(_getDayData(day));
+    final Map<String, dynamic> current = Map<String, dynamic>.from(
+      _getDayData(day),
+    );
 
     current['active'] = value;
 
@@ -205,44 +196,29 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
     });
   }
 
-  Future<void> _pickTime({
-    required String day,
-    required bool isStart,
-  }) async {
+  Future<void> _pickTime({required String day, required bool isStart}) async {
     final Map<String, dynamic> current = _getDayData(day);
 
-    final String currentTime =
-        isStart ? current['start'].toString() : current['end'].toString();
+    final String currentTime = isStart
+        ? current['start'].toString()
+        : current['end'].toString();
 
     final List<String> parts = currentTime.split(':');
 
     final TimeOfDay initialTime = TimeOfDay(
-      hour: int.tryParse(
-            parts.isNotEmpty ? parts[0] : '8',
-          ) ??
-          8,
-      minute: int.tryParse(
-            parts.length > 1 ? parts[1] : '0',
-          ) ??
-          0,
+      hour: int.tryParse(parts.isNotEmpty ? parts[0] : '8') ?? 8,
+      minute: int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0,
     );
 
     final TimeOfDay? selectedTime = await showTimePicker(
       context: context,
       initialTime: initialTime,
-      builder: (
-        BuildContext context,
-        Widget? child,
-      ) {
+      builder: (BuildContext context, Widget? child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: brown,
-            ),
-            textTheme: Theme.of(context).textTheme.apply(
-              bodyColor: Colors.black,
-              displayColor: Colors.black,
-            ),
+            colorScheme: Theme.of(context).colorScheme.copyWith(primary: brown),
+            textTheme: Theme.of(context).textTheme
+                .apply(bodyColor: Colors.black, displayColor: Colors.black),
           ),
           child: child!,
         );
@@ -251,14 +227,11 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
 
     if (selectedTime == null) return;
 
-    final String hour =
-        selectedTime.hour.toString().padLeft(2, '0');
+    final String hour = selectedTime.hour.toString().padLeft(2, '0');
 
-    final String minute =
-        selectedTime.minute.toString().padLeft(2, '0');
+    final String minute = selectedTime.minute.toString().padLeft(2, '0');
 
-    final Map<String, dynamic> updated =
-        Map<String, dynamic>.from(current);
+    final Map<String, dynamic> updated = Map<String, dynamic>.from(current);
 
     updated[isStart ? 'start' : 'end'] = '$hour:$minute';
 
@@ -281,12 +254,7 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
               )
             : SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  22,
-                  16,
-                  22,
-                  30,
-                ),
+                padding: const EdgeInsets.fromLTRB(22, 16, 22, 30),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -423,12 +391,7 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        13,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 13),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -448,9 +411,7 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
                 width: 35,
                 height: 35,
                 decoration: BoxDecoration(
-                  color: active
-                      ? softOrange
-                      : const Color(0xFFF0ECE9),
+                  color: active ? softOrange : const Color(0xFFF0ECE9),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -492,10 +453,7 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
                     label: 'Mulai',
                     time: start,
                     onTap: () {
-                      _pickTime(
-                        day: day,
-                        isStart: true,
-                      );
+                      _pickTime(day: day, isStart: true);
                     },
                   ),
                 ),
@@ -505,10 +463,7 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
                     label: 'Selesai',
                     time: end,
                     onTap: () {
-                      _pickTime(
-                        day: day,
-                        isStart: false,
-                      );
+                      _pickTime(day: day, isStart: false);
                     },
                   ),
                 ),
@@ -543,17 +498,11 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         height: 58,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color(0xFFF0D9CC),
-            width: 0.8,
-          ),
+          border: Border.all(color: const Color(0xFFF0D9CC), width: 0.8),
         ),
         child: Row(
           children: [

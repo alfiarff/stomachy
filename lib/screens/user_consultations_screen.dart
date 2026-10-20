@@ -1,18 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'consultation_chat_screen.dart';
 import 'notification_screen.dart';
 
 class UserConsultationsScreen extends StatefulWidget {
   final String searchQuery;
 
-  const UserConsultationsScreen({
-    super.key,
-    this.searchQuery = '',
-  });
+  const UserConsultationsScreen({super.key, this.searchQuery = ''});
 
   @override
   State<UserConsultationsScreen> createState() =>
@@ -82,14 +81,10 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
         final status = (data['status'] ?? '').toString().toLowerCase();
 
         if (status == 'booked' && _isDue(data)) {
-          batch.set(
-            doc.reference,
-            {
-              'status': 'active',
-              'updatedAt': FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true),
-          );
+          batch.set(doc.reference, {
+            'status': 'active',
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
           due.add(MapEntry(doc.id, data));
         }
       }
@@ -98,8 +93,8 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
         await batch.commit();
         for (final item in due) {
           try {
-            final doctorName =
-                (item.value['doctorName'] ?? 'Dokter').toString();
+            final doctorName = (item.value['doctorName'] ?? 'Dokter')
+                .toString();
             await AppNotification.create(
               uid: user.uid,
               type: 'consultation',
@@ -134,10 +129,7 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
             const SnackBar(
               content: Text(
                 'Belum waktunya konsultasi.',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                ),
+                style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
               ),
               behavior: SnackBarBehavior.floating,
             ),
@@ -156,10 +148,7 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
           const SnackBar(
             content: Text(
               'Konsultasi ini belum dapat dibuka.',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 11,
-              ),
+              style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
             ),
             behavior: SnackBarBehavior.floating,
           ),
@@ -170,10 +159,7 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
     await FirebaseFirestore.instance
         .collection('consultations')
         .doc(consultationId)
-        .set(
-      {'unreadForUser': 0},
-      SetOptions(merge: true),
-    );
+        .set({'unreadForUser': 0}, SetOptions(merge: true));
 
     if (!mounted) return;
 
@@ -231,11 +217,8 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
         child: Image.network(
           image,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(
-            Icons.person_rounded,
-            size: 40,
-            color: primaryBrown,
-          ),
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.person_rounded, size: 40, color: primaryBrown),
         ),
       );
     }
@@ -253,11 +236,8 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
           child: Image.memory(
             base64Decode(image),
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const Icon(
-              Icons.person_rounded,
-              size: 40,
-              color: primaryBrown,
-            ),
+            errorBuilder: (_, __, ___) =>
+                const Icon(Icons.person_rounded, size: 40, color: primaryBrown),
           ),
         );
       } catch (_) {}
@@ -270,11 +250,7 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
         shape: BoxShape.circle,
         color: Color(0xFFFFE3D1),
       ),
-      child: const Icon(
-        Icons.person_rounded,
-        size: 40,
-        color: primaryBrown,
-      ),
+      child: const Icon(Icons.person_rounded, size: 40, color: primaryBrown),
     );
   }
 
@@ -346,8 +322,8 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
                         status == 'completed'
                             ? Icons.done_all_rounded
                             : canChat
-                                ? Icons.chat_bubble_rounded
-                                : Icons.schedule_rounded,
+                            ? Icons.chat_bubble_rounded
+                            : Icons.schedule_rounded,
                         size: 14,
                         color: statusColor,
                       ),

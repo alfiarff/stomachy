@@ -28,11 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
   // CONTROLLER
   // ===============================================================
 
-  final TextEditingController emailController =
-      TextEditingController();
+  final TextEditingController emailController = TextEditingController();
 
-  final TextEditingController passwordController =
-      TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   // ===============================================================
   // STATE
@@ -67,9 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // =============================================================
 
     if (email.isEmpty || password.isEmpty) {
-      _showMessage(
-        'Email dan kata sandi wajib diisi.',
-      );
+      _showMessage('Email dan kata sandi wajib diisi.');
       return;
     }
 
@@ -82,8 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // LOGIN FIREBASE AUTHENTICATION
       // ===========================================================
 
-      final credential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -91,9 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final user = credential.user;
 
       if (user == null) {
-        throw Exception(
-          'Data pengguna tidak ditemukan.',
-        );
+        throw Exception('Data pengguna tidak ditemukan.');
       }
 
       // ===========================================================
@@ -114,21 +107,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
-        _showMessage(
-          'Data akun belum terdaftar di sistem.',
-        );
+        _showMessage('Data akun belum terdaftar di sistem.');
 
         return;
       }
 
       final data = userDoc.data();
 
+      if (data == null) {
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        _showMessage('Data akun tidak valid.');
+        return;
+      }
+
+      if (data['isActive'] == false) {
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        _showMessage('Akun ini telah dinonaktifkan oleh administrator.');
+        return;
+      }
+
       // ===========================================================
       // AMBIL ROLE
       // ===========================================================
 
-      final String role =
-          data?['role']?.toString().trim().toLowerCase() ?? '';
+      final String role = data?['role']?.toString().trim().toLowerCase() ?? '';
 
       // DEBUG
       debugPrint('================================');
@@ -156,8 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
 
         case 'user-not-found':
-          message =
-              'Akun dengan email tersebut tidak ditemukan.';
+          message = 'Akun dengan email tersebut tidak ditemukan.';
           break;
 
         case 'wrong-password':
@@ -165,23 +172,19 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
 
         case 'invalid-credential':
-          message =
-              'Email atau kata sandi salah.';
+          message = 'Email atau kata sandi salah.';
           break;
 
         case 'user-disabled':
-          message =
-              'Akun ini telah dinonaktifkan.';
+          message = 'Akun ini telah dinonaktifkan.';
           break;
 
         case 'too-many-requests':
-          message =
-              'Terlalu banyak percobaan login. Coba lagi nanti.';
+          message = 'Terlalu banyak percobaan login. Coba lagi nanti.';
           break;
 
         case 'network-request-failed':
-          message =
-              'Tidak ada koneksi internet. Coba lagi.';
+          message = 'Tidak ada koneksi internet. Coba lagi.';
           break;
       }
 
@@ -189,13 +192,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      debugPrint(
-        'ERROR LOGIN: $e',
-      );
+      debugPrint('ERROR LOGIN: $e');
 
-      _showMessage(
-        'Terjadi kesalahan. Silakan coba lagi.',
-      );
+      _showMessage('Terjadi kesalahan. Silakan coba lagi.');
     } finally {
       if (mounted) {
         setState(() {
@@ -229,9 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (role == 'admin') {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (context) => const AdminHomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
         (route) => false,
       );
 
@@ -242,22 +239,13 @@ class _LoginScreenState extends State<LoginScreen> {
     // ROLE DOKTER
     // =============================================================
 
-    if (role == 'doctor' ||
-        role == 'dokter') {
+    if (role == 'doctor' || role == 'dokter') {
       Navigator.pushAndRemoveUntil(
-
         context,
 
-        MaterialPageRoute(
-
-          builder: (context) =>
-
-              const DoctorHomeScreen(),
-
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorHomeScreen()),
 
         (route) => false,
-
       );
 
       return;
@@ -267,23 +255,13 @@ class _LoginScreenState extends State<LoginScreen> {
     // ROLE USER
     // =============================================================
 
-    if (role == 'user' ||
-        role == 'pengguna' ||
-        role.isEmpty) {
+    if (role == 'user' || role == 'pengguna' || role.isEmpty) {
       Navigator.pushAndRemoveUntil(
-
         context,
 
-        MaterialPageRoute(
-
-          builder: (context) =>
-
-              const HomeScreen(),
-
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
 
         (route) => false,
-
       );
 
       return;
@@ -297,9 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
 
-    _showMessage(
-      'Role akun tidak dikenali. Hubungi administrator.',
-    );
+    _showMessage('Role akun tidak dikenali. Hubungi administrator.');
   }
 
   // ===============================================================
@@ -318,15 +294,12 @@ class _LoginScreenState extends State<LoginScreen> {
       // LOGIN GOOGLE
       // ===========================================================
 
-      final credential =
-          await GoogleAuthService.signInWithGoogle();
+      final credential = await GoogleAuthService.signInWithGoogle();
 
       final user = credential.user;
 
       if (user == null) {
-        throw Exception(
-          'Akun Google tidak ditemukan.',
-        );
+        throw Exception('Akun Google tidak ditemukan.');
       }
 
       // ===========================================================
@@ -337,8 +310,7 @@ class _LoginScreenState extends State<LoginScreen> {
           .collection('users')
           .doc(user.uid);
 
-      final existingDoc =
-          await userRef.get();
+      final existingDoc = await userRef.get();
 
       // ===========================================================
       // CEK ROLE YANG SUDAH ADA
@@ -347,18 +319,9 @@ class _LoginScreenState extends State<LoginScreen> {
       String role = '';
 
       if (existingDoc.exists) {
-        final existingData =
-            existingDoc.data();
+        final existingData = existingDoc.data();
 
-        role = existingData?['role']
-
-                ?.toString()
-
-                .trim()
-
-                .toLowerCase() ??
-
-            '';
+        role = existingData?['role']?.toString().trim().toLowerCase() ?? '';
       }
 
       // ===========================================================
@@ -368,15 +331,10 @@ class _LoginScreenState extends State<LoginScreen> {
       // role TIDAK DITIMPA.
       // ===========================================================
 
-      await userRef.set(
-        {
-          'name': user.displayName ?? '',
-          'email': user.email ?? '',
-        },
-        SetOptions(
-          merge: true,
-        ),
-      );
+      await userRef.set({
+        'name': user.displayName ?? '',
+        'email': user.email ?? '',
+      }, SetOptions(merge: true));
 
       // ===========================================================
       // DEBUG
@@ -399,8 +357,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
 
-      String message =
-          'Google gagal masuk.';
+      String message = 'Google gagal masuk.';
 
       switch (e.code) {
         case 'account-exists-with-different-credential':
@@ -409,18 +366,15 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
 
         case 'network-request-failed':
-          message =
-              'Tidak ada koneksi internet. Coba lagi.';
+          message = 'Tidak ada koneksi internet. Coba lagi.';
           break;
 
         case 'user-disabled':
-          message =
-              'Akun ini telah dinonaktifkan.';
+          message = 'Akun ini telah dinonaktifkan.';
           break;
 
         case 'invalid-credential':
-          message =
-              'Kredensial Google tidak valid. Silakan coba lagi.';
+          message = 'Kredensial Google tidak valid. Silakan coba lagi.';
           break;
       }
 
@@ -428,13 +382,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      debugPrint(
-        'ERROR GOOGLE LOGIN: $e',
-      );
+      debugPrint('ERROR GOOGLE LOGIN: $e');
 
-      _showMessage(
-        'Google gagal masuk. Silakan coba lagi.',
-      );
+      _showMessage('Google gagal masuk. Silakan coba lagi.');
     } finally {
       if (mounted) {
         setState(() {
@@ -455,12 +405,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(
-            message,
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-            ),
-          ),
+          content: Text(message, style: const TextStyle(fontFamily: 'Nunito')),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -478,56 +423,34 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: const Color(0xFFFFF4EC),
 
       body: SafeArea(
-
         child: SingleChildScrollView(
-
-          physics:
-              const BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(),
 
           child: Padding(
-
-            padding: EdgeInsets.symmetric(
-
-              horizontal:
-                  size.width * 0.09,
-
-            ),
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.09),
 
             child: Column(
-
               children: [
-
                 // =================================================
 
                 // JARAK ATAS
 
                 // =================================================
-
-                SizedBox(
-
-                  height:
-                      size.height * 0.035,
-
-                ),
+                SizedBox(height: size.height * 0.035),
 
                 // =================================================
 
                 // LOGO
 
                 // =================================================
-
                 Image.asset(
-
                   'assets/images/logo_utama_stomachy.png',
 
-                  width:
-                      size.width * 0.48,
+                  width: size.width * 0.48,
 
-                  height:
-                      size.height * 0.19,
+                  height: size.height * 0.19,
 
                   fit: BoxFit.contain,
-
                 ),
 
                 // =================================================
@@ -535,132 +458,60 @@ class _LoginScreenState extends State<LoginScreen> {
                 // PESAN
 
                 // =================================================
-
                 Container(
-
                   width: double.infinity,
 
-                  padding:
-                      EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.025,
 
-                    horizontal:
-                        size.width * 0.025,
-
-                    vertical:
-                        size.height * 0.012,
-
+                    vertical: size.height * 0.012,
                   ),
 
-                  decoration:
-                      BoxDecoration(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFE6D5),
 
-                    color:
-                        const Color(0xFFFFE6D5),
-
-                    borderRadius:
-                        BorderRadius.circular(
-
-                      10,
-
-                    ),
+                    borderRadius: BorderRadius.circular(10),
 
                     boxShadow: const [
-
                       BoxShadow(
-
-                        color:
-                            Color(0x22000000),
+                        color: Color(0x22000000),
 
                         blurRadius: 3,
 
-                        offset:
-                            Offset(0, 2),
-
+                        offset: Offset(0, 2),
                       ),
-
                     ],
-
                   ),
 
                   child: Row(
-
                     children: [
-
                       Icon(
+                        Icons.verified_user_outlined,
 
-                        Icons
+                        size: size.width * 0.04,
 
-                            .verified_user_outlined,
-
-                        size:
-
-                            size.width *
-
-                                0.04,
-
-                        color:
-
-                            const Color(
-
-                          0xFFFF7775,
-
-                        ),
-
+                        color: const Color(0xFFFF7775),
                       ),
 
-                      SizedBox(
-
-                        width:
-
-                            size.width *
-
-                                0.02,
-
-                      ),
+                      SizedBox(width: size.width * 0.02),
 
                       Expanded(
-
                         child: Text(
-
                           'Yuk, mulai jaga kesehatan lambungmu bersama STOMACHY!',
 
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
 
+                            fontSize: size.width * 0.021,
 
-                          style:
-                              TextStyle(
+                            fontWeight: FontWeight.w500,
 
-                            fontFamily:
-
-                                'Nunito',
-
-                            fontSize:
-
-                                size.width *
-
-                                    0.021,
-
-                            fontWeight:
-
-                                FontWeight.w500,
-
-                            color:
-
-                                const Color(
-
-                              0xFF493C37,
-
-                            ),
-
+                            color: const Color(0xFF493C37),
                           ),
-
                         ),
-
                       ),
-
                     ],
-
                   ),
-
                 ),
 
                 // =================================================
@@ -668,27 +519,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 // JARAK
 
                 // =================================================
-
-                SizedBox(
-
-                  height:
-                      size.height * 0.025,
-
-                ),
+                SizedBox(height: size.height * 0.025),
 
                 // =================================================
 
                 // LOGIN CARD
 
                 // =================================================
-
                 Container(
-
                   width: double.infinity,
 
-                  padding:
-                      EdgeInsets.fromLTRB(
-
+                  padding: EdgeInsets.fromLTRB(
                     size.width * 0.05,
 
                     size.height * 0.032,
@@ -696,662 +537,270 @@ class _LoginScreenState extends State<LoginScreen> {
                     size.width * 0.05,
 
                     size.height * 0.022,
-
                   ),
 
-                  decoration:
-                      BoxDecoration(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFCF9),
 
-                    color:
-                        const Color(0xFFFFFCF9),
-
-                    borderRadius:
-                        BorderRadius.circular(
-
-                      25,
-
-                    ),
+                    borderRadius: BorderRadius.circular(25),
 
                     boxShadow: const [
-
                       BoxShadow(
-
-                        color:
-                            Color(0x33000000),
+                        color: Color(0x33000000),
 
                         blurRadius: 5,
 
-                        offset:
-                            Offset(0, 4),
-
+                        offset: Offset(0, 4),
                       ),
-
                     ],
-
                   ),
 
                   child: Column(
-
                     children: [
-
                       // =========================================
 
                       // JUDUL
 
                       // =========================================
-
                       Text(
-
                         'Selamat Datang Kembali!',
 
+                        textAlign: TextAlign.center,
 
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
 
-                        textAlign:
-                            TextAlign.center,
+                          fontSize: size.width * 0.045,
 
+                          fontWeight: FontWeight.w700,
 
-
-                        style:
-                            TextStyle(
-
-                          fontFamily:
-
-                              'Nunito',
-
-                          fontSize:
-
-                              size.width *
-
-                                  0.045,
-
-                          fontWeight:
-
-                              FontWeight.w700,
-
-                          color:
-                              const Color(
-
-                            0xFF171310,
-
-                          ),
-
+                          color: const Color(0xFF171310),
                         ),
-
                       ),
 
-
-
-                      SizedBox(
-
-                        height:
-                            size.height *
-
-                                0.004,
-
-                      ),
-
-
+                      SizedBox(height: size.height * 0.004),
 
                       // =========================================
 
                       // SUBTITLE
 
                       // =========================================
-
                       Text(
-
                         'Masuk untuk melanjutkan ke STOMACHY!',
 
+                        textAlign: TextAlign.center,
 
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
 
-                        textAlign:
-                            TextAlign.center,
+                          fontSize: size.width * 0.023,
 
-
-
-                        style:
-                            TextStyle(
-
-                          fontFamily:
-
-                              'Nunito',
-
-                          fontSize:
-
-                              size.width *
-
-                                  0.023,
-
-                          color:
-                              Colors.grey[600],
-
+                          color: Colors.grey[600],
                         ),
-
                       ),
 
-
-
-                      SizedBox(
-
-                        height:
-                            size.height *
-
-                                0.018,
-
-                      ),
-
-
+                      SizedBox(height: size.height * 0.018),
 
                       // =========================================
 
                       // EMAIL
 
                       // =========================================
-
                       _buildTextField(
+                        controller: emailController,
 
-                        controller:
+                        hintText: 'Email',
 
-                            emailController,
+                        icon: Icons.email_outlined,
 
-                        hintText:
-
-                            'Email',
-
-                        icon:
-
-                            Icons
-
-                                .email_outlined,
-
-                        width:
-
-                            size.width,
-
+                        width: size.width,
                       ),
 
-
-
-                      SizedBox(
-
-                        height:
-                            size.height *
-
-                                0.012,
-
-                      ),
-
-
+                      SizedBox(height: size.height * 0.012),
 
                       // =========================================
 
                       // PASSWORD
 
                       // =========================================
+                      _buildPasswordField(size),
 
-                      _buildPasswordField(
-
-                        size,
-
-                      ),
-
-
-
-                      SizedBox(
-
-                        height:
-                            size.height *
-
-                                0.008,
-
-                      ),
-
-
+                      SizedBox(height: size.height * 0.008),
 
                       // =========================================
 
                       // LUPA PASSWORD
 
                       // =========================================
-
                       Align(
+                        alignment: Alignment.centerRight,
 
-                        alignment:
-                            Alignment
+                        child: GestureDetector(
+                          onTap: isLoading
+                              ? null
+                              : () {
+                                  Navigator.push(
+                                    context,
 
-                                .centerRight,
-
-
-
-                        child:
-                            GestureDetector(
-
-                          onTap:
-                              isLoading
-
-                                  ? null
-
-                                  : () {
-
-                                      Navigator
-
-                                          .push(
-
-                                        context,
-
-                                        MaterialPageRoute(
-
-                                          builder:
-
-                                              (context) =>
-
-                                                  const ForgotPasswordScreen(),
-
-                                        ),
-
-                                      );
-
-                                    },
-
-
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ForgotPasswordScreen(),
+                                    ),
+                                  );
+                                },
 
                           child: Text(
-
                             'Lupa Kata Sandi?',
 
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
 
+                              fontSize: size.width * 0.021,
 
-                            style:
-                                TextStyle(
+                              fontWeight: FontWeight.w700,
 
-                              fontFamily:
-
-                                  'Nunito',
-
-                              fontSize:
-
-                                  size.width *
-
-                                      0.021,
-
-                              fontWeight:
-
-                                  FontWeight.w700,
-
-                              color:
-                                  const Color(
-
-                                0xFFC5674E,
-
-                              ),
-
+                              color: const Color(0xFFC5674E),
                             ),
-
                           ),
-
                         ),
-
                       ),
 
-
-
-                      SizedBox(
-
-                        height:
-                            size.height *
-
-                                0.018,
-
-                      ),
-
-
+                      SizedBox(height: size.height * 0.018),
 
                       // =========================================
 
                       // BUTTON MASUK
 
                       // =========================================
-
                       SizedBox(
+                        width: double.infinity,
 
-                        width:
-                            double.infinity,
+                        height: size.height * 0.045,
 
-                        height:
-                            size.height *
+                        child: ElevatedButton(
+                          onPressed: isLoading ? null : _login,
 
-                                0.045,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFB7D1B0),
 
+                            disabledBackgroundColor: const Color(0xFFD5DFD2),
 
-
-                        child:
-                            ElevatedButton(
-
-                          onPressed:
-                              isLoading
-
-                                  ? null
-
-                                  : _login,
-
-
-
-                          style:
-                              ElevatedButton
-
-                                  .styleFrom(
-
-                            backgroundColor:
-
-                                const Color(
-
-                                  0xFFB7D1B0,
-
-                                ),
-
-
-
-                            disabledBackgroundColor:
-
-                                const Color(
-
-                                  0xFFD5DFD2,
-
-                                ),
-
-
-
-                            foregroundColor:
-
-                                Colors.black,
-
-
+                            foregroundColor: Colors.black,
 
                             elevation: 0,
 
-
-
-                            shape:
-                                RoundedRectangleBorder(
-
-                                  borderRadius:
-
-                                      BorderRadius.circular(
-
-                                    30,
-
-                                  ),
-
-                                ),
-
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
                           ),
 
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 20,
 
+                                  height: 20,
 
-                          child:
-                              isLoading
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  'Masuk',
 
-                                  ? const SizedBox(
+                                  style: TextStyle(
+                                    fontFamily: 'Nunito',
 
-                                      width: 20,
+                                    fontSize: size.width * 0.030,
 
-                                      height: 20,
-
-                                      child:
-
-                                          CircularProgressIndicator(
-
-                                        strokeWidth:
-
-                                            2,
-
-                                      ),
-
-                                    )
-
-                                  : Text(
-
-                                      'Masuk',
-
-
-
-                                      style:
-                                          TextStyle(
-
-                                        fontFamily:
-
-                                            'Nunito',
-
-                                        fontSize:
-
-                                            size.width *
-
-                                                0.030,
-
-                                        fontWeight:
-
-                                            FontWeight.w700,
-
-                                      ),
-
-                                    ),
-
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                         ),
-
                       ),
 
-
-
-                      SizedBox(
-
-                        height:
-                            size.height *
-
-                                0.025,
-
-                      ),
-
-
+                      SizedBox(height: size.height * 0.025),
 
                       // =========================================
 
                       // DIVIDER
 
                       // =========================================
+                      _buildDividerText(size),
 
-                      _buildDividerText(
-
-                        size,
-
-                      ),
-
-
-
-                      SizedBox(
-
-                        height:
-                            size.height *
-
-                                0.018,
-
-                      ),
-
-
+                      SizedBox(height: size.height * 0.018),
 
                       // =========================================
 
                       // GOOGLE
 
                       // =========================================
-
                       Row(
-
-                        mainAxisAlignment:
-
-                            MainAxisAlignment
-
-                                .center,
-
-
+                        mainAxisAlignment: MainAxisAlignment.center,
 
                         children: [
-
                           _socialButton(
+                            icon: Icons.g_mobiledata,
 
-                            icon: Icons
-
-                                .g_mobiledata,
-
-
-
-                            onPressed:
-
-                                isLoading
-
-                                    ? null
-
-                                    : _loginWithGoogle,
-
+                            onPressed: isLoading ? null : _loginWithGoogle,
                           ),
-
                         ],
-
                       ),
 
-
-
-                      SizedBox(
-
-                        height:
-                            size.height *
-
-                                0.018,
-
-                      ),
-
-
+                      SizedBox(height: size.height * 0.018),
 
                       // =========================================
 
                       // DAFTAR
 
                       // =========================================
-
                       Row(
-
-                        mainAxisAlignment:
-
-                            MainAxisAlignment
-
-                                .center,
-
-
+                        mainAxisAlignment: MainAxisAlignment.center,
 
                         children: [
-
                           Text(
-
                             'Belum punya akun? ',
 
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
 
+                              fontSize: size.width * 0.021,
 
-                            style:
-                                TextStyle(
-
-                              fontFamily:
-
-                                  'Nunito',
-
-                              fontSize:
-
-                                  size.width *
-
-                                      0.021,
-
-                              color:
-                                  Colors.grey[700],
-
+                              color: Colors.grey[700],
                             ),
-
                           ),
-
-
 
                           GestureDetector(
+                            onTap: isLoading
+                                ? null
+                                : () {
+                                    Navigator.push(
+                                      context,
 
-                            onTap:
-                                isLoading
-
-                                    ? null
-
-                                    : () {
-
-                                        Navigator
-
-                                            .push(
-
-                                          context,
-
-                                          MaterialPageRoute(
-
-                                            builder:
-
-                                                (context) =>
-
-                                                    const RegisterScreen(),
-
-                                          ),
-
-                                        );
-
-                                      },
-
-
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const RegisterScreen(),
+                                      ),
+                                    );
+                                  },
 
                             child: Text(
-
                               'Daftar sekarang',
 
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
 
+                                fontSize: size.width * 0.021,
 
-                              style:
-                                  TextStyle(
+                                fontWeight: FontWeight.w700,
 
-                                fontFamily:
-
-                                    'Nunito',
-
-                                fontSize:
-
-                                    size.width *
-
-                                        0.021,
-
-                                fontWeight:
-
-                                    FontWeight.w700,
-
-                                color:
-                                    const Color(
-
-                                      0xFFC5674E,
-
-                                    ),
-
+                                color: const Color(0xFFC5674E),
                               ),
-
                             ),
-
                           ),
-
                         ],
-
                       ),
-
                     ],
-
                   ),
-
                 ),
 
                 // =================================================
@@ -1359,26 +808,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 // JARAK BAWAH
 
                 // =================================================
-
-                SizedBox(
-
-                  height:
-                      size.height * 0.035,
-
-                ),
-
+                SizedBox(height: size.height * 0.035),
               ],
-
             ),
-
           ),
-
         ),
-
       ),
-
     );
-
   }
 
   // ===============================================================
@@ -1388,7 +824,6 @@ class _LoginScreenState extends State<LoginScreen> {
   // ===============================================================
 
   Widget _buildTextField({
-
     required TextEditingController controller,
 
     required String hintText,
@@ -1396,163 +831,50 @@ class _LoginScreenState extends State<LoginScreen> {
     required IconData icon,
 
     required double width,
-
   }) {
-
     return TextField(
-
       controller: controller,
 
+      keyboardType: TextInputType.emailAddress,
 
+      textInputAction: TextInputAction.next,
 
-      keyboardType:
+      style: TextStyle(fontFamily: 'Nunito', fontSize: width * 0.022),
 
-          TextInputType.emailAddress,
-
-
-
-      textInputAction:
-
-          TextInputAction.next,
-
-
-
-      style: TextStyle(
-
-        fontFamily: 'Nunito',
-
-        fontSize:
-
-            width * 0.022,
-
-      ),
-
-
-
-      decoration:
-
-          InputDecoration(
-
+      decoration: InputDecoration(
         hintText: hintText,
 
-
-
-        hintStyle:
-
-            TextStyle(
-
+        hintStyle: TextStyle(
           fontFamily: 'Nunito',
 
-          fontSize:
+          fontSize: width * 0.022,
 
-              width * 0.022,
-
-          color:
-
-              Colors.black54,
-
+          color: Colors.black54,
         ),
 
-
-
-        prefixIcon:
-
-            Icon(
-
+        prefixIcon: Icon(
           icon,
 
-          size:
+          size: width * 0.04,
 
-              width * 0.04,
-
-          color:
-
-              const Color(
-
-            0xFF765B4A,
-
-          ),
-
+          color: const Color(0xFF765B4A),
         ),
 
+        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
 
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
 
-        contentPadding:
-
-            const EdgeInsets
-
-                .symmetric(
-
-          vertical: 10,
-
-          horizontal: 8,
-
+          borderSide: const BorderSide(color: Color(0xFFFF8D82), width: 0.8),
         ),
 
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
 
-
-        enabledBorder:
-
-            OutlineInputBorder(
-
-          borderRadius:
-
-              BorderRadius.circular(
-
-            10,
-
-          ),
-
-
-
-          borderSide:
-
-              const BorderSide(
-
-            color:
-
-                Color(0xFFFF8D82),
-
-            width: 0.8,
-
-          ),
-
+          borderSide: const BorderSide(color: Color(0xFFFF7775), width: 1.2),
         ),
-
-
-
-        focusedBorder:
-
-            OutlineInputBorder(
-
-          borderRadius:
-
-              BorderRadius.circular(
-
-            10,
-
-          ),
-
-
-
-          borderSide:
-
-              const BorderSide(
-
-            color:
-
-                Color(0xFFFF7775),
-
-            width: 1.2,
-
-          ),
-
-        ),
-
       ),
-
     );
-
   }
 
   // ===============================================================
@@ -1561,235 +883,74 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // ===============================================================
 
-  Widget _buildPasswordField(
-
-    Size size,
-
-  ) {
-
+  Widget _buildPasswordField(Size size) {
     return TextField(
+      controller: passwordController,
 
-      controller:
+      obscureText: obscurePassword,
 
-          passwordController,
-
-
-
-      obscureText:
-
-          obscurePassword,
-
-
-
-      textInputAction:
-
-          TextInputAction.done,
-
-
+      textInputAction: TextInputAction.done,
 
       onSubmitted: (_) {
-
         if (!isLoading) {
-
           _login();
-
         }
-
       },
 
+      style: TextStyle(fontFamily: 'Nunito', fontSize: size.width * 0.022),
 
+      decoration: InputDecoration(
+        hintText: 'Kata Sandi',
 
-      style: TextStyle(
-
-        fontFamily: 'Nunito',
-
-        fontSize:
-
-            size.width * 0.022,
-
-      ),
-
-
-
-      decoration:
-
-          InputDecoration(
-
-        hintText:
-
-            'Kata Sandi',
-
-
-
-        hintStyle:
-
-            TextStyle(
-
+        hintStyle: TextStyle(
           fontFamily: 'Nunito',
 
-          fontSize:
+          fontSize: size.width * 0.022,
 
-              size.width * 0.022,
-
-          color:
-
-              Colors.black54,
-
+          color: Colors.black54,
         ),
 
-
-
-        prefixIcon:
-
-            Icon(
-
+        prefixIcon: Icon(
           Icons.lock_outline,
 
-          size:
+          size: size.width * 0.04,
 
-              size.width * 0.04,
-
-          color:
-
-              const Color(
-
-            0xFF765B4A,
-
-          ),
-
+          color: const Color(0xFF765B4A),
         ),
 
-
-
-        suffixIcon:
-
-            IconButton(
-
-          icon:
-
-              Icon(
-
+        suffixIcon: IconButton(
+          icon: Icon(
             obscurePassword
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
 
-                ? Icons
+            size: size.width * 0.035,
 
-                    .visibility_off_outlined
-
-                : Icons
-
-                    .visibility_outlined,
-
-
-
-            size:
-
-                size.width * 0.035,
-
-
-
-            color:
-                const Color(
-
-                  0xFF8B817C,
-
-                ),
-
+            color: const Color(0xFF8B817C),
           ),
-
-
 
           onPressed: () {
-
             setState(() {
-
-              obscurePassword =
-
-                  !obscurePassword;
-
+              obscurePassword = !obscurePassword;
             });
-
           },
-
         ),
 
+        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
 
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
 
-        contentPadding:
-
-            const EdgeInsets
-
-                .symmetric(
-
-          vertical: 10,
-
-          horizontal: 8,
-
+          borderSide: const BorderSide(color: Color(0xFFFF8D82), width: 0.8),
         ),
 
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
 
-
-        enabledBorder:
-
-            OutlineInputBorder(
-
-          borderRadius:
-
-              BorderRadius.circular(
-
-            10,
-
-          ),
-
-
-
-          borderSide:
-
-              const BorderSide(
-
-            color:
-
-                Color(0xFFFF8D82),
-
-            width: 0.8,
-
-          ),
-
+          borderSide: const BorderSide(color: Color(0xFFFF7775), width: 1.2),
         ),
-
-
-
-        focusedBorder:
-
-            OutlineInputBorder(
-
-          borderRadius:
-
-              BorderRadius.circular(
-
-            10,
-
-          ),
-
-
-
-          borderSide:
-
-              const BorderSide(
-
-            color:
-
-                Color(0xFFFF7775),
-
-            width: 1.2,
-
-          ),
-
-        ),
-
       ),
-
     );
-
   }
 
   // ===============================================================
@@ -1798,101 +959,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // ===============================================================
 
-  Widget _buildDividerText(
-
-    Size size,
-
-  ) {
-
+  Widget _buildDividerText(Size size) {
     return Row(
-
       children: [
-
-        Expanded(
-
-          child:
-              Container(
-
-            height: 0.5,
-
-            color:
-                const Color(
-
-                  0xFFD4D0CC,
-
-                ),
-
-          ),
-
-        ),
-
-
+        Expanded(child: Container(height: 0.5, color: const Color(0xFFD4D0CC))),
 
         Padding(
-
-          padding:
-              const EdgeInsets
-
-                  .symmetric(
-
-            horizontal: 10,
-
-          ),
-
-
+          padding: const EdgeInsets.symmetric(horizontal: 10),
 
           child: Text(
-
             'atau masuk dengan',
 
+            style: TextStyle(
+              fontFamily: 'Nunito',
 
+              fontSize: size.width * 0.021,
 
-            style:
-                TextStyle(
-
-              fontFamily:
-
-                  'Nunito',
-
-              fontSize:
-
-                  size.width *
-
-                      0.021,
-
-              color:
-                  Colors.grey[600],
-
+              color: Colors.grey[600],
             ),
-
           ),
-
         ),
 
-
-
-        Expanded(
-
-          child:
-              Container(
-
-            height: 0.5,
-
-            color:
-                const Color(
-
-                  0xFFD4D0CC,
-
-                ),
-
-          ),
-
-        ),
-
+        Expanded(child: Container(height: 0.5, color: const Color(0xFFD4D0CC))),
       ],
-
     );
-
   }
 
   // ===============================================================
@@ -1902,111 +992,38 @@ class _LoginScreenState extends State<LoginScreen> {
   // ===============================================================
 
   Widget _socialButton({
-
     required IconData icon,
 
     required VoidCallback? onPressed,
-
   }) {
-
     return SizedBox(
-
       width: 42,
 
       height: 42,
 
+      child: ElevatedButton(
+        onPressed: onPressed,
 
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFFFF8F4),
 
-      child:
-          ElevatedButton(
+          disabledBackgroundColor: const Color(0xFFF0EAE6),
 
-        onPressed:
-            onPressed,
+          foregroundColor: const Color(0xFFB85E47),
 
-
-
-        style:
-            ElevatedButton
-
-                .styleFrom(
-
-          backgroundColor:
-
-              const Color(
-
-                0xFFFFF8F4,
-
-              ),
-
-
-
-          disabledBackgroundColor:
-
-              const Color(
-
-                0xFFF0EAE6,
-
-              ),
-
-
-
-          foregroundColor:
-
-              const Color(
-
-                0xFFB85E47,
-
-              ),
-
-
-
-          disabledForegroundColor:
-
-              const Color(
-
-                0xFFB8AAA3,
-
-              ),
-
-
+          disabledForegroundColor: const Color(0xFFB8AAA3),
 
           elevation: 1,
 
+          padding: EdgeInsets.zero,
 
-
-          padding:
-              EdgeInsets.zero,
-
-
-
-          shape:
-              RoundedRectangleBorder(
-
-            borderRadius:
-                BorderRadius.circular(
-
-              13,
-
-            ),
-
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(13),
           ),
-
         ),
 
-
-
-        child:
-            Icon(
-
-          icon,
-
-          size: 25,
-
-        ),
-
+        child: Icon(icon, size: 25),
       ),
-
     );
-
   }
 }

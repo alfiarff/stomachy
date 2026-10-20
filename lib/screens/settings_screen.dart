@@ -86,32 +86,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (settings is Map) {
               setState(() {
                 notificationApp =
-                    settings['notificationApp'] as bool? ??
-                        notificationApp;
+                    settings['notificationApp'] as bool? ?? notificationApp;
 
                 notifArtikel =
-                    settings['notifArtikel'] as bool? ??
-                        notifArtikel;
+                    settings['notifArtikel'] as bool? ?? notifArtikel;
 
                 notifEdukasi =
-                    settings['notifEdukasi'] as bool? ??
-                        notifEdukasi;
+                    settings['notifEdukasi'] as bool? ?? notifEdukasi;
 
                 notifOlahraga =
-                    settings['notifOlahraga'] as bool? ??
-                        notifOlahraga;
+                    settings['notifOlahraga'] as bool? ?? notifOlahraga;
 
                 notifMakanan =
-                    settings['notifMakanan'] as bool? ??
-                        notifMakanan;
+                    settings['notifMakanan'] as bool? ?? notifMakanan;
 
                 notifBalasanDokter =
                     settings['notifBalasanDokter'] as bool? ??
-                        notifBalasanDokter;
+                    notifBalasanDokter;
 
                 notifPengingatSkrining =
                     settings['notifPengingatSkrining'] as bool? ??
-                        notifPengingatSkrining;
+                    notifPengingatSkrining;
               });
             }
           }
@@ -140,24 +135,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set(
-        {
-          'settings': {
-            'notificationApp': notificationApp,
-            'notifArtikel': notifArtikel,
-            'notifEdukasi': notifEdukasi,
-            'notifOlahraga': notifOlahraga,
-            'notifMakanan': notifMakanan,
-            'notifBalasanDokter': notifBalasanDokter,
-            'notifPengingatSkrining': notifPengingatSkrining,
-          },
-          'settingsUpdatedAt': FieldValue.serverTimestamp(),
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'settings': {
+          'notificationApp': notificationApp,
+          'notifArtikel': notifArtikel,
+          'notifEdukasi': notifEdukasi,
+          'notifOlahraga': notifOlahraga,
+          'notifMakanan': notifMakanan,
+          'notifBalasanDokter': notifBalasanDokter,
+          'notifPengingatSkrining': notifPengingatSkrining,
         },
-        SetOptions(merge: true),
-      );
+        'settingsUpdatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('SETTINGS SAVE ERROR: $e');
     }
@@ -176,9 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -187,9 +174,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -198,9 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -209,9 +192,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -220,9 +201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -239,19 +218,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       body: SafeArea(
         child: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: brown,
-                ),
-              )
+            ? Center(child: CircularProgressIndicator(color: brown))
             : SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  22,
-                  12,
-                  22,
-                  105,
-                ),
+                padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -266,7 +236,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     // =============================================
                     // BAGIAN AKUN
                     // =============================================
-
                     _buildSectionTitle('Akun'),
 
                     const SizedBox(height: 10),
@@ -278,7 +247,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     // =============================================
                     // BAGIAN NOTIFIKASI
                     // =============================================
-
                     _buildSectionTitle('Notifikasi'),
 
                     const SizedBox(height: 10),
@@ -291,8 +259,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSimpleNotificationCard(
                       icon: BootstrapIcons.chat_dots,
                       title: 'Balasan Dokter',
-                      description:
-                          'Balasan chat konsultasi dari dokter',
+                      description: 'Balasan chat konsultasi dari dokter',
                       value: notifBalasanDokter,
                       onChanged: (value) {
                         setState(() {
@@ -309,8 +276,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSimpleNotificationCard(
                       icon: BootstrapIcons.alarm,
                       title: 'Pengingat Skrining Mingguan',
-                      description:
-                          'Setiap Senin - 09.00 (jadwal tetap)',
+                      description: 'Setiap Senin - 09.00 (jadwal tetap)',
                       value: notifPengingatSkrining,
                       onChanged: (value) {
                         setState(() {
@@ -330,7 +296,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // ===========================================================
       // BOTTOM NAVIGATION
       // ===========================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -372,7 +337,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // =======================================================
           // JUDUL
           // =======================================================
-
           const Expanded(
             child: Center(
               child: Text(
@@ -390,10 +354,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // =======================================================
           // PENYEIMBANG
           // =======================================================
-
-          const SizedBox(
-            width: 45,
-          ),
+          const SizedBox(width: 45),
         ],
       ),
     );
@@ -424,18 +385,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ChangePasswordScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
         );
       },
       child: Container(
         width: double.infinity,
         height: 58,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 7,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(17),
@@ -461,11 +417,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Icon(
-                  BootstrapIcons.lock,
-                  size: 19,
-                  color: brown,
-                ),
+                child: Icon(BootstrapIcons.lock, size: 19, color: brown),
               ),
             ),
 
@@ -474,7 +426,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // =====================================================
             // TEXT
             // =====================================================
-
             const Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -509,12 +460,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // =====================================================
             // CHEVRON
             // =====================================================
-
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 25,
-              color: brown,
-            ),
+            Icon(Icons.chevron_right_rounded, size: 25, color: brown),
           ],
         ),
       ),
@@ -528,12 +474,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildNotificationAppCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        12,
-        12,
-        16,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
@@ -561,11 +502,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Icon(
-                    BootstrapIcons.bell,
-                    size: 19,
-                    color: brown,
-                  ),
+                  child: Icon(BootstrapIcons.bell, size: 19, color: brown),
                 ),
               ),
 
@@ -619,7 +556,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ======================================================
           // SUB-ITEM NOTIFIKASI
           // ======================================================
-
           Opacity(
             opacity: notificationApp ? 1.0 : 0.45,
             child: Column(
@@ -627,8 +563,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSubNotificationItem(
                   icon: BootstrapIcons.newspaper,
                   title: 'Artikel Mingguan',
-                  description:
-                      'Saat ada artikel mingguan baru',
+                  description: 'Saat ada artikel mingguan baru',
                   value: notifArtikel,
                   onChanged: (value) {
                     setState(() {
@@ -660,8 +595,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSubNotificationItem(
                   icon: BootstrapIcons.bicycle,
                   title: 'Rekomendasi Olahraga',
-                  description:
-                      'Saat rekomendasi olahraga baru',
+                  description: 'Saat rekomendasi olahraga baru',
                   value: notifOlahraga,
                   onChanged: (value) {
                     setState(() {
@@ -677,8 +611,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSubNotificationItem(
                   icon: BootstrapIcons.egg_fried,
                   title: 'Rekomendasi Makanan',
-                  description:
-                      'Saat rekomendasi makanan baru',
+                  description: 'Saat rekomendasi makanan baru',
                   value: notifMakanan,
                   onChanged: (value) {
                     setState(() {
@@ -722,22 +655,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // =====================================================
         // ICON
         // =====================================================
-
-        SizedBox(
-          width: 22,
-          child: Icon(
-            icon,
-            size: 17,
-            color: brown,
-          ),
-        ),
+        SizedBox(width: 22, child: Icon(icon, size: 17, color: brown)),
 
         const SizedBox(width: 9),
 
         // =====================================================
         // TEKS
         // =====================================================
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -773,7 +697,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // =====================================================
         // SWITCH
         // =====================================================
-
         _buildCustomSwitch(
           value: value,
           onChanged: notificationApp ? onChanged : null,
@@ -796,10 +719,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       width: double.infinity,
       height: 58,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
@@ -824,13 +744,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: Color(0xFFFFE8D8),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Icon(
-                icon,
-                size: 19,
-                color: brown,
-              ),
-            ),
+            child: Center(child: Icon(icon, size: 19, color: brown)),
           ),
 
           const SizedBox(width: 10),
@@ -838,7 +752,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // =======================================================
           // TEXT
           // =======================================================
-
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -873,11 +786,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // =======================================================
           // SWITCH
           // =======================================================
-
-          _buildCustomSwitch(
-            value: value,
-            onChanged: onChanged,
-          ),
+          _buildCustomSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );
@@ -909,17 +818,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         height: 25,
         padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
-          color: value
-              ? brown
-              : const Color(0xFFE5DDD8),
+          color: value ? brown : const Color(0xFFE5DDD8),
           borderRadius: BorderRadius.circular(20),
         ),
         child: AnimatedAlign(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
-          alignment: value
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
+          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
             width: 19,
             height: 19,
@@ -951,8 +856,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          if (i != 2)
-            const SizedBox(height: 5),
+          if (i != 2) const SizedBox(height: 5),
         ],
       ],
     );

@@ -42,9 +42,7 @@ class _PertolonganSaatKambuhScreenState
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color primaryBrown = const Color(0xFF493028);
 
-  final Set<String> _expandedSections = {
-    'Ubah Posisi Tubuh',
-  };
+  final Set<String> _expandedSections = {'Ubah Posisi Tubuh'};
 
   // ===============================================================
   // DATA SEMUA SEKSI
@@ -111,9 +109,7 @@ class _PertolonganSaatKambuhScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -121,9 +117,7 @@ class _PertolonganSaatKambuhScreenState
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -131,9 +125,7 @@ class _PertolonganSaatKambuhScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -141,9 +133,7 @@ class _PertolonganSaatKambuhScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -151,9 +141,7 @@ class _PertolonganSaatKambuhScreenState
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -171,12 +159,7 @@ class _PertolonganSaatKambuhScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            27,
-            5,
-            27,
-            105,
-          ),
+          padding: const EdgeInsets.fromLTRB(27, 5, 27, 105),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -209,17 +192,14 @@ class _PertolonganSaatKambuhScreenState
                     color: Color(0xFF30221E),
                   ),
                   children: const [
-                    TextSpan(
-                      text: 'Tenang, ini ',
-                    ),
+                    TextSpan(text: 'Tenang, ini '),
                     TextSpan(
                       text: 'langkah sederhana',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w800),
                     ),
                     TextSpan(
-                      text: ' yang bisa membantu meredakan '
+                      text:
+                          ' yang bisa membantu meredakan '
                           'gejala dengan cepat, sebelum kamu '
                           'mendapatkan penanganan lebih lanjut.',
                     ),
@@ -229,13 +209,10 @@ class _PertolonganSaatKambuhScreenState
 
               const SizedBox(height: 16),
 
-              for (int i = 0;
-                  i < _sections.length;
-                  i++) ...[
+              for (int i = 0; i < _sections.length; i++) ...[
                 _buildInfoCard(_sections[i]),
 
-                if (i != _sections.length - 1)
-                  const SizedBox(height: 12),
+                if (i != _sections.length - 1) const SizedBox(height: 12),
               ],
 
               const SizedBox(height: 16),
@@ -329,12 +306,7 @@ class _PertolonganSaatKambuhScreenState
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) {
             return const Center(
-              child: Text(
-                '🆘',
-                style: TextStyle(
-                  fontSize: 60,
-                ),
-              ),
+              child: Text('🆘', style: TextStyle(fontSize: 60)),
             );
           },
         ),
@@ -347,8 +319,7 @@ class _PertolonganSaatKambuhScreenState
   // ===============================================================
 
   Widget _buildInfoCard(_InfoSection section) {
-    final bool isExpanded =
-        _expandedSections.contains(section.title);
+    final bool isExpanded = _expandedSections.contains(section.title);
 
     return Container(
       width: double.infinity,
@@ -369,22 +340,15 @@ class _PertolonganSaatKambuhScreenState
             onTap: () {
               setState(() {
                 if (isExpanded) {
-                  _expandedSections
-                      .remove(section.title);
+                  _expandedSections.remove(section.title);
                 } else {
-                  _expandedSections
-                      .add(section.title);
+                  _expandedSections.add(section.title);
                 }
               });
             },
             borderRadius: BorderRadius.circular(16),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                14,
-                13,
-                12,
-                13,
-              ),
+              padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
               child: Row(
                 children: [
                   Container(
@@ -392,8 +356,7 @@ class _PertolonganSaatKambuhScreenState
                     height: 38,
                     decoration: BoxDecoration(
                       color: section.iconBackground,
-                      borderRadius:
-                          BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       section.icon,
@@ -430,12 +393,9 @@ class _PertolonganSaatKambuhScreenState
 
                   AnimatedRotation(
                     turns: isExpanded ? 0.5 : 0,
-                    duration: const Duration(
-                      milliseconds: 250,
-                    ),
+                    duration: const Duration(milliseconds: 250),
                     child: const Icon(
-                      Icons
-                          .keyboard_arrow_down_rounded,
+                      Icons.keyboard_arrow_down_rounded,
                       size: 22,
                       color: Color(0xFF9A8F89),
                     ),
@@ -451,22 +411,13 @@ class _PertolonganSaatKambuhScreenState
             crossFadeState: isExpanded
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
-            firstChild: const SizedBox(
-              width: double.infinity,
-            ),
+            firstChild: const SizedBox(width: double.infinity),
             secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                14,
-                0,
-                16,
-                14,
-              ),
+              padding: const EdgeInsets.fromLTRB(14, 0, 16, 14),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final point in section.points)
-                    _buildBulletItem(point),
+                  for (final point in section.points) _buildBulletItem(point),
                 ],
               ),
             ),
@@ -482,10 +433,7 @@ class _PertolonganSaatKambuhScreenState
 
   Widget _buildBulletItem(String text) {
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 44,
-        bottom: 7,
-      ),
+      padding: const EdgeInsets.only(left: 44, bottom: 7),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -521,18 +469,10 @@ class _PertolonganSaatKambuhScreenState
   // REMEMBER BOX
   // ===============================================================
 
-  Widget _buildRememberBox({
-    String header = 'Ingat!',
-    required String text,
-  }) {
+  Widget _buildRememberBox({String header = 'Ingat!', required String text}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        14,
-        10,
-        14,
-        10,
-      ),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       decoration: BoxDecoration(
         color: const Color(0xFFFFE4D2),
         borderRadius: BorderRadius.circular(11),

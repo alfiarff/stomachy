@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,10 +9,6 @@ import '../../services/admin_content_service.dart';
 import 'admin_article_screen.dart';
 import 'admin_content_screen.dart';
 import 'admin_profile_screen.dart';
-
-// ===============================================================
-// BERANDA ADMIN
-// ===============================================================
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -78,31 +74,32 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   void _onNavigationTap(int index) {
     if (index == _selectedIndex) return;
 
-    if (index == 1) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminArticleScreen()),
-      );
-      return;
-    }
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminContentScreen()),
-      );
-      return;
-    }
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminProfileScreen()),
-      );
-      return;
-    }
+    switch (index) {
+      case 0:
+        // Beranda
+        return;
 
-    setState(() {
-      _selectedIndex = index;
-    });
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminArticleScreen()),
+        );
+        break;
+
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminContentScreen()),
+        );
+        break;
+
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminProfileScreen()),
+        );
+        break;
+    }
   }
 
   @override
@@ -145,7 +142,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-    // ===============================================================
+  // ===============================================================
   // HEADER
   // ===============================================================
 
@@ -226,7 +223,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ),
           ),
           Text(
-            '$_adminName! ðŸ‘‹',
+            '$_adminName! 👋',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -260,12 +257,29 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     final now = DateTime.now();
 
     const days = [
-      'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu',
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
     ];
 
     const months = [
-      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
 
     final String dayName = days[now.weekday - 1];
@@ -321,7 +335,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 9, vertical: 4),
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: article != null
                         ? const Color(0xFFE5F3E8)
@@ -436,7 +452,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 8),
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFE9D9),
                       borderRadius: BorderRadius.circular(10),
@@ -474,6 +492,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  // ===============================================================
+  // AMBIL 1 ARTIKEL TAYANG (PAKE get, BUKAN STREAM)
+  // ===============================================================
+
   Future<AdminArticle?> _getPublishedArticle() async {
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -492,7 +514,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     }
   }
 
-    // ===============================================================
+  // ===============================================================
   // LOADING STATE
   // ===============================================================
 
@@ -635,9 +657,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 color: Color(0xFFFFE1D2),
                 shape: BoxShape.circle,
               ),
-              child: Center(
-                child: Icon(icon, size: 27, color: accentBrown),
-              ),
+              child: Center(child: Icon(icon, size: 27, color: accentBrown)),
             ),
             const SizedBox(height: 14),
             Text(
@@ -659,6 +679,3 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 }
-
-
-

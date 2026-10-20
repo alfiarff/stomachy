@@ -23,8 +23,7 @@ class PersonalInformationScreen extends StatefulWidget {
       _PersonalInformationScreenState();
 }
 
-class _PersonalInformationScreenState
-    extends State<PersonalInformationScreen> {
+class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   int _selectedIndex = 4;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
@@ -90,8 +89,7 @@ class _PersonalInformationScreenState
       // Foto Google sebagai fallback
       final String authPhoto = user.photoURL ?? '';
 
-      if (authPhoto.isNotEmpty &&
-          !authPhoto.startsWith('data:')) {
+      if (authPhoto.isNotEmpty && !authPhoto.startsWith('data:')) {
         _googlePhotoUrl = authPhoto;
       }
 
@@ -138,8 +136,7 @@ class _PersonalInformationScreenState
           }
 
           // Foto Base64 dari Firestore
-          if (photoBase64 is String &&
-              photoBase64.trim().isNotEmpty) {
+          if (photoBase64 is String && photoBase64.trim().isNotEmpty) {
             _photoBase64 = photoBase64;
           }
         }
@@ -150,10 +147,7 @@ class _PersonalInformationScreenState
           SnackBar(
             content: Text(
               'Gagal mengambil informasi pengguna: $e',
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 11,
-              ),
+              style: const TextStyle(fontFamily: 'Nunito', fontSize: 11),
             ),
           ),
         );
@@ -176,16 +170,12 @@ class _PersonalInformationScreenState
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 16,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -226,9 +216,7 @@ class _PersonalInformationScreenState
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    _pickAndSavePhoto(
-                      ImageSource.camera,
-                    );
+                    _pickAndSavePhoto(ImageSource.camera);
                   },
                 ),
 
@@ -257,9 +245,7 @@ class _PersonalInformationScreenState
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    _pickAndSavePhoto(
-                      ImageSource.gallery,
-                    );
+                    _pickAndSavePhoto(ImageSource.gallery);
                   },
                 ),
               ],
@@ -274,9 +260,7 @@ class _PersonalInformationScreenState
   // PILIH + SIMPAN FOTO SEBAGAI BASE64
   // ===============================================================
 
-  Future<void> _pickAndSavePhoto(
-    ImageSource source,
-  ) async {
+  Future<void> _pickAndSavePhoto(ImageSource source) async {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
@@ -284,10 +268,7 @@ class _PersonalInformationScreenState
         const SnackBar(
           content: Text(
             'Silakan login terlebih dahulu.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
         ),
       );
@@ -322,10 +303,7 @@ class _PersonalInformationScreenState
         compressQuality: 85,
         maxWidth: 512,
         maxHeight: 512,
-        aspectRatio: const CropAspectRatio(
-          ratioX: 1,
-          ratioY: 1,
-        ),
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Atur Foto Profil',
@@ -384,10 +362,7 @@ class _PersonalInformationScreenState
           const SnackBar(
             content: Text(
               'Ukuran foto terlalu besar. Coba pilih foto lain.',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 11,
-              ),
+              style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
             ),
             behavior: SnackBarBehavior.floating,
           ),
@@ -400,16 +375,10 @@ class _PersonalInformationScreenState
       // 6. SIMPAN KE FIRESTORE
       // ===========================================================
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set(
-        {
-          'photoBase64': base64String,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'photoBase64': base64String,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       if (!mounted) return;
 
@@ -421,10 +390,7 @@ class _PersonalInformationScreenState
         const SnackBar(
           content: Text(
             'Foto profil berhasil diperbarui.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
@@ -437,10 +403,7 @@ class _PersonalInformationScreenState
         SnackBar(
           content: Text(
             'Gagal menyimpan foto: $e',
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: const TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -466,10 +429,7 @@ class _PersonalInformationScreenState
         const SnackBar(
           content: Text(
             'Silakan login terlebih dahulu.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
         ),
       );
@@ -484,27 +444,19 @@ class _PersonalInformationScreenState
       // Update nama di Firebase Authentication
       if (nameController.text.trim().isNotEmpty &&
           nameController.text.trim() != user.displayName) {
-        await user.updateDisplayName(
-          nameController.text.trim(),
-        );
+        await user.updateDisplayName(nameController.text.trim());
       }
 
       // Simpan seluruh informasi ke Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set(
-        {
-          'name': nameController.text.trim(),
-          'email': emailController.text.trim(),
-          'phone': phoneController.text.trim(),
-          'birth': birthController.text.trim(),
-          'gender': genderController.text.trim(),
-          'address': addressController.text.trim(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'name': nameController.text.trim(),
+        'email': emailController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'birth': birthController.text.trim(),
+        'gender': genderController.text.trim(),
+        'address': addressController.text.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       if (!mounted) return;
 
@@ -512,10 +464,7 @@ class _PersonalInformationScreenState
         const SnackBar(
           content: Text(
             'Informasi pribadi berhasil diperbarui.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
@@ -528,10 +477,7 @@ class _PersonalInformationScreenState
         SnackBar(
           content: Text(
             'Gagal menyimpan informasi: $e',
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: const TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -573,9 +519,7 @@ class _PersonalInformationScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -584,9 +528,7 @@ class _PersonalInformationScreenState
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -595,9 +537,7 @@ class _PersonalInformationScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -606,9 +546,7 @@ class _PersonalInformationScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -617,9 +555,7 @@ class _PersonalInformationScreenState
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -636,18 +572,11 @@ class _PersonalInformationScreenState
       body: SafeArea(
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFFB9543A),
-                ),
+                child: CircularProgressIndicator(color: Color(0xFFB9543A)),
               )
             : SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  22,
-                  12,
-                  22,
-                  105,
-                ),
+                padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
                 child: Column(
                   children: [
                     // =================================================
@@ -661,7 +590,6 @@ class _PersonalInformationScreenState
                     // =================================================
                     // FOTO PROFIL
                     // =================================================
-
                     _buildProfilePhoto(),
 
                     const SizedBox(height: 42),
@@ -669,7 +597,6 @@ class _PersonalInformationScreenState
                     // =================================================
                     // INFORMASI PRIBADI
                     // =================================================
-
                     _buildInformationField(
                       label: 'Nama Lengkap',
                       controller: nameController,
@@ -699,8 +626,7 @@ class _PersonalInformationScreenState
                     _buildInformationField(
                       label: 'Tempat, Tanggal Lahir',
                       controller: birthController,
-                      hintText:
-                          'Masukkan tempat, tanggal lahir anda',
+                      hintText: 'Masukkan tempat, tanggal lahir anda',
                     ),
 
                     const SizedBox(height: 13),
@@ -708,8 +634,7 @@ class _PersonalInformationScreenState
                     _buildInformationField(
                       label: 'Jenis Kelamin',
                       controller: genderController,
-                      hintText:
-                          'Masukkan jenis kelamin anda',
+                      hintText: 'Masukkan jenis kelamin anda',
                     ),
 
                     const SizedBox(height: 13),
@@ -726,7 +651,6 @@ class _PersonalInformationScreenState
                     // =================================================
                     // TOMBOL UBAH INFORMASI
                     // =================================================
-
                     _buildEditButton(),
 
                     const SizedBox(height: 20),
@@ -738,7 +662,6 @@ class _PersonalInformationScreenState
       // =============================================================
       // BOTTOM NAVIGATION
       // =============================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -787,9 +710,7 @@ class _PersonalInformationScreenState
             ),
           ),
 
-          const SizedBox(
-            width: 45,
-          ),
+          const SizedBox(width: 45),
         ],
       ),
     );
@@ -810,9 +731,7 @@ class _PersonalInformationScreenState
             shape: BoxShape.circle,
             color: Color(0xFFE8E8E8),
           ),
-          child: ClipOval(
-            child: _buildPhotoImage(),
-          ),
+          child: ClipOval(child: _buildPhotoImage()),
         ),
 
         // LOADING
@@ -841,19 +760,14 @@ class _PersonalInformationScreenState
           right: -2,
           bottom: -2,
           child: GestureDetector(
-            onTap: _isUploadingPhoto
-                ? null
-                : _showPhotoSourcePicker,
+            onTap: _isUploadingPhoto ? null : _showPhotoSourcePicker,
             child: Container(
               width: 30,
               height: 30,
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFFE2E2E2),
-                  width: 0.8,
-                ),
+                border: Border.all(color: const Color(0xFFE2E2E2), width: 0.8),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.12),
@@ -921,11 +835,7 @@ class _PersonalInformationScreenState
     return const SizedBox(
       width: 100,
       height: 100,
-      child: Icon(
-        Icons.person,
-        size: 65,
-        color: Color(0xFF777777),
-      ),
+      child: Icon(Icons.person, size: 65, color: Color(0xFF777777)),
     );
   }
 
@@ -944,12 +854,7 @@ class _PersonalInformationScreenState
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 15,
-      padding: const EdgeInsets.fromLTRB(
-        18,
-        8,
-        15,
-        7,
-      ),
+      padding: const EdgeInsets.fromLTRB(18, 8, 15, 7),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

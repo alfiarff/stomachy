@@ -1,6 +1,8 @@
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import 'home_screen.dart';
 import 'screening_screen.dart';
 import '../widgets/bottom_navigation.dart';
@@ -9,28 +11,25 @@ import 'profile_screen.dart';
 import 'doctor_detail_screen.dart';
 import 'user_consultations_screen.dart';
 
-
 class DoctorScreen extends StatefulWidget {
   final int initialTab;
 
-  const DoctorScreen({
-    super.key,
-    this.initialTab = 0,
-  });
+  const DoctorScreen({super.key, this.initialTab = 0});
 
   @override
   State<DoctorScreen> createState() => _DoctorScreenState();
 }
-class _DoctorScreenState extends State<DoctorScreen> {
-int _selectedIndex = 2;
-late int _pageIndex;
-String _searchQuery = '';
 
-@override
-void initState() {
-  super.initState();
-  _pageIndex = widget.initialTab;
-}
+class _DoctorScreenState extends State<DoctorScreen> {
+  int _selectedIndex = 2;
+  late int _pageIndex;
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _pageIndex = widget.initialTab;
+  }
 
   static const Color backgroundColor = Color(0xFFFFF5ED);
   static const Color brown = Color(0xFFB05039);
@@ -38,7 +37,7 @@ void initState() {
   Stream<QuerySnapshot<Map<String, dynamic>>> _doctorStream() {
     return FirebaseFirestore.instance
         .collection('users')
-        .where('role', isEqualTo: 'doctor')
+        .where('role', whereIn: ['doctor', 'dokter'])
         .snapshots();
   }
 
@@ -63,9 +62,7 @@ void initState() {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
       return;
     }
@@ -73,9 +70,7 @@ void initState() {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const ScreeningScreen()),
       );
       return;
     }
@@ -83,9 +78,7 @@ void initState() {
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const EdukasiScreen()),
       );
       return;
     }
@@ -93,9 +86,7 @@ void initState() {
     if (index == 4) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const ProfileScreen()),
       );
     }
   }
@@ -116,9 +107,7 @@ void initState() {
             Expanded(
               child: _pageIndex == 0
                   ? _buildDoctorList()
-                  : UserConsultationsScreen(
-                      searchQuery: _searchQuery,
-                    ),
+                  : UserConsultationsScreen(searchQuery: _searchQuery),
             ),
           ],
         ),
@@ -189,11 +178,7 @@ void initState() {
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.search_rounded,
-              size: 21,
-              color: brown,
-            ),
+            const Icon(Icons.search_rounded, size: 21, color: brown),
             const SizedBox(width: 9),
             Expanded(
               child: TextField(
@@ -232,38 +217,26 @@ void initState() {
       child: Row(
         children: [
           Expanded(
-            child: _buildTab(
-              'Daftar Dokter',
-              _pageIndex == 0,
-              () {
-                setState(() {
-                  _pageIndex = 0;
-                });
-              },
-            ),
+            child: _buildTab('Daftar Dokter', _pageIndex == 0, () {
+              setState(() {
+                _pageIndex = 0;
+              });
+            }),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: _buildTab(
-              'Konsultasi',
-              _pageIndex == 1,
-              () {
-                setState(() {
-                  _pageIndex = 1;
-                });
-              },
-            ),
+            child: _buildTab('Konsultasi', _pageIndex == 1, () {
+              setState(() {
+                _pageIndex = 1;
+              });
+            }),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTab(
-    String title,
-    bool active,
-    VoidCallback onTap,
-  ) {
+  Widget _buildTab(String title, bool active, VoidCallback onTap) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -293,10 +266,7 @@ void initState() {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(
-              color: brown,
-              strokeWidth: 2,
-            ),
+            child: CircularProgressIndicator(color: brown, strokeWidth: 2),
           );
         }
 
@@ -307,12 +277,11 @@ void initState() {
           );
         }
 
-        final doctors = snapshot.data?.docs
+        final doctors =
+            snapshot.data?.docs
                 .map(
-                  (document) => DoctorData.fromFirestore(
-                    document.id,
-                    document.data(),
-                  ),
+                  (document) =>
+                      DoctorData.fromFirestore(document.id, document.data()),
                 )
                 .toList() ??
             [];
@@ -328,20 +297,13 @@ void initState() {
 
         return ListView.separated(
           physics: const ClampingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            14,
-            0,
-            14,
-            20,
-          ),
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
           itemCount: filteredDoctors.length,
           separatorBuilder: (_, __) {
             return const SizedBox(height: 12);
           },
           itemBuilder: (context, index) {
-            return _buildDoctorCard(
-              filteredDoctors[index],
-            );
+            return _buildDoctorCard(filteredDoctors[index]);
           },
         );
       },
@@ -354,20 +316,13 @@ void initState() {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => DoctorDetailScreen(
-              doctor: doctor,
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => DoctorDetailScreen(doctor: doctor)),
         );
       },
       child: Container(
         width: double.infinity,
         height: 80,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(19),
@@ -413,11 +368,7 @@ void initState() {
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 27,
-              color: brown,
-            ),
+            const Icon(Icons.chevron_right_rounded, size: 27, color: brown),
           ],
         ),
       ),
@@ -427,15 +378,12 @@ void initState() {
   Widget _buildDoctorImage(DoctorData doctor) {
     const double photoSize = 50;
 
-    if (doctor.photoBase64 != null &&
-        doctor.photoBase64!.isNotEmpty) {
+    if (doctor.photoBase64 != null && doctor.photoBase64!.isNotEmpty) {
       try {
         return Container(
           width: photoSize,
           height: photoSize,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-          ),
+          decoration: const BoxDecoration(shape: BoxShape.circle),
           clipBehavior: Clip.antiAlias,
           child: Image.memory(
             base64Decode(doctor.photoBase64!),
@@ -448,14 +396,11 @@ void initState() {
       } catch (_) {}
     }
 
-    if (doctor.photoUrl != null &&
-        doctor.photoUrl!.isNotEmpty) {
+    if (doctor.photoUrl != null && doctor.photoUrl!.isNotEmpty) {
       return Container(
         width: photoSize,
         height: photoSize,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-        ),
+        decoration: const BoxDecoration(shape: BoxShape.circle),
         clipBehavior: Clip.antiAlias,
         child: Image.network(
           doctor.photoUrl!,
@@ -471,9 +416,7 @@ void initState() {
       return Container(
         width: photoSize,
         height: photoSize,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-        ),
+        decoration: const BoxDecoration(shape: BoxShape.circle),
         clipBehavior: Clip.antiAlias,
         child: Image.asset(
           doctor.image,
@@ -496,29 +439,18 @@ void initState() {
         shape: BoxShape.circle,
         color: Color(0xFFF4E8DF),
       ),
-      child: const Icon(
-        Icons.person_rounded,
-        size: 29,
-        color: brown,
-      ),
+      child: const Icon(Icons.person_rounded, size: 29, color: brown),
     );
   }
 
-  Widget _buildEmptyMessage(
-    String title,
-    String subtitle,
-  ) {
+  Widget _buildEmptyMessage(String title, String subtitle) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.medical_services_outlined,
-              size: 45,
-              color: brown,
-            ),
+            const Icon(Icons.medical_services_outlined, size: 45, color: brown),
             const SizedBox(height: 12),
             Text(
               title,
@@ -578,38 +510,26 @@ class DoctorData {
     this.photoUrl,
   });
 
-  factory DoctorData.fromFirestore(
-    String id,
-    Map<String, dynamic> data,
-  ) {
+  factory DoctorData.fromFirestore(String id, Map<String, dynamic> data) {
     return DoctorData(
       id: id,
       name: (data['name'] ?? 'Dokter').toString(),
-      specialty: (
-        data['specialization'] ??
-        data['specialty'] ??
-        'Dokter Umum'
-      ).toString(),
+      specialty: (data['specialization'] ?? data['specialty'] ?? 'Dokter Umum')
+          .toString(),
       status: (data['status'] ?? 'Offline').toString(),
       rating: (data['rating'] ?? '0.0').toString(),
       reviews: (data['reviews'] ?? '0').toString(),
       image: (data['image'] ?? '').toString(),
       schedules: data['schedules'] is List
           ? List<String>.from(
-              (data['schedules'] as List)
-                  .map((item) => item.toString()),
+              (data['schedules'] as List).map((item) => item.toString()),
             )
           : [],
-      experience:
-          (data['experience'] ?? '-').toString(),
-      education:
-          (data['education'] ?? '-').toString(),
-      location:
-          (data['location'] ?? '-').toString(),
-      photoBase64:
-          data['photoBase64']?.toString(),
-      photoUrl:
-          data['photoUrl']?.toString(),
+      experience: (data['experience'] ?? '-').toString(),
+      education: (data['education'] ?? '-').toString(),
+      location: (data['location'] ?? '-').toString(),
+      photoBase64: data['photoBase64']?.toString(),
+      photoUrl: data['photoUrl']?.toString(),
     );
   }
 }

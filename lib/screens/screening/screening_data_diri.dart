@@ -89,24 +89,18 @@ class ScreeningDataDiri extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                       color: Color(0xFF99918E),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
 
                     // BORDER INPUT TETAP
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF8B817D),
-                      ),
+                      borderSide: const BorderSide(color: Color(0xFF8B817D)),
                     ),
 
                     // BORDER INPUT TETAP
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                        color: Color(0xFFB05039),
-                      ),
+                      borderSide: const BorderSide(color: Color(0xFFB05039)),
                     ),
                   ),
                 ),
@@ -146,11 +140,7 @@ class ScreeningDataDiri extends StatelessWidget {
           children: [
             const SizedBox(
               width: 55,
-              child: Icon(
-                Icons.wc_rounded,
-                size: 44,
-                color: Color(0xFFB05039),
-              ),
+              child: Icon(Icons.wc_rounded, size: 44, color: Color(0xFFB05039)),
             ),
 
             const SizedBox(width: 10),
@@ -207,29 +197,19 @@ class ScreeningDataDiri extends StatelessWidget {
         height: 36,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFFFE3D9)
-              : const Color(0xFFFFFCF9),
+          color: selected ? const Color(0xFFFFE3D9) : const Color(0xFFFFFCF9),
           borderRadius: BorderRadius.circular(10),
 
           // BORDER TOMBOL TETAP
-          border: Border.all(
-            color: selected
-                ? brown
-                : const Color(0xFF9A908B),
-          ),
+          border: Border.all(color: selected ? brown : const Color(0xFF9A908B)),
         ),
         child: Text(
           value,
           style: TextStyle(
             fontFamily: 'Nunito',
             fontSize: 11,
-            color: selected
-                ? brown
-                : const Color(0xFF827A76),
-            fontWeight: selected
-                ? FontWeight.w700
-                : FontWeight.w400,
+            color: selected ? brown : const Color(0xFF827A76),
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
           ),
         ),
       ),

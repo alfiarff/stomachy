@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'screening_loading_screen.dart';
 import '../widgets/bottom_navigation.dart';
 import '../widgets/stomachy_card.dart';
@@ -32,12 +33,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  15,
-                  8,
-                  15,
-                  30,
-                ),
+                padding: const EdgeInsets.fromLTRB(15, 8, 15, 30),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -93,8 +89,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    ScreeningLoadingScreen(
+                                builder: (context) => ScreeningLoadingScreen(
                                   age: age,
                                   gender: gender,
                                   step2Answers: step2Answers,
@@ -107,11 +102,9 @@ class ScreeningConfirmationScreen extends StatelessWidget {
                             backgroundColor: brown,
                             foregroundColor: Colors.white,
                             elevation: 3,
-                            shadowColor:
-                                Colors.black.withOpacity(0.25),
+                            shadowColor: Colors.black.withOpacity(0.25),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(25),
+                              borderRadius: BorderRadius.circular(25),
                             ),
                           ),
                           child: const Text(
@@ -213,10 +206,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
 
               if (i < 3)
                 Expanded(
-                  child: Container(
-                    height: 2,
-                    color: const Color(0xFFB83E20),
-                  ),
+                  child: Container(height: 2, color: const Color(0xFFB83E20)),
                 ),
             ],
           ],
@@ -233,14 +223,8 @@ class ScreeningConfirmationScreen extends StatelessWidget {
     return _buildSummaryCard(
       title: 'Data Diri',
       children: [
-        _buildSummaryRow(
-          'Usia',
-          '$age Tahun',
-        ),
-        _buildSummaryRow(
-          'Jenis kelamin',
-          gender,
-        ),
+        _buildSummaryRow('Usia', '$age Tahun'),
+        _buildSummaryRow('Jenis kelamin', gender),
       ],
     );
   }
@@ -255,21 +239,15 @@ class ScreeningConfirmationScreen extends StatelessWidget {
       children: [
         _buildSummaryRow(
           'Perut terasa penuh',
-          _yesNoText(
-            step2Answers['Perut terasa penuh'],
-          ),
+          _yesNoText(step2Answers['Perut terasa penuh']),
         ),
         _buildSummaryRow(
           'Tidur cukup',
-          _yesNoText(
-            step2Answers['Waktu tidur'],
-          ),
+          _yesNoText(step2Answers['Waktu tidur']),
         ),
         _buildSummaryRow(
           'Menggunakan obat',
-          _yesNoText(
-            step2Answers['Penggunaan obat'],
-          ),
+          _yesNoText(step2Answers['Penggunaan obat']),
         ),
       ],
     );
@@ -283,10 +261,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
     return _buildSummaryCard(
       title: 'Gejala dan Frekuensi',
       children: [
-        _buildSummaryRow(
-          'Panas di dada',
-          step3Answers['Panas di dada'] ?? '-',
-        ),
+        _buildSummaryRow('Panas di dada', step3Answers['Panas di dada'] ?? '-'),
         _buildSummaryRow(
           'Asam lambung naik',
           step3Answers['Asam lambung naik'] ?? '-',
@@ -310,12 +285,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 12,
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        9,
-        12,
-        10,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -337,14 +307,9 @@ class ScreeningConfirmationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryRow(
-    String label,
-    String? value,
-  ) {
+  Widget _buildSummaryRow(String label, String? value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
           Expanded(

@@ -11,8 +11,7 @@ import 'login_screen.dart';
 // Kalau kamu punya file maskot terpisah (tanpa tulisan logo),
 // ganti path di bawah ini, contoh:
 // 'assets/images/maskot_stomachy.png'
-const String kMascotAsset =
-    'assets/images/mascot_happy_bayangan.png';
+const String kMascotAsset = 'assets/images/mascot_happy_bayangan.png';
 
 // ===============================================================
 // PALET WARNA LANDING PAGE
@@ -35,8 +34,7 @@ class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
 
   @override
-  State<LandingScreen> createState() =>
-      _LandingScreenState();
+  State<LandingScreen> createState() => _LandingScreenState();
 }
 
 class _LandingScreenState extends State<LandingScreen> {
@@ -61,9 +59,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
@@ -78,9 +74,7 @@ class _LandingScreenState extends State<LandingScreen> {
           // =========================================================
           // BUBBLE BACKGROUND ANIMASI
           // =========================================================
-          const Positioned.fill(
-            child: _BubbleBackground(),
-          ),
+          const Positioned.fill(child: _BubbleBackground()),
 
           // =========================================================
           // LINGKARAN DECORATIVE (SESUAI DESAIN FIGMA)
@@ -88,18 +82,12 @@ class _LandingScreenState extends State<LandingScreen> {
           Positioned(
             top: -size.width * 0.35,
             right: -size.width * 0.25,
-            child: _circle(
-              size.width * 0.9,
-              const Color(0x2EF2D9C2),
-            ),
+            child: _circle(size.width * 0.9, const Color(0x2EF2D9C2)),
           ),
           Positioned(
             bottom: -size.width * 0.3,
             left: -size.width * 0.3,
-            child: _circle(
-              size.width * 0.85,
-              const Color(0x36F5C9BA),
-            ),
+            child: _circle(size.width * 0.85, const Color(0x36F5C9BA)),
           ),
 
           // =========================================================
@@ -125,7 +113,7 @@ class _LandingScreenState extends State<LandingScreen> {
                         active: _currentPage == 1,
                         pageController: _pageController,
                       ),
-                        _LandingPageThree(
+                      _LandingPageThree(
                         active: _currentPage == 2,
                         pageController: _pageController,
                         onStartPressed: _goToLogin,
@@ -155,10 +143,7 @@ class _LandingScreenState extends State<LandingScreen> {
     return Container(
       width: diameter,
       height: diameter,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 
@@ -182,15 +167,11 @@ class _LandingScreenState extends State<LandingScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOut,
-            margin: const EdgeInsets.symmetric(
-              horizontal: 5,
-            ),
+            margin: const EdgeInsets.symmetric(horizontal: 5),
             width: isActive ? 26 : 10,
             height: 10,
             decoration: BoxDecoration(
-              color: isActive
-                  ? kBrownHeading
-                  : kDotInactive,
+              color: isActive ? kBrownHeading : kDotInactive,
               borderRadius: BorderRadius.circular(20),
             ),
           ),
@@ -216,18 +197,12 @@ class _StaggerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double start =
-        (order * 0.12).clamp(0.0, 0.55).toDouble();
-    final double end =
-        (start + 0.45).clamp(0.0, 1.0).toDouble();
+    final double start = (order * 0.12).clamp(0.0, 0.55).toDouble();
+    final double end = (start + 0.45).clamp(0.0, 1.0).toDouble();
 
     final Animation<double> animation = CurvedAnimation(
       parent: controller,
-      curve: Interval(
-        start,
-        end,
-        curve: Curves.easeOutCubic,
-      ),
+      curve: Interval(start, end, curve: Curves.easeOutCubic),
     );
 
     return AnimatedBuilder(
@@ -237,10 +212,7 @@ class _StaggerItem extends StatelessWidget {
         return Opacity(
           opacity: animation.value,
           child: Transform.translate(
-            offset: Offset(
-              0,
-              (1 - animation.value) * 34,
-            ),
+            offset: Offset(0, (1 - animation.value) * 34),
             child: child,
           ),
         );
@@ -266,14 +238,12 @@ class _FloatingWidget extends StatefulWidget {
   final Duration duration;
 
   @override
-  State<_FloatingWidget> createState() =>
-      _FloatingWidgetState();
+  State<_FloatingWidget> createState() => _FloatingWidgetState();
 }
 
 class _FloatingWidgetState extends State<_FloatingWidget>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(
+  late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: widget.duration,
   )..repeat();
@@ -291,15 +261,10 @@ class _FloatingWidgetState extends State<_FloatingWidget>
       child: widget.child,
       builder: (context, child) {
         final double dy =
-            math.sin((_controller.value + widget.phase) *
-                    2 *
-                    math.pi) *
-                widget.amplitude;
+            math.sin((_controller.value + widget.phase) * 2 * math.pi) *
+            widget.amplitude;
 
-        return Transform.translate(
-          offset: Offset(0, dy),
-          child: child,
-        );
+        return Transform.translate(offset: Offset(0, dy), child: child);
       },
     );
   }
@@ -331,12 +296,9 @@ class _Parallax extends StatelessWidget {
 
         if (pageController.hasClients &&
             pageController.position.haveDimensions) {
-          delta =
-              ((pageController.page ??
-                          pageIndex.toDouble()) -
-                      pageIndex)
-                  .clamp(-1.0, 1.0)
-                  .toDouble();
+          delta = ((pageController.page ?? pageIndex.toDouble()) - pageIndex)
+              .clamp(-1.0, 1.0)
+              .toDouble();
         }
 
         return Transform.translate(
@@ -352,13 +314,7 @@ class _Parallax extends StatelessWidget {
 // BUBBLE BACKGROUND (GELEMBUNG MELAYANG KE ATAS)
 // ===============================================================
 class _Bubble {
-  const _Bubble(
-    this.x,
-    this.size,
-    this.speed,
-    this.phase,
-    this.color,
-  );
+  const _Bubble(this.x, this.size, this.speed, this.phase, this.color);
 
   final double x;
   final double size;
@@ -371,15 +327,12 @@ class _BubbleBackground extends StatefulWidget {
   const _BubbleBackground();
 
   @override
-  State<_BubbleBackground> createState() =>
-      _BubbleBackgroundState();
+  State<_BubbleBackground> createState() => _BubbleBackgroundState();
 }
 
-class _BubbleBackgroundState
-    extends State<_BubbleBackground>
+class _BubbleBackgroundState extends State<_BubbleBackground>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(
+  late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 14),
   )..repeat();
@@ -427,23 +380,17 @@ class _BubbleBackgroundState
     );
   }
 
-  Widget _buildBubble(
-    _Bubble bubble,
-    double width,
-    double height,
-  ) {
+  Widget _buildBubble(_Bubble bubble, double width, double height) {
     final double progress =
-        (_controller.value * bubble.speed + bubble.phase) %
-            1.0;
+        (_controller.value * bubble.speed + bubble.phase) % 1.0;
 
     // Bergerak dari bawah ke atas lalu berulang
-    final double top = height -
-        (progress * (height + bubble.size * 2)) -
-        bubble.size;
+    final double top =
+        height - (progress * (height + bubble.size * 2)) - bubble.size;
 
     // Goyangan kecil ke kiri-kanan
-    final double left = bubble.x * width +
-        math.sin(progress * 2 * math.pi) * 12.0;
+    final double left =
+        bubble.x * width + math.sin(progress * 2 * math.pi) * 12.0;
 
     // Fade in - fade out supaya muncul / hilang dengan lembut
     final double opacity = math
@@ -459,9 +406,7 @@ class _BubbleBackgroundState
         child: Container(
           width: bubble.size,
           height: bubble.size,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-          ),
+          decoration: const BoxDecoration(shape: BoxShape.circle),
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: bubble.color,
@@ -478,23 +423,18 @@ class _BubbleBackgroundState
 // HALAMAN 1 : PERKENALAN
 // ===============================================================
 class _LandingPageOne extends StatefulWidget {
-  const _LandingPageOne({
-    required this.active,
-    required this.pageController,
-  });
+  const _LandingPageOne({required this.active, required this.pageController});
 
   final bool active;
   final PageController pageController;
 
   @override
-  State<_LandingPageOne> createState() =>
-      _LandingPageOneState();
+  State<_LandingPageOne> createState() => _LandingPageOneState();
 }
 
 class _LandingPageOneState extends State<_LandingPageOne>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _entrance =
-      AnimationController(
+  late final AnimationController _entrance = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 700),
   );
@@ -509,8 +449,7 @@ class _LandingPageOneState extends State<_LandingPageOne>
   }
 
   @override
-  void didUpdateWidget(
-      covariant _LandingPageOne oldWidget) {
+  void didUpdateWidget(covariant _LandingPageOne oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.active != oldWidget.active) {
@@ -541,9 +480,7 @@ class _LandingPageOneState extends State<_LandingPageOne>
     final size = MediaQuery.of(context).size;
 
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.06,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -798,8 +735,7 @@ class _LandingPageOneState extends State<_LandingPageOne>
         style: baseStyle,
         children: const [
           TextSpan(
-            text:
-                'STOMACHY bantu kamu memantau risiko GERD melalui cek skrining oleh AI, edukasi mingguan, dan konsultasi dokter ',
+            text: 'STOMACHY bantu kamu memantau risiko GERD melalui cek skrining oleh AI, edukasi mingguan, dan konsultasi dokter ',
           ),
           TextSpan(
             text: 'semuanya dalam satu aplikasi.',
@@ -858,8 +794,7 @@ class _LandingPageOneState extends State<_LandingPageOne>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       '4.9',
@@ -870,9 +805,7 @@ class _LandingPageOneState extends State<_LandingPageOne>
                         color: kBrownHeading,
                       ),
                     ),
-                    SizedBox(
-                      width: size.width * 0.012,
-                    ),
+                    SizedBox(width: size.width * 0.012),
                     Icon(
                       Icons.star_rounded,
                       color: const Color(0xFFF2B04C),
@@ -937,10 +870,7 @@ class _LandingPageOneState extends State<_LandingPageOne>
         decoration: BoxDecoration(
           color: kCardWhite,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: kBrownHeading,
-            width: 1.1,
-          ),
+          border: Border.all(color: kBrownHeading, width: 1.1),
         ),
         child: Center(child: child),
       ),
@@ -952,23 +882,18 @@ class _LandingPageOneState extends State<_LandingPageOne>
 // HALAMAN 2 : FITUR UTAMA
 // ===============================================================
 class _LandingPageTwo extends StatefulWidget {
-  const _LandingPageTwo({
-    required this.active,
-    required this.pageController,
-  });
+  const _LandingPageTwo({required this.active, required this.pageController});
 
   final bool active;
   final PageController pageController;
 
   @override
-  State<_LandingPageTwo> createState() =>
-      _LandingPageTwoState();
+  State<_LandingPageTwo> createState() => _LandingPageTwoState();
 }
 
 class _LandingPageTwoState extends State<_LandingPageTwo>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _entrance =
-      AnimationController(
+  late final AnimationController _entrance = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 700),
   );
@@ -983,8 +908,7 @@ class _LandingPageTwoState extends State<_LandingPageTwo>
   }
 
   @override
-  void didUpdateWidget(
-      covariant _LandingPageTwo oldWidget) {
+  void didUpdateWidget(covariant _LandingPageTwo oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.active != oldWidget.active) {
@@ -1064,8 +988,7 @@ class _LandingPageTwoState extends State<_LandingPageTwo>
             order: 2,
             emoji: '📋',
             title: 'Skrining Risiko GERD',
-            description:
-                'Jawab pertanyaan singkat, AI akan menghitung skor dan risiko GERDmu.',
+            description: 'Jawab pertanyaan singkat, AI akan menghitung skor dan risiko GERDmu.',
           ),
 
           SizedBox(height: size.height * 0.014),
@@ -1075,8 +998,7 @@ class _LandingPageTwoState extends State<_LandingPageTwo>
             order: 3,
             emoji: '📊',
             title: 'Grafik Riwayat Skrining',
-            description:
-                'Pantau perkembangan skor skriningmu lewat grafik yang mudah dibaca.',
+            description: 'Pantau perkembangan skor skriningmu lewat grafik yang mudah dibaca.',
           ),
 
           SizedBox(height: size.height * 0.014),
@@ -1097,8 +1019,7 @@ class _LandingPageTwoState extends State<_LandingPageTwo>
             order: 5,
             emoji: '🩺',
             title: 'Konsultasi dengan Dokter',
-            description:
-                'Tanya langsung ke dokter jika hasil skrining perlu tindak lanjut.',
+            description: 'Tanya langsung ke dokter jika hasil skrining perlu tindak lanjut.',
           ),
 
           SizedBox(height: size.height * 0.022),
@@ -1215,17 +1136,14 @@ class _LandingPageTwoState extends State<_LandingPageTwo>
               child: Center(
                 child: Text(
                   emoji,
-                  style: TextStyle(
-                    fontSize: size.width * 0.055,
-                  ),
+                  style: TextStyle(fontSize: size.width * 0.055),
                 ),
               ),
             ),
             SizedBox(width: size.width * 0.038),
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
@@ -1290,33 +1208,17 @@ class _LandingPageTwoState extends State<_LandingPageTwo>
             ),
           ),
           SizedBox(height: size.height * 0.016),
-          _buildExtraItem(
-            size,
-            '📰',
-            'Artikel baru setiap minggu',
-          ),
+          _buildExtraItem(size, '📰', 'Artikel baru setiap minggu'),
           SizedBox(height: size.height * 0.012),
-          _buildExtraItem(
-            size,
-            '🏋️',
-            'Rekomendasi olahraga',
-          ),
+          _buildExtraItem(size, '🏋️', 'Rekomendasi olahraga'),
           SizedBox(height: size.height * 0.012),
-          _buildExtraItem(
-            size,
-            '🥗',
-            'Rekomendasi makanan',
-          ),
+          _buildExtraItem(size, '🥗', 'Rekomendasi makanan'),
         ],
       ),
     );
   }
 
-  Widget _buildExtraItem(
-    Size size,
-    String emoji,
-    String label,
-  ) {
+  Widget _buildExtraItem(Size size, String emoji, String label) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(
@@ -1336,12 +1238,7 @@ class _LandingPageTwoState extends State<_LandingPageTwo>
       ),
       child: Row(
         children: [
-          Text(
-            emoji,
-            style: TextStyle(
-              fontSize: size.width * 0.048,
-            ),
-          ),
+          Text(emoji, style: TextStyle(fontSize: size.width * 0.048)),
           SizedBox(width: size.width * 0.03),
           Expanded(
             child: Text(
@@ -1375,15 +1272,12 @@ class _LandingPageThree extends StatefulWidget {
   final VoidCallback onStartPressed;
 
   @override
-  State<_LandingPageThree> createState() =>
-      _LandingPageThreeState();
+  State<_LandingPageThree> createState() => _LandingPageThreeState();
 }
 
-class _LandingPageThreeState
-    extends State<_LandingPageThree>
+class _LandingPageThreeState extends State<_LandingPageThree>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _entrance =
-      AnimationController(
+  late final AnimationController _entrance = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 700),
   );
@@ -1398,8 +1292,7 @@ class _LandingPageThreeState
   }
 
   @override
-  void didUpdateWidget(
-      covariant _LandingPageThree oldWidget) {
+  void didUpdateWidget(covariant _LandingPageThree oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.active != oldWidget.active) {
@@ -1430,9 +1323,7 @@ class _LandingPageThreeState
     final size = MediaQuery.of(context).size;
 
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.075,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.075),
       child: Column(
         children: [
           // =====================================================
@@ -1536,17 +1427,13 @@ class _LandingPageThreeState
 // TOMBOL UTAMA (DENGAN ANIMASI TEKAN)
 // ===============================================================
 class _PrimaryButton extends StatefulWidget {
-  const _PrimaryButton({
-    required this.label,
-    required this.onTap,
-  });
+  const _PrimaryButton({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
 
   @override
-  State<_PrimaryButton> createState() =>
-      _PrimaryButtonState();
+  State<_PrimaryButton> createState() => _PrimaryButtonState();
 }
 
 class _PrimaryButtonState extends State<_PrimaryButton> {

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'doctor_chat_screen.dart';
 import 'doctor_notification_screen.dart';
 import 'doctor_patient_chat_screen.dart';
@@ -49,7 +51,10 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       final User? user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
       String name = user.displayName ?? '';
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       final firestoreName = (doc.data()?['name'] ?? '').toString().trim();
       if (firestoreName.isNotEmpty) name = firestoreName;
       if (!mounted) return;
@@ -57,14 +62,21 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     } catch (_) {
       if (!mounted) return;
       final user = FirebaseAuth.instance.currentUser;
-      setState(() => _doctorName = user?.displayName?.trim().isNotEmpty == true ? user!.displayName!.trim() : 'Dokter');
+      setState(
+        () => _doctorName = user?.displayName?.trim().isNotEmpty == true
+            ? user!.displayName!.trim()
+            : 'Dokter',
+      );
     }
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _consultationStream() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const Stream.empty();
-    return FirebaseFirestore.instance.collection('consultations').where('doctorId', isEqualTo: user.uid).snapshots();
+    return FirebaseFirestore.instance
+        .collection('consultations')
+        .where('doctorId', isEqualTo: user.uid)
+        .snapshots();
   }
 
   DateTime? _consultationDate(Map<String, dynamic> data) {
@@ -102,17 +114,25 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     } catch (_) {}
   }
 
-  int _getUnreadCount(List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations) {
+  int _getUnreadCount(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
+  ) {
     int total = 0;
     for (final doc in consultations) {
       final value = doc.data()['unreadForDoctor'];
-      final unread = value is int ? value : value is num ? value.toInt() : int.tryParse(value?.toString() ?? '0') ?? 0;
+      final unread = value is int
+          ? value
+          : value is num
+          ? value.toInt()
+          : int.tryParse(value?.toString() ?? '0') ?? 0;
       if (unread > 0) total += unread;
     }
     return total;
   }
 
-  int _getPatientTodayCount(List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations) {
+  int _getPatientTodayCount(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
+  ) {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, now.day);
     final end = start.add(const Duration(days: 1));
@@ -127,7 +147,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     return patients.length;
   }
 
-  int _getPatientCount(List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations) {
+  int _getPatientCount(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
+  ) {
     final patients = <String>{};
     for (final doc in consultations) {
       final userId = (doc.data()['userId'] ?? '').toString().trim();
@@ -140,24 +162,44 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     if (index == 0) {
       setState(() => _selectedIndex = 0);
     } else if (index == 1) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const DoctorPatientsScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const DoctorPatientsScreen()),
+      );
     } else if (index == 2) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const DoctorChatScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const DoctorChatScreen()),
+      );
     } else if (index == 3) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const DoctorProfileScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const DoctorProfileScreen()),
+      );
     }
   }
 
   void _openNotifications() {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const DoctorNotificationScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const DoctorNotificationScreen()),
+    );
   }
 
   void _openProfile() {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const DoctorProfileScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const DoctorProfileScreen()),
+    );
   }
 
   void _openPatientChat(Map<String, dynamic> patient) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorPatientChatScreen(patient: patient)));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DoctorPatientChatScreen(patient: patient),
+      ),
+    );
   }
 
   @override
@@ -168,7 +210,9 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
         child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: _consultationStream(),
           builder: (context, snapshot) {
-            final consultations = snapshot.data?.docs ?? <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+            final consultations =
+                snapshot.data?.docs ??
+                <QueryDocumentSnapshot<Map<String, dynamic>>>[];
             final unreadCount = _getUnreadCount(consultations);
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -190,7 +234,10 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           },
         ),
       ),
-      bottomNavigationBar: DoctorBottomNavigation(selectedIndex: _selectedIndex, onItemSelected: _onNavigationTap),
+      bottomNavigationBar: DoctorBottomNavigation(
+        selectedIndex: _selectedIndex,
+        onItemSelected: _onNavigationTap,
+      ),
     );
   }
 
@@ -208,10 +255,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     final User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return _buildHeaderContent(
-        photoBase64: null,
-        googlePhotoUrl: '',
-      );
+      return _buildHeaderContent(photoBase64: null, googlePhotoUrl: '');
     }
 
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -261,9 +305,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             onTap: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const DoctorProfileScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const DoctorProfileScreen()),
               );
               if (!mounted) return;
               setState(() {});
@@ -339,41 +381,108 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFEDE3),
         borderRadius: BorderRadius.circular(27),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 7, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 7,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Halo,', style: TextStyle(fontFamily: 'Fredoka', fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black, height: 1.2)),
+          const Text(
+            'Halo,',
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+              height: 1.2,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text('dr. $_doctorName 👋', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Fredoka', fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black, height: 1.2)),
+          Text(
+            'dr. $_doctorName 👋',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+              height: 1.2,
+            ),
+          ),
           const SizedBox(height: 9),
-          Text(unreadCount > 0 ? 'Anda punya $unreadCount pesan belum dibaca.' : 'Tidak ada pesan baru.', style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w400, color: Colors.black)),
+          Text(
+            unreadCount > 0
+                ? 'Anda punya $unreadCount pesan belum dibaca.'
+                : 'Tidak ada pesan baru.',
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatistics(List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations, int unreadCount) {
+  Widget _buildStatistics(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
+    int unreadCount,
+  ) {
     return Row(
       children: [
-        Expanded(child: _buildStatisticCard(icon: Icons.groups_rounded, value: _getPatientTodayCount(consultations).toString(), label: 'Pasien Hari Ini')),
+        Expanded(
+          child: _buildStatisticCard(
+            icon: Icons.groups_rounded,
+            value: _getPatientTodayCount(consultations).toString(),
+            label: 'Pasien Hari Ini',
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _buildStatisticCard(icon: Icons.chat_bubble_rounded, value: unreadCount.toString(), label: 'Belum Dibaca')),
+        Expanded(
+          child: _buildStatisticCard(
+            icon: Icons.chat_bubble_rounded,
+            value: unreadCount.toString(),
+            label: 'Belum Dibaca',
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _buildStatisticCard(icon: Icons.calendar_month_rounded, value: _getPatientCount(consultations).toString(), label: 'Total Pasien')),
+        Expanded(
+          child: _buildStatisticCard(
+            icon: Icons.calendar_month_rounded,
+            value: _getPatientCount(consultations).toString(),
+            label: 'Total Pasien',
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildStatisticCard({required IconData icon, required String value, required String label}) {
+  Widget _buildStatisticCard({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 26),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 7, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 7,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -381,20 +490,43 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           Container(
             width: 54,
             height: 54,
-            decoration: const BoxDecoration(color: Color(0xFFFFE1C8), shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFE1C8),
+              shape: BoxShape.circle,
+            ),
             child: Icon(icon, size: 27, color: brown),
           ),
           const SizedBox(height: 14),
-          Text(value, style: const TextStyle(fontFamily: 'Nunito', fontSize: 25, fontWeight: FontWeight.w800, color: Colors.black)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 25,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+            ),
+          ),
           const SizedBox(height: 5),
-          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w400, color: Colors.black)),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRecentMessages(List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations) {
-    final latestByUser = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+  Widget _buildRecentMessages(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
+  ) {
+    final latestByUser =
+        <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
 
     for (final document in consultations) {
       final data = document.data();
@@ -410,15 +542,25 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
         continue;
       }
 
-      final oldTime = existing.data()['updatedAt'] is Timestamp ? existing.data()['updatedAt'] as Timestamp : null;
-      final newTime = data['updatedAt'] is Timestamp ? data['updatedAt'] as Timestamp : null;
-      if (newTime != null && (oldTime == null || newTime.compareTo(oldTime) > 0)) latestByUser[userId] = document;
+      final oldTime = existing.data()['updatedAt'] is Timestamp
+          ? existing.data()['updatedAt'] as Timestamp
+          : null;
+      final newTime = data['updatedAt'] is Timestamp
+          ? data['updatedAt'] as Timestamp
+          : null;
+      if (newTime != null &&
+          (oldTime == null || newTime.compareTo(oldTime) > 0))
+        latestByUser[userId] = document;
     }
 
     final recentChats = latestByUser.values.toList();
     recentChats.sort((a, b) {
-      final aTime = a.data()['updatedAt'] is Timestamp ? a.data()['updatedAt'] as Timestamp : null;
-      final bTime = b.data()['updatedAt'] is Timestamp ? b.data()['updatedAt'] as Timestamp : null;
+      final aTime = a.data()['updatedAt'] is Timestamp
+          ? a.data()['updatedAt'] as Timestamp
+          : null;
+      final bTime = b.data()['updatedAt'] is Timestamp
+          ? b.data()['updatedAt'] as Timestamp
+          : null;
       if (aTime == null && bTime == null) return 0;
       if (aTime == null) return 1;
       if (bTime == null) return -1;
@@ -433,20 +575,48 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(27),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 7, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 7,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
-              const Expanded(child: Text('Pesan Terbaru', style: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w800, color: Colors.black))),
+              const Expanded(
+                child: Text(
+                  'Pesan Terbaru',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
               GestureDetector(
                 onTap: _openNotifications,
                 child: const Row(
                   children: [
-                    Text('Lihat Semua', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFAA4E39))),
+                    Text(
+                      'Lihat Semua',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFAA4E39),
+                      ),
+                    ),
                     SizedBox(width: 2),
-                    Icon(Icons.chevron_right_rounded, size: 19, color: Color(0xFFAA4E39)),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 19,
+                      color: Color(0xFFAA4E39),
+                    ),
                   ],
                 ),
               ),
@@ -456,7 +626,14 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           if (limitedChats.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
-              child: Text('Belum ada pesan terbaru.', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Colors.black)),
+              child: Text(
+                'Belum ada pesan terbaru.',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
+                  color: Colors.black,
+                ),
+              ),
             )
           else
             ...limitedChats.map(_buildMessageItem),
@@ -465,52 +642,114 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
-  Widget _buildMessageItem(QueryDocumentSnapshot<Map<String, dynamic>> document) {
+  Widget _buildMessageItem(
+    QueryDocumentSnapshot<Map<String, dynamic>> document,
+  ) {
     final data = document.data();
-    final patientName = (data['userName'] ?? data['name'] ?? 'Pasien').toString();
+    final patientName = (data['userName'] ?? data['name'] ?? 'Pasien')
+        .toString();
     final message = (data['lastMessage'] ?? '').toString().trim();
     final status = (data['status'] ?? '').toString().toLowerCase();
     final value = data['unreadForDoctor'];
-    final unreadCount = value is int ? value : value is num ? value.toInt() : int.tryParse(value?.toString() ?? '0') ?? 0;
-    final patient = {...data, 'consultationId': document.id, 'userName': patientName};
+    final unreadCount = value is int
+        ? value
+        : value is num
+        ? value.toInt()
+        : int.tryParse(value?.toString() ?? '0') ?? 0;
+    final patient = {
+      ...data,
+      'consultationId': document.id,
+      'userName': patientName,
+    };
 
     return GestureDetector(
       onTap: () => _openPatientChat(patient),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 9),
-        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFEFE7E3), width: 1))),
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Color(0xFFEFE7E3), width: 1),
+          ),
+        ),
         child: Row(
           children: [
             Container(
               width: 48,
               height: 48,
-              decoration: const BoxDecoration(color: Color(0xFFFFE5D8), shape: BoxShape.circle),
-              child: const Icon(Icons.person_rounded, size: 31, color: Color(0xFFAA4E39)),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFE5D8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_rounded,
+                size: 31,
+                color: Color(0xFFAA4E39),
+              ),
             ),
             const SizedBox(width: 11),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(patientName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black)),
+                  Text(
+                    patientName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(message, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w400, color: Colors.black)),
+                  Text(
+                    message,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 6),
             if (unreadCount > 0)
-              Container(width: 11, height: 11, decoration: const BoxDecoration(color: Color(0xFFFFD9E1), shape: BoxShape.circle))
+              Container(
+                width: 11,
+                height: 11,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFD9E1),
+                  shape: BoxShape.circle,
+                ),
+              )
             else
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: status == 'active' ? const Color(0xFFFFE5D8) : status == 'completed' ? const Color(0xFFECECEC) : const Color(0xFFFFEEE5),
+                  color: status == 'active'
+                      ? const Color(0xFFFFE5D8)
+                      : status == 'completed'
+                      ? const Color(0xFFECECEC)
+                      : const Color(0xFFFFEEE5),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  status == 'active' ? 'Aktif' : status == 'booked' ? 'Terjadwal' : 'Selesai',
-                  style: const TextStyle(fontFamily: 'Nunito', fontSize: 9, fontWeight: FontWeight.w700, color: Colors.black),
+                  status == 'active'
+                      ? 'Aktif'
+                      : status == 'booked'
+                      ? 'Terjadwal'
+                      : 'Selesai',
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
                 ),
               ),
           ],
@@ -540,8 +779,7 @@ class _DoctorNotificationBell extends StatefulWidget {
       _DoctorNotificationBellState();
 }
 
-class _DoctorNotificationBellState
-    extends State<_DoctorNotificationBell> {
+class _DoctorNotificationBellState extends State<_DoctorNotificationBell> {
   int _unreadCount = 0;
 
   @override
@@ -549,9 +787,7 @@ class _DoctorNotificationBellState
     super.initState();
     _refreshCount();
 
-    NotificationService.badgeSignal.addListener(
-      _onBadgeSignal,
-    );
+    NotificationService.badgeSignal.addListener(_onBadgeSignal);
   }
 
   void _onBadgeSignal() {
@@ -560,9 +796,7 @@ class _DoctorNotificationBellState
 
   @override
   void dispose() {
-    NotificationService.badgeSignal.removeListener(
-      _onBadgeSignal,
-    );
+    NotificationService.badgeSignal.removeListener(_onBadgeSignal);
     super.dispose();
   }
 
@@ -578,10 +812,7 @@ class _DoctorNotificationBellState
       return;
     }
 
-    final int count =
-        await AppNotification.getRecentUnreadCount(
-      user.uid,
-    );
+    final int count = await AppNotification.getRecentUnreadCount(user.uid);
 
     if (!mounted) return;
 
@@ -599,8 +830,7 @@ class _DoctorNotificationBellState
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                const DoctorNotificationScreen(),
+            builder: (context) => const DoctorNotificationScreen(),
           ),
         );
 
@@ -626,14 +856,8 @@ class _DoctorNotificationBellState
               right: -3,
               top: -4,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 2,
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 19,
-                  minHeight: 19,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                constraints: const BoxConstraints(minWidth: 19, minHeight: 19),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: const Color(0xFFAA4E39),
@@ -643,10 +867,7 @@ class _DoctorNotificationBellState
                   borderRadius: _unreadCount > 9
                       ? BorderRadius.circular(10)
                       : null,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 1.2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 1.2),
                 ),
                 child: Text(
                   _unreadCount > 9 ? '9+' : '$_unreadCount',

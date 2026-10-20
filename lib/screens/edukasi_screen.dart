@@ -38,9 +38,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -49,9 +47,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -60,9 +56,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -71,9 +65,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
     if (index == 4) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -96,12 +88,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
             // ========================================================
 
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                20,
-                14,
-                20,
-                8,
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
               child: Row(
                 children: [
                   GestureDetector(
@@ -144,16 +131,10 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
             // ========================================================
             // EDUCATION LIST
             // ========================================================
-
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  14,
-                  10,
-                  14,
-                  90,
-                ),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 90),
                 child: Column(
                   children: [
                     // ==================================================
@@ -181,10 +162,8 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                     // ==================================================
                     // 2. GEJALA & TANDA BAHAYA
                     // ==================================================
-
                     _buildEducationCard(
-                      image:
-                          'assets/images/edukasi_gejala_red_flags.png',
+                      image: 'assets/images/edukasi_gejala_red_flags.png',
                       title: 'Gejala & Tanda Bahaya (Red Flags)',
                       description:
                           'Kenali ciri khas gejala GERD dan tanda bahaya\n'
@@ -205,10 +184,8 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                     // ==================================================
                     // 3. PERTOLONGAN PERTAMA
                     // ==================================================
-
                     _buildEducationCard(
-                      image:
-                          'assets/images/edukasi_pertolongan_pertama.png',
+                      image: 'assets/images/edukasi_pertolongan_pertama.png',
                       title: 'Pertolongan Pertama Saat Kambuh',
                       description:
                           'Langkah praktis dan cepat untuk meredakan\n'
@@ -229,7 +206,6 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                     // ==================================================
                     // 4. MITOS VS FAKTA
                     // ==================================================
-
                     _buildEducationCard(
                       image: 'assets/images/edukasi_mitos_fakta.png',
                       title: 'Mitos vs. Fakta GERD',
@@ -252,11 +228,9 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                     // ==================================================
                     // 5. WAKTU MAKAN
                     // ==================================================
-
                     _buildEducationCard(
                       image: 'assets/images/edukasi_waktu_makan.png',
-                      title:
-                          'Waktu Makan yang Tepat untuk Penderita GERD',
+                      title: 'Waktu Makan yang Tepat untuk Penderita GERD',
                       description:
                           'Panduan mengatur waktu makan untuk penderita GERD.',
                       onTap: () {
@@ -281,7 +255,6 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
       // ==============================================================
       // BOTTOM NAVIGATION
       // ==============================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -305,16 +278,11 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
       child: Container(
         width: double.infinity,
         height: 130,
-        padding: const EdgeInsets.symmetric(
-          vertical: 10,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: const Color(0xFFFFFCFA),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: borderColor,
-            width: 1,
-          ),
+          border: Border.all(color: borderColor, width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.10),
@@ -332,19 +300,14 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
             Container(
               width: 90,
               height: 90,
-              margin: const EdgeInsets.only(
-                left: 10,
-              ),
+              margin: const EdgeInsets.only(left: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFE9D9),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(5),
-                child: Image.asset(
-                  image,
-                  fit: BoxFit.contain,
-                ),
+                child: Image.asset(image, fit: BoxFit.contain),
               ),
             ),
 
@@ -353,7 +316,6 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
             // ======================================================
             // TEXT
             // ======================================================
-
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -389,12 +351,8 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
             // ======================================================
             // ARROW
             // ======================================================
-
             const Padding(
-              padding: EdgeInsets.only(
-                left: 5,
-                right: 14,
-              ),
+              padding: EdgeInsets.only(left: 5, right: 14),
               child: Icon(
                 Icons.chevron_right_rounded,
                 size: 30,

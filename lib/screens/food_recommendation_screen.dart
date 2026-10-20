@@ -16,8 +16,7 @@ class FoodRecommendationScreen extends StatefulWidget {
       _FoodRecommendationScreenState();
 }
 
-class _FoodRecommendationScreenState
-    extends State<FoodRecommendationScreen> {
+class _FoodRecommendationScreenState extends State<FoodRecommendationScreen> {
   // ===============================================================
   // BOTTOM NAVIGATION
   // ===============================================================
@@ -45,9 +44,7 @@ class _FoodRecommendationScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -56,9 +53,7 @@ class _FoodRecommendationScreenState
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -67,9 +62,7 @@ class _FoodRecommendationScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -78,9 +71,7 @@ class _FoodRecommendationScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -89,9 +80,7 @@ class _FoodRecommendationScreenState
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -109,12 +98,7 @@ class _FoodRecommendationScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            22,
-            12,
-            22,
-            105,
-          ),
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -129,7 +113,6 @@ class _FoodRecommendationScreenState
               // ===================================================
               // HERO CARD
               // ===================================================
-
               _buildHeroCard(),
 
               const SizedBox(height: 24),
@@ -137,7 +120,6 @@ class _FoodRecommendationScreenState
               // ===================================================
               // MAKANAN 1
               // ===================================================
-
               _buildFoodCard(
                 imagePath: 'assets/images/makanan_karbohidrat.png',
                 title: 'Oatmeal, Ubi jalar, Roti Gandum',
@@ -152,7 +134,6 @@ class _FoodRecommendationScreenState
               // ===================================================
               // MAKANAN 2
               // ===================================================
-
               _buildFoodCard(
                 imagePath: 'assets/images/makanan_buah.png',
                 title: 'Pisang, Melon, Apel, Pir, Pepaya',
@@ -167,7 +148,6 @@ class _FoodRecommendationScreenState
               // ===================================================
               // MAKANAN 3
               // ===================================================
-
               _buildFoodCard(
                 imagePath: 'assets/images/makanan_protein.png',
                 title: 'Putih telur, Ayam, Ikan',
@@ -182,7 +162,6 @@ class _FoodRecommendationScreenState
               // ===================================================
               // TIPS TAMBAHAN
               // ===================================================
-
               _buildTipsCard(),
 
               const SizedBox(height: 20),
@@ -194,7 +173,6 @@ class _FoodRecommendationScreenState
       // ===========================================================
       // BOTTOM NAVIGATION
       // ===========================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -246,9 +224,7 @@ class _FoodRecommendationScreenState
           ),
 
           // HEADER BALANCER
-          const SizedBox(
-            width: 45,
-          ),
+          const SizedBox(width: 45),
         ],
       ),
     );
@@ -262,10 +238,7 @@ class _FoodRecommendationScreenState
     return StomachyCard(
       color: const Color(0xFFFFE3D6),
       radius: 14,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: SizedBox(
         height: 119,
         child: Row(
@@ -297,14 +270,9 @@ class _FoodRecommendationScreenState
             // =====================================================
             // TEXT
             // =====================================================
-
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(
-                  right: 5,
-                  top: 5,
-                  bottom: 5,
-                ),
+                padding: const EdgeInsets.only(right: 5, top: 5, bottom: 5),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -366,10 +334,7 @@ class _FoodRecommendationScreenState
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 13,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -404,7 +369,6 @@ class _FoodRecommendationScreenState
           // =======================================================
           // FOOD INFORMATION
           // =======================================================
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,10 +440,7 @@ class _FoodRecommendationScreenState
   Widget _buildTipsCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFFFE4D3),
         borderRadius: BorderRadius.circular(12),
@@ -505,7 +466,6 @@ class _FoodRecommendationScreenState
           // =====================================================
           // TEXT
           // =====================================================
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

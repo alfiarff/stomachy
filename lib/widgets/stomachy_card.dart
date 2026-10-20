@@ -47,10 +47,7 @@ class StomachyCard extends StatelessWidget {
           ),
         ],
         border: useBorder
-            ? Border.all(
-                color: const Color(0xFFF6E3D7),
-                width: 1,
-              )
+            ? Border.all(color: const Color(0xFFF6E3D7), width: 1)
             : null,
       ),
       child: child,

@@ -1,10 +1,10 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../landing_screen.dart';
+import '../login_screen.dart';
 import '../personal_information_screen.dart';
 import '../change_password_screen.dart';
 
@@ -13,6 +13,7 @@ import '../../widgets/admin_bottom_navigation.dart';
 import 'admin_home_screen.dart';
 import 'admin_article_screen.dart';
 import 'admin_content_screen.dart';
+import 'admin_account_management_screen.dart';
 
 class AdminProfileScreen extends StatefulWidget {
   const AdminProfileScreen({super.key});
@@ -65,9 +66,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(22, 16, 22, 110),
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Column(
                     children: [
@@ -257,6 +256,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     return Icon(Icons.person, size: 38, color: brown);
   }
 
+  // ===============================================================
+  // MENU PROFILE
+  // ===============================================================
+
   Widget _buildProfileMenuList() {
     return Column(
       children: [
@@ -273,7 +276,9 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             );
           },
         ),
+
         const SizedBox(height: 14),
+
         _buildProfileMenuCard(
           icon: Icons.lock_outline_rounded,
           title: 'Ubah Kata Sandi',
@@ -283,6 +288,22 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => const ChangePasswordScreen(),
+              ),
+            );
+          },
+        ),
+
+        const SizedBox(height: 14),
+
+        _buildProfileMenuCard(
+          icon: Icons.manage_accounts_rounded,
+          title: 'Manajemen Akun',
+          subtitle: 'Kelola akun dokter & pengguna',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AdminAccountManagementScreen(),
               ),
             );
           },
@@ -480,7 +501,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const LandingScreen(),
+                                builder: (context) => const LoginScreen(),
                               ),
                               (route) => false,
                             );
@@ -515,5 +536,3 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     );
   }
 }
-
-

@@ -52,12 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            22,
-            16,
-            22,
-            110,
-          ),
+          padding: const EdgeInsets.fromLTRB(22, 16, 22, 110),
           child: Column(
             children: [
               // =====================================================
@@ -71,7 +66,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // =====================================================
               // MENU PROFILE
               // =====================================================
-
               _buildProfileMenuList(),
 
               const SizedBox(height: 43),
@@ -79,7 +73,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // =====================================================
               // TOMBOL KELUAR
               // =====================================================
-
               _buildLogoutButton(),
 
               const SizedBox(height: 20),
@@ -91,7 +84,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // =============================================================
       // BOTTOM NAVIGATION
       // =============================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -111,9 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -121,9 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -131,9 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -141,9 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -188,32 +172,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
         String? photoBase64;
 
         if (snapshot.hasData && snapshot.data!.exists) {
-          final data =
-              snapshot.data!.data() as Map<String, dynamic>?;
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
 
           if (data != null) {
-            final firestoreName =
-                data['name']?.toString().trim();
+            final firestoreName = data['name']?.toString().trim();
 
-            final firestoreEmail =
-                data['email']?.toString().trim();
+            final firestoreEmail = data['email']?.toString().trim();
 
-            final firestorePhoto =
-                data['photoBase64']?.toString().trim();
+            final firestorePhoto = data['photoBase64']?.toString().trim();
 
-            if (firestoreName != null &&
-                firestoreName.isNotEmpty) {
+            if (firestoreName != null && firestoreName.isNotEmpty) {
               name = firestoreName;
             }
 
-            if (firestoreEmail != null &&
-                firestoreEmail.isNotEmpty) {
+            if (firestoreEmail != null && firestoreEmail.isNotEmpty) {
               email = firestoreEmail;
             }
 
             // Foto Base64 dari Firestore
-            if (firestorePhoto != null &&
-                firestorePhoto.isNotEmpty) {
+            if (firestorePhoto != null && firestorePhoto.isNotEmpty) {
               photoBase64 = firestorePhoto;
             }
           }
@@ -246,10 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return StomachyCard(
       color: const Color(0xFFFFFFFF),
       radius: 16,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 15,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: SizedBox(
         height: 64,
         child: Row(
@@ -278,7 +252,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // =======================================================
             // NAMA DAN EMAIL
             // =======================================================
-
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -332,19 +305,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           base64Decode(photoBase64),
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return Icon(
-              Icons.person,
-              size: 38,
-              color: brown,
-            );
+            return Icon(Icons.person, size: 38, color: brown);
           },
         );
       } catch (e) {
-        return Icon(
-          Icons.person,
-          size: 38,
-          color: brown,
-        );
+        return Icon(Icons.person, size: 38, color: brown);
       }
     }
 
@@ -354,21 +319,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         googlePhotoUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return Icon(
-            Icons.person,
-            size: 38,
-            color: brown,
-          );
+          return Icon(Icons.person, size: 38, color: brown);
         },
       );
     }
 
     // 3. Default
-    return Icon(
-      Icons.person,
-      size: 38,
-      color: brown,
-    );
+    return Icon(Icons.person, size: 38, color: brown);
   }
 
   // ===============================================================
@@ -390,8 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    const PersonalInformationScreen(),
+                builder: (context) => const PersonalInformationScreen(),
               ),
             );
           },
@@ -402,7 +358,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ===========================================================
         // RIWAYAT
         // ===========================================================
-
         _buildProfileMenuCard(
           icon: Icons.access_time_rounded,
           title: 'Riwayat',
@@ -410,9 +365,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const HistoryScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
             );
           },
         ),
@@ -422,7 +375,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ===========================================================
         // REKOMENDASI OLAHRAGA
         // ===========================================================
-
         _buildProfileMenuCard(
           icon: Icons.directions_bike_outlined,
           title: 'Rekomendasi Olahraga',
@@ -431,8 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    const RecommendationSportScreen(),
+                builder: (context) => const RecommendationSportScreen(),
               ),
             );
           },
@@ -443,7 +394,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ===========================================================
         // REKOMENDASI MAKANAN
         // ===========================================================
-
         _buildProfileMenuCard(
           icon: Icons.local_drink_outlined,
           title: 'Rekomendasi Makanan',
@@ -452,8 +402,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    const FoodRecommendationScreen(),
+                builder: (context) => const FoodRecommendationScreen(),
               ),
             );
           },
@@ -464,7 +413,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ===========================================================
         // GRAFIK
         // ===========================================================
-
         _buildProfileMenuCard(
           icon: Icons.show_chart_rounded,
           title: 'Grafik',
@@ -472,9 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const GrafikScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const GrafikScreen()),
             );
           },
         ),
@@ -484,7 +430,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ===========================================================
         // PENGATURAN
         // ===========================================================
-
         _buildProfileMenuCard(
           icon: Icons.settings_outlined,
           title: 'Pengaturan',
@@ -492,9 +437,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const SettingsScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
             );
           },
         ),
@@ -504,7 +447,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ===========================================================
         // TENTANG STOMACHY
         // ===========================================================
-
         _buildProfileMenuCard(
           icon: Icons.info_outline_rounded,
           title: 'Tentang Stomachy',
@@ -513,8 +455,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    const AboutStomachyScreen(),
+                builder: (context) => const AboutStomachyScreen(),
               ),
             );
           },
@@ -536,10 +477,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return StomachyCard(
       color: Colors.white,
       radius: 16,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       onTap: onTap,
       child: SizedBox(
         height: 50,
@@ -556,11 +494,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: softOrange,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                size: 21,
-                color: brown,
-              ),
+              child: Icon(icon, size: 21, color: brown),
             ),
 
             const SizedBox(width: 12),
@@ -568,7 +502,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // =======================================================
             // TITLE + SUBTITLE
             // =======================================================
-
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -607,7 +540,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // =======================================================
             // ARROW
             // =======================================================
-
             const Icon(
               Icons.chevron_right_rounded,
               size: 23,
@@ -643,11 +575,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.logout_rounded,
-              size: 19,
-              color: Colors.white,
-            ),
+            Icon(Icons.logout_rounded, size: 19, color: Colors.white),
             SizedBox(width: 8),
             Text(
               'Keluar',
@@ -677,17 +605,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 45,
-          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 45),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              28,
-              20,
-              25,
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 25),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
@@ -731,13 +652,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.zero,
-                            side: BorderSide(
-                              color: brown,
-                              width: 0.8,
-                            ),
+                            side: BorderSide(color: brown, width: 0.8),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(7),
+                              borderRadius: BorderRadius.circular(7),
                             ),
                           ),
                           child: Text(
@@ -770,8 +687,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const LoginScreen(),
+                                builder: (context) => const LoginScreen(),
                               ),
                               (route) => false,
                             );
@@ -782,8 +698,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             elevation: 0,
                             padding: EdgeInsets.zero,
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(7),
+                              borderRadius: BorderRadius.circular(7),
                             ),
                           ),
                           child: const Text(

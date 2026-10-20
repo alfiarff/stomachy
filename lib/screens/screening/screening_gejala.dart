@@ -24,24 +24,21 @@ class ScreeningGejala extends StatelessWidget {
       children: [
         _buildFrequencyCard(
           title: 'Panas di dada',
-          question:
-              'Seberapa sering kamu merasakan sensasi panas atau terbakar di dada?',
+          question: 'Seberapa sering kamu merasakan sensasi panas atau terbakar di dada?',
         ),
 
         const SizedBox(height: 15),
 
         _buildFrequencyCard(
           title: 'Asam lambung naik',
-          question:
-              'Seberapa sering kamu merasakan asam atau rasa pahit naik ke tenggorokan?',
+          question: 'Seberapa sering kamu merasakan asam atau rasa pahit naik ke tenggorokan?',
         ),
 
         const SizedBox(height: 15),
 
         _buildFrequencyCard(
           title: 'Nyeri dada atau ulu hati',
-          question:
-              'Seberapa sering kamu merasakan nyeri atau tidak nyaman di dada atau ulu hati?',
+          question: 'Seberapa sering kamu merasakan nyeri atau tidak nyaman di dada atau ulu hati?',
         ),
       ],
     );
@@ -58,14 +55,9 @@ class ScreeningGejala extends StatelessWidget {
     return StomachyCard(
       color: cardColor,
       radius: 17,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 9,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          minHeight: 110,
-        ),
+        constraints: const BoxConstraints(minHeight: 110),
         child: Row(
           children: [
             Container(
@@ -112,7 +104,6 @@ class ScreeningGejala extends StatelessWidget {
                   // ==================================================
                   // ISI / PENJELASAN
                   // ==================================================
-
                   Text(
                     question,
                     maxLines: 2,
@@ -130,24 +121,15 @@ class ScreeningGejala extends StatelessWidget {
 
                   Row(
                     children: [
-                      _buildFrequencyButton(
-                        title: title,
-                        value: 'Tidak Ada',
-                      ),
+                      _buildFrequencyButton(title: title, value: 'Tidak Ada'),
 
                       const SizedBox(width: 7),
 
-                      _buildFrequencyButton(
-                        title: title,
-                        value: 'Mingguan',
-                      ),
+                      _buildFrequencyButton(title: title, value: 'Mingguan'),
 
                       const SizedBox(width: 7),
 
-                      _buildFrequencyButton(
-                        title: title,
-                        value: 'Bulanan',
-                      ),
+                      _buildFrequencyButton(title: title, value: 'Bulanan'),
                     ],
                   ),
                 ],
@@ -163,35 +145,24 @@ class ScreeningGejala extends StatelessWidget {
   // TOMBOL FREKUENSI
   // ============================================================
 
-  Widget _buildFrequencyButton({
-    required String title,
-    required String value,
-  }) {
+  Widget _buildFrequencyButton({required String title, required String value}) {
     final bool selected = answers[title] == value;
 
     return GestureDetector(
       onTap: () {
-        onAnswer(
-          MapEntry(title, value),
-        );
+        onAnswer(MapEntry(title, value));
       },
       child: Container(
         height: 21,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 10,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFFFE0D5)
-              : Colors.white,
+          color: selected ? const Color(0xFFFFE0D5) : Colors.white,
           borderRadius: BorderRadius.circular(15),
 
           // BORDER TOMBOL TETAP
           border: Border.all(
-            color: selected
-                ? brown
-                : const Color(0xFFFF765B),
+            color: selected ? brown : const Color(0xFFFF765B),
             width: 1,
           ),
 
@@ -208,9 +179,7 @@ class ScreeningGejala extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'Nunito',
             fontSize: 10,
-            fontWeight: selected
-                ? FontWeight.w700
-                : FontWeight.w400,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             color: Colors.black,
           ),
         ),

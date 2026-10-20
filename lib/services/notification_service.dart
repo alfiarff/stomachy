@@ -20,7 +20,7 @@ class NotificationService {
   static const int _doctorReplyBaseId = 300000;
   static const int _patientMessageBaseId = 400000;
 
-    // =============================================================
+  // =============================================================
   // SINYAL PEMBARUAN BADGE LONCENG
   //
   // Setiap kali watcher menemukan pesan baru dan membuat
@@ -30,8 +30,7 @@ class NotificationService {
   // pindah halaman atau buka-tutup aplikasi.
   // =============================================================
 
-  static final ValueNotifier<int> badgeSignal =
-      ValueNotifier<int>(0);
+  static final ValueNotifier<int> badgeSignal = ValueNotifier<int>(0);
 
   static void _notifyBadgeChanged() {
     badgeSignal.value = badgeSignal.value + 1;
@@ -56,10 +55,10 @@ class NotificationService {
   // =============================================================
 
   static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
-      _watcherSubAsPatient;
+  _watcherSubAsPatient;
 
   static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
-      _watcherSubAsDoctor;
+  _watcherSubAsDoctor;
 
   static String? _watcherUid;
 
@@ -106,7 +105,8 @@ class NotificationService {
 
     if (user == null) return;
 
-    final bool alreadyRunning = _watcherUid == user.uid &&
+    final bool alreadyRunning =
+        _watcherUid == user.uid &&
         (_watcherSubAsPatient != null || _watcherSubAsDoctor != null);
 
     if (alreadyRunning) return;
@@ -157,14 +157,11 @@ class NotificationService {
     for (final doc in snapshot.docs) {
       final data = doc.data();
 
-      final String lastMessage =
-          (data['lastMessage'] ?? '').toString().trim();
+      final String lastMessage = (data['lastMessage'] ?? '').toString().trim();
 
-      final String lastSenderId =
-          (data['lastSenderId'] ?? '').toString();
+      final String lastSenderId = (data['lastSenderId'] ?? '').toString();
 
-      final String lastMessageId =
-          (data['lastMessageId'] ?? '').toString();
+      final String lastMessageId = (data['lastMessageId'] ?? '').toString();
 
       // ---------------------------------------------------------
       // BASELINE PER KONSULTASI
@@ -266,24 +263,23 @@ class NotificationService {
     const AndroidInitializationSettings androidInit =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const DarwinInitializationSettings iosInit =
-        DarwinInitializationSettings(
+    const DarwinInitializationSettings iosInit = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
 
-    const InitializationSettings initSettings =
-        InitializationSettings(
+    const InitializationSettings initSettings = InitializationSettings(
       android: androidInit,
       iOS: iosInit,
     );
 
     await _plugin.initialize(initSettings);
 
-    final AndroidFlutterLocalNotificationsPlugin? android =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final AndroidFlutterLocalNotificationsPlugin? android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     await android?.requestNotificationsPermission();
   }
@@ -292,19 +288,15 @@ class NotificationService {
     try {
       final FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-      final NotificationSettings settings =
-          await messaging.requestPermission(
+      final NotificationSettings settings = await messaging.requestPermission(
         alert: true,
         badge: true,
         sound: true,
       );
 
-      debugPrint(
-        'FCM: authorizationStatus = ${settings.authorizationStatus}',
-      );
+      debugPrint('FCM: authorizationStatus = ${settings.authorizationStatus}');
 
-      if (settings.authorizationStatus ==
-          AuthorizationStatus.denied) {
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
         debugPrint('FCM: izin notifikasi ditolak.');
         return;
       }
@@ -316,45 +308,31 @@ class NotificationService {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user != null && token != null && token.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set(
-          {
-            'fcmToken': token,
-            'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'fcmToken': token,
+          'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
 
-        debugPrint(
-          'FCM: token berhasil disimpan untuk user ${user.uid}',
-        );
+        debugPrint('FCM: token berhasil disimpan untuk user ${user.uid}');
       }
 
-      FirebaseMessaging.instance.onTokenRefresh.listen(
-        (newToken) async {
-          final currentUser = FirebaseAuth.instance.currentUser;
+      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+        final currentUser = FirebaseAuth.instance.currentUser;
 
-          if (currentUser == null || newToken.isEmpty) {
-            return;
-          }
+        if (currentUser == null || newToken.isEmpty) {
+          return;
+        }
 
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(currentUser.uid)
-              .set(
-            {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .set({
               'fcmToken': newToken,
-              'fcmTokenUpdatedAt':
-                  FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true),
-          );
+              'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
 
-          debugPrint('FCM: token diperbarui.');
-        },
-      );
+        debugPrint('FCM: token diperbarui.');
+      });
     } catch (e) {
       debugPrint('FCM: gagal setup messaging: $e');
     }
@@ -374,8 +352,7 @@ class NotificationService {
       android: AndroidNotificationDetails(
         'weekly_screening',
         'Pengingat Skrining Mingguan',
-        channelDescription:
-            'Pengingat skrining GERD setiap Senin 09.00',
+        channelDescription: 'Pengingat skrining GERD setiap Senin 09.00',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -390,10 +367,8 @@ class NotificationService {
       details,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents:
-          DateTimeComponents.dayOfWeekAndTime,
-      androidScheduleMode:
-          AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
 
     debugPrint(
@@ -440,8 +415,10 @@ class NotificationService {
     if (consultationId.isEmpty) return;
 
     final tz.Location location = _resolveLocation();
-    final tz.TZDateTime scheduled =
-        tz.TZDateTime.from(consultationTime, location);
+    final tz.TZDateTime scheduled = tz.TZDateTime.from(
+      consultationTime,
+      location,
+    );
 
     if (!scheduled.isAfter(tz.TZDateTime.now(location))) {
       return;
@@ -455,8 +432,7 @@ class NotificationService {
       android: AndroidNotificationDetails(
         'consultation_reminder',
         'Pengingat Konsultasi',
-        channelDescription:
-            'Pengingat saat konsultasi dengan dokter dimulai',
+        channelDescription: 'Pengingat saat konsultasi dengan dokter dimulai',
         importance: Importance.max,
         priority: Priority.high,
       ),
@@ -471,14 +447,11 @@ class NotificationService {
       details,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      androidScheduleMode:
-          AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
   }
 
-  static Future<void> cancelConsultationReminder(
-    String consultationId,
-  ) async {
+  static Future<void> cancelConsultationReminder(String consultationId) async {
     if (consultationId.isEmpty) return;
     await _plugin.cancel(_consultationId(consultationId));
   }
@@ -498,8 +471,7 @@ class NotificationService {
       android: AndroidNotificationDetails(
         'doctor_reply',
         'Balasan Dokter',
-        channelDescription:
-            'Notifikasi saat dokter membalas pesan konsultasi',
+        channelDescription: 'Notifikasi saat dokter membalas pesan konsultasi',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -525,8 +497,7 @@ class NotificationService {
       android: AndroidNotificationDetails(
         'patient_message',
         'Pesan Baru dari Pasien',
-        channelDescription:
-            'Notifikasi saat pasien mengirim pesan konsultasi',
+        channelDescription: 'Notifikasi saat pasien mengirim pesan konsultasi',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -553,8 +524,7 @@ class NotificationService {
       android: AndroidNotificationDetails(
         'consultation_booking',
         'Booking Konsultasi',
-        channelDescription:
-            'Notifikasi saat booking konsultasi berhasil',
+        channelDescription: 'Notifikasi saat booking konsultasi berhasil',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -600,9 +570,7 @@ class NotificationService {
         await cancelWeeklyScreening();
       }
     } catch (e) {
-      debugPrint(
-        'NOTIFIKASI: Gagal sinkronisasi pengaturan: $e',
-      );
+      debugPrint('NOTIFIKASI: Gagal sinkronisasi pengaturan: $e');
     }
   }
 
@@ -624,9 +592,7 @@ class NotificationService {
     return tz.getLocation('Asia/Jakarta');
   }
 
-  static tz.TZDateTime _nextMondayAt9(
-    tz.Location location,
-  ) {
+  static tz.TZDateTime _nextMondayAt9(tz.Location location) {
     final tz.TZDateTime now = tz.TZDateTime.now(location);
 
     tz.TZDateTime scheduled = tz.TZDateTime(
@@ -638,11 +604,8 @@ class NotificationService {
       0,
     );
 
-    while (scheduled.weekday != DateTime.monday ||
-        !scheduled.isAfter(now)) {
-      scheduled = scheduled.add(
-        const Duration(days: 1),
-      );
+    while (scheduled.weekday != DateTime.monday || !scheduled.isAfter(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
     }
 
     return scheduled;

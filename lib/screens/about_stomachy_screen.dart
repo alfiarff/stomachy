@@ -33,9 +33,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -44,9 +42,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -55,9 +51,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -66,9 +60,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -77,9 +69,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -97,12 +87,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            22,
-            12,
-            22,
-            105,
-          ),
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
           child: Column(
             children: [
               // =====================================================
@@ -116,7 +101,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
               // =====================================================
               // ABOUT CARD
               // =====================================================
-
               _buildAboutCard(),
 
               const SizedBox(height: 20),
@@ -128,7 +112,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
       // ===========================================================
       // BOTTOM NAVIGATION
       // ===========================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -180,9 +163,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           ),
 
           // PENYEIMBANG
-          const SizedBox(
-            width: 45,
-          ),
+          const SizedBox(width: 45),
         ],
       ),
     );
@@ -195,19 +176,11 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
   Widget _buildAboutCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        18,
-        12,
-        18,
-        18,
-      ),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF806A),
-          width: 0.8,
-        ),
+        border: Border.all(color: const Color(0xFFFF806A), width: 0.8),
       ),
       child: Column(
         children: [
@@ -238,7 +211,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           // =======================================================
           // VERSI
           // =======================================================
-
           const Text(
             'Versi 1.0.0',
             style: TextStyle(
@@ -254,7 +226,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           // =======================================================
           // DIVIDER
           // =======================================================
-
           Container(
             height: 1,
             width: double.infinity,
@@ -266,7 +237,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           // =======================================================
           // DESKRIPSI
           // =======================================================
-
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 7),
             child: Text(
@@ -289,7 +259,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           // =======================================================
           // FITUR SKRINING
           // =======================================================
-
           _buildFeatureItem(
             icon: Icons.health_and_safety_outlined,
             title: 'Skrining GERD',
@@ -303,7 +272,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           // =======================================================
           // FITUR SKOR
           // =======================================================
-
           _buildFeatureItem(
             icon: Icons.show_chart_rounded,
             title: 'Grafik',
@@ -317,7 +285,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           // =======================================================
           // FITUR KONSULTASI
           // =======================================================
-
           _buildFeatureItem(
             icon: Icons.forum_outlined,
             title: 'Konsultasi',
@@ -331,7 +298,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           // =======================================================
           // DIVIDER BAWAH
           // =======================================================
-
           Container(
             height: 1,
             width: double.infinity,
@@ -343,7 +309,6 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           // =======================================================
           // PENUTUP
           // =======================================================
-
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
             child: Text(
@@ -385,11 +350,7 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
             color: Color(0xFFFFE1C8),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: const Color(0xFF705044),
-          ),
+          child: Icon(icon, size: 20, color: const Color(0xFF705044)),
         ),
 
         const SizedBox(width: 10),

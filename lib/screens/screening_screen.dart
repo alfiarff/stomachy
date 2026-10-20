@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'home_screen.dart';
 import 'doctor_screen.dart';
 import '../widgets/bottom_navigation.dart';
 import 'edukasi_screen.dart';
-import 'profile_screen.dart'; 
-import 'screening_question_screen.dart'; 
+import 'profile_screen.dart';
+import 'screening_question_screen.dart';
 
 class ScreeningScreen extends StatefulWidget {
   const ScreeningScreen({super.key});
@@ -24,9 +25,7 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -40,9 +39,7 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -51,9 +48,7 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -62,9 +57,7 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
     if (index == 4) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -82,12 +75,7 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    15,
-                    8,
-                    15,
-                    20,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(15, 8, 15, 20),
                   child: Column(
                     children: [
                       // =====================================================
@@ -131,7 +119,6 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
                       // =====================================================
                       // JUDUL
                       // =====================================================
-
                       const Text(
                         'Skrining GERD\nDengan AI',
                         textAlign: TextAlign.center,
@@ -163,7 +150,6 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
                       // =====================================================
                       // GAMBAR MASCOT DOKTER
                       // =====================================================
-
                       SizedBox(
                         width: double.infinity,
                         height: 320,
@@ -182,7 +168,6 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
                       // =====================================================
                       // KEUNGGULAN: MUDAH - CEPAT - RAHASIA
                       // =====================================================
-
                       Container(
                         width: double.infinity,
                         height: 82,
@@ -223,19 +208,19 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
                       // =====================================================
                       // BUTTON MULAI
                       // =====================================================
-
                       SizedBox(
                         width: double.infinity,
                         height: 38,
                         child: ElevatedButton(
                           onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ScreeningQuestionScreen(),
-                                ),
-                              );
-                            },
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ScreeningQuestionScreen(),
+                              ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: brown,
                             foregroundColor: Colors.white,
@@ -268,7 +253,6 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
       // =====================================================
       // BOTTOM NAVIGATION
       // =====================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -280,18 +264,11 @@ class _ScreeningScreenState extends State<ScreeningScreen> {
   // BENEFIT ITEM
   // ================================================================
 
-  Widget _buildBenefitItem({
-    required IconData icon,
-    required String title,
-  }) {
+  Widget _buildBenefitItem({required IconData icon, required String title}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          icon,
-          size: 25,
-          color: const Color(0xFFB05039),
-        ),
+        Icon(icon, size: 25, color: const Color(0xFFB05039)),
 
         const SizedBox(height: 5),
 

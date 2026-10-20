@@ -16,8 +16,7 @@ class RecommendationSportScreen extends StatefulWidget {
       _RecommendationSportScreenState();
 }
 
-class _RecommendationSportScreenState
-    extends State<RecommendationSportScreen> {
+class _RecommendationSportScreenState extends State<RecommendationSportScreen> {
   int _selectedIndex = 4;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
@@ -37,9 +36,7 @@ class _RecommendationSportScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -48,9 +45,7 @@ class _RecommendationSportScreenState
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -59,9 +54,7 @@ class _RecommendationSportScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -70,9 +63,7 @@ class _RecommendationSportScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -81,9 +72,7 @@ class _RecommendationSportScreenState
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -101,12 +90,7 @@ class _RecommendationSportScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            22,
-            12,
-            22,
-            105,
-          ),
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -121,7 +105,6 @@ class _RecommendationSportScreenState
               // ===================================================
               // HERO CARD
               // ===================================================
-
               _buildHeroCard(),
 
               const SizedBox(height: 24),
@@ -129,7 +112,6 @@ class _RecommendationSportScreenState
               // ===================================================
               // OLAHRAGA 1
               // ===================================================
-
               _buildSportCard(
                 imagePath: 'assets/images/yoga.png',
                 title: 'Yoga',
@@ -144,7 +126,6 @@ class _RecommendationSportScreenState
               // ===================================================
               // OLAHRAGA 2
               // ===================================================
-
               _buildSportCard(
                 imagePath: 'assets/images/jalan_kaki.png',
                 title: 'Jalan Santai',
@@ -160,7 +141,6 @@ class _RecommendationSportScreenState
               // ===================================================
               // OLAHRAGA 3
               // ===================================================
-
               _buildSportCard(
                 imagePath: 'assets/images/berenang.png',
                 title: 'Berenang',
@@ -176,7 +156,6 @@ class _RecommendationSportScreenState
               // ===================================================
               // OLAHRAGA 4
               // ===================================================
-
               _buildSportCard(
                 imagePath: 'assets/images/peregangan.png',
                 title: 'Stretching',
@@ -192,7 +171,6 @@ class _RecommendationSportScreenState
               // ===================================================
               // TIPS TAMBAHAN
               // ===================================================
-
               _buildTipsCard(),
 
               const SizedBox(height: 20),
@@ -204,7 +182,6 @@ class _RecommendationSportScreenState
       // ===========================================================
       // BOTTOM NAVIGATION
       // ===========================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -256,9 +233,7 @@ class _RecommendationSportScreenState
           ),
 
           // HEADER BALANCER
-          const SizedBox(
-            width: 45,
-          ),
+          const SizedBox(width: 45),
         ],
       ),
     );
@@ -272,10 +247,7 @@ class _RecommendationSportScreenState
     return StomachyCard(
       color: const Color(0xFFFFE3D6),
       radius: 14,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: SizedBox(
         height: 119,
         child: Row(
@@ -307,14 +279,9 @@ class _RecommendationSportScreenState
             // =====================================================
             // TEXT
             // =====================================================
-
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(
-                  right: 5,
-                  top: 5,
-                  bottom: 5,
-                ),
+                padding: const EdgeInsets.only(right: 5, top: 5, bottom: 5),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -375,10 +342,7 @@ class _RecommendationSportScreenState
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 13,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -413,7 +377,6 @@ class _RecommendationSportScreenState
           // =======================================================
           // SPORT INFORMATION
           // =======================================================
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,10 +448,7 @@ class _RecommendationSportScreenState
   Widget _buildTipsCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFFFE4D3),
         borderRadius: BorderRadius.circular(12),
@@ -514,7 +474,6 @@ class _RecommendationSportScreenState
           // =====================================================
           // TEXT
           // =====================================================
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

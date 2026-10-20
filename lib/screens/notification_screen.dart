@@ -15,8 +15,7 @@ import '../services/notification_service.dart';
 // ===============================================================
 
 class AppNotification {
-  static const String _keyPrefix =
-      'stomachy_notifications_';
+  static const String _keyPrefix = 'stomachy_notifications_';
 
   static String _key(String uid) => '$_keyPrefix$uid';
   static Future<void> _createQueue = Future<void>.value();
@@ -24,7 +23,6 @@ class AppNotification {
   // -------------------------------------------------------------
   // BUAT NOTIFIKASI BARU
   // -------------------------------------------------------------
-
 
   static Future<void> create({
     required String uid,
@@ -48,7 +46,8 @@ class AppNotification {
         items.insert(
           0,
           LocalNotification(
-            id: notificationId ??
+            id:
+                notificationId ??
                 DateTime.now().microsecondsSinceEpoch.toString(),
             type: type,
             title: title,
@@ -60,9 +59,7 @@ class AppNotification {
 
         await prefs.setString(
           _key(uid),
-          jsonEncode(
-            items.take(50).map((item) => item.toMap()).toList(),
-          ),
+          jsonEncode(items.take(50).map((item) => item.toMap()).toList()),
         );
 
         debugPrint('NOTIFIKASI TERSIMPAN: $title');
@@ -75,16 +72,13 @@ class AppNotification {
     _createQueue = operation;
     return operation;
   }
-  
+
   // -------------------------------------------------------------
   // AMBIL SEMUA NOTIFIKASI (TERBARU DI ATAS)
   // -------------------------------------------------------------
 
-  static Future<List<LocalNotification>> getAll(
-    String uid,
-  ) async {
-    final prefs =
-        await SharedPreferences.getInstance();
+  static Future<List<LocalNotification>> getAll(String uid) async {
+    final prefs = await SharedPreferences.getInstance();
 
     final String? raw = prefs.getString(_key(uid));
 
@@ -113,12 +107,10 @@ class AppNotification {
   // ke bagian "Sebelumnya" meskipun belum dibaca.
   // -------------------------------------------------------------
 
-  static const Duration freshWindow =
-      Duration(hours: 24);
+  static const Duration freshWindow = Duration(hours: 24);
 
   static bool isFresh(LocalNotification item) {
-    final DateTime cutoff =
-        DateTime.now().subtract(freshWindow);
+    final DateTime cutoff = DateTime.now().subtract(freshWindow);
 
     return item.createdAt.isAfter(cutoff);
   }
@@ -130,18 +122,10 @@ class AppNotification {
   // konsisten dengan isi halaman notifikasi.
   // -------------------------------------------------------------
 
-  static Future<int> getRecentUnreadCount(
-    String uid,
-  ) async {
+  static Future<int> getRecentUnreadCount(String uid) async {
     final items = await getAll(uid);
 
-    return items
-        .where(
-          (item) =>
-              !item.isRead &&
-              isFresh(item),
-        )
-        .length;
+    return items.where((item) => !item.isRead && isFresh(item)).length;
   }
 
   // -------------------------------------------------------------
@@ -153,18 +137,13 @@ class AppNotification {
 
     if (items.isEmpty) return;
 
-    final updated = items
-        .map((item) => item.copyWith(isRead: true))
-        .toList();
+    final updated = items.map((item) => item.copyWith(isRead: true)).toList();
 
-    final prefs =
-        await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
     await prefs.setString(
       _key(uid),
-      jsonEncode(
-        updated.map((item) => item.toMap()).toList(),
-      ),
+      jsonEncode(updated.map((item) => item.toMap()).toList()),
     );
   }
 
@@ -173,8 +152,7 @@ class AppNotification {
   // -------------------------------------------------------------
 
   static Future<void> clearAll(String uid) async {
-    final prefs =
-        await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
     await prefs.remove(_key(uid));
   }
@@ -207,15 +185,12 @@ class LocalNotification {
       'type': type,
       'title': title,
       'body': body,
-      'createdAt':
-          createdAt.millisecondsSinceEpoch,
+      'createdAt': createdAt.millisecondsSinceEpoch,
       'isRead': isRead,
     };
   }
 
-  factory LocalNotification.fromMap(
-    Map<String, dynamic> map,
-  ) {
+  factory LocalNotification.fromMap(Map<String, dynamic> map) {
     return LocalNotification(
       id: map['id']?.toString() ?? '',
       type: map['type']?.toString() ?? 'info',
@@ -248,12 +223,10 @@ class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
   @override
-  State<NotificationScreen> createState() =>
-      _NotificationScreenState();
+  State<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-class _NotificationScreenState
-    extends State<NotificationScreen> {
+class _NotificationScreenState extends State<NotificationScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color accentBrown = const Color(0xFFB9543A);
 
@@ -284,25 +257,16 @@ class _NotificationScreenState
       return;
     }
 
-    final items =
-        await AppNotification.getAll(user.uid);
+    final items = await AppNotification.getAll(user.uid);
 
     // Belum dibaca DAN belum lewat 24 jam
     final List<LocalNotification> unread = items
-        .where(
-          (item) =>
-              !item.isRead &&
-              AppNotification.isFresh(item),
-        )
+        .where((item) => !item.isRead && AppNotification.isFresh(item))
         .toList();
 
     // Sudah dibaca ATAU sudah lewat 24 jam
     final List<LocalNotification> read = items
-        .where(
-          (item) =>
-              item.isRead ||
-              !AppNotification.isFresh(item),
-        )
+        .where((item) => item.isRead || !AppNotification.isFresh(item))
         .toList();
 
     if (!mounted) return;
@@ -322,34 +286,20 @@ class _NotificationScreenState
   // FORMAT WAKTU
   // ===============================================================
 
-  String _formatLabel(
-    DateTime date, {
-    required bool isUnread,
-  }) {
+  String _formatLabel(DateTime date, {required bool isUnread}) {
     if (isUnread) {
-      final hour =
-          date.hour.toString().padLeft(2, '0');
-      final minute =
-          date.minute.toString().padLeft(2, '0');
+      final hour = date.hour.toString().padLeft(2, '0');
+      final minute = date.minute.toString().padLeft(2, '0');
 
       return '$hour.$minute';
     }
 
     final now = DateTime.now();
-    final today = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    );
+    final today = DateTime(now.year, now.month, now.day);
 
-    final thatDay = DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    final thatDay = DateTime(date.year, date.month, date.day);
 
-    final int diffDays =
-        today.difference(thatDay).inDays;
+    final int diffDays = today.difference(thatDay).inDays;
 
     if (diffDays <= 7) {
       const days = [
@@ -392,51 +342,28 @@ class _NotificationScreenState
   // STYLE PER TIPE NOTIFIKASI
   // ===============================================================
 
-  ({String emoji, Color bg}) _typeStyle(
-    String type,
-  ) {
+  ({String emoji, Color bg}) _typeStyle(String type) {
     switch (type) {
       case 'chat':
-        return (
-          emoji: '👨‍⚕️',
-          bg: const Color(0xFFDFF2E4),
-        );
+        return (emoji: '👨‍⚕️', bg: const Color(0xFFDFF2E4));
 
       case 'artikel':
-        return (
-          emoji: '📰',
-          bg: const Color(0xFFE9E2F8),
-        );
+        return (emoji: '📰', bg: const Color(0xFFE9E2F8));
 
       case 'edukasi':
-        return (
-          emoji: '📚',
-          bg: const Color(0xFFE9E2F8),
-        );
+        return (emoji: '📚', bg: const Color(0xFFE9E2F8));
 
       case 'olahraga':
-        return (
-          emoji: '🏃',
-          bg: const Color(0xFFE2F1DB),
-        );
+        return (emoji: '🏃', bg: const Color(0xFFE2F1DB));
 
       case 'makanan':
-        return (
-          emoji: '🥗',
-          bg: const Color(0xFFE2F1DB),
-        );
+        return (emoji: '🥗', bg: const Color(0xFFE2F1DB));
 
       case 'skrining':
-        return (
-          emoji: '⏰',
-          bg: const Color(0xFFFCE0DB),
-        );
+        return (emoji: '⏰', bg: const Color(0xFFFCE0DB));
 
       default:
-        return (
-          emoji: '🔔',
-          bg: const Color(0xFFFFE8D8),
-        );
+        return (emoji: '🔔', bg: const Color(0xFFFFE8D8));
     }
   }
 
@@ -452,9 +379,7 @@ class _NotificationScreenState
       body: SafeArea(
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFFB9543A),
-                ),
+                child: CircularProgressIndicator(color: Color(0xFFB9543A)),
               )
             : _buildContent(),
       ),
@@ -466,8 +391,7 @@ class _NotificationScreenState
   // ===============================================================
 
   Widget _buildContent() {
-    final bool isEmpty =
-        _unread.isEmpty && _read.isEmpty;
+    final bool isEmpty = _unread.isEmpty && _read.isEmpty;
 
     if (isEmpty) {
       return _buildEmptyState();
@@ -475,12 +399,7 @@ class _NotificationScreenState
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        22,
-        12,
-        22,
-        30,
-      ),
+      padding: const EdgeInsets.fromLTRB(22, 12, 22, 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -489,7 +408,6 @@ class _NotificationScreenState
           // ================================================
           // BELUM DIBACA
           // ================================================
-
           if (_unread.isNotEmpty) ...[
             const SizedBox(height: 24),
 
@@ -506,20 +424,15 @@ class _NotificationScreenState
             const SizedBox(height: 12),
 
             for (int i = 0; i < _unread.length; i++) ...[
-              _buildNotificationCard(
-                item: _unread[i],
-                isUnread: true,
-              ),
+              _buildNotificationCard(item: _unread[i], isUnread: true),
 
-              if (i != _unread.length - 1)
-                const SizedBox(height: 11),
+              if (i != _unread.length - 1) const SizedBox(height: 11),
             ],
           ],
 
           // ================================================
           // SEBELUMNYA
           // ================================================
-
           if (_read.isNotEmpty) ...[
             const SizedBox(height: 22),
 
@@ -536,13 +449,9 @@ class _NotificationScreenState
             const SizedBox(height: 12),
 
             for (int i = 0; i < _read.length; i++) ...[
-              _buildNotificationCard(
-                item: _read[i],
-                isUnread: false,
-              ),
+              _buildNotificationCard(item: _read[i], isUnread: false),
 
-              if (i != _read.length - 1)
-                const SizedBox(height: 11),
+              if (i != _read.length - 1) const SizedBox(height: 11),
             ],
           ],
 
@@ -551,7 +460,6 @@ class _NotificationScreenState
           // ================================================
           // TOMBOL TES (SELALU TERLIHAT)
           // ================================================
-
           _buildTestButtons(),
 
           const SizedBox(height: 20),
@@ -619,10 +527,7 @@ class _NotificationScreenState
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 13,
-        vertical: 13,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -640,17 +545,9 @@ class _NotificationScreenState
           Container(
             width: 42,
             height: 42,
-            decoration: BoxDecoration(
-              color: style.bg,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: style.bg, shape: BoxShape.circle),
             child: Center(
-              child: Text(
-                style.emoji,
-                style: const TextStyle(
-                  fontSize: 19,
-                ),
-              ),
+              child: Text(style.emoji, style: const TextStyle(fontSize: 19)),
             ),
           ),
 
@@ -658,8 +555,7 @@ class _NotificationScreenState
 
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   item.title,
@@ -668,9 +564,7 @@ class _NotificationScreenState
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 13,
-                    fontWeight: isUnread
-                        ? FontWeight.w800
-                        : FontWeight.w700,
+                    fontWeight: isUnread ? FontWeight.w800 : FontWeight.w700,
                     color: const Color(0xFF30221E),
                   ),
                 ),
@@ -685,9 +579,7 @@ class _NotificationScreenState
                     fontFamily: 'Nunito',
                     fontSize: 11.5,
                     height: 1.25,
-                    fontWeight: isUnread
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+                    fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
                     color: const Color(0xFF675B57),
                   ),
                 ),
@@ -698,10 +590,7 @@ class _NotificationScreenState
           const SizedBox(width: 10),
 
           Text(
-            _formatLabel(
-              item.createdAt,
-              isUnread: isUnread,
-            ),
+            _formatLabel(item.createdAt, isUnread: isUnread),
             style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 12,
@@ -721,9 +610,7 @@ class _NotificationScreenState
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 34,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 34),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -735,12 +622,7 @@ class _NotificationScreenState
                 shape: BoxShape.circle,
               ),
               child: const Center(
-                child: Text(
-                  '🔔',
-                  style: TextStyle(
-                    fontSize: 52,
-                  ),
-                ),
+                child: Text('🔔', style: TextStyle(fontSize: 52)),
               ),
             ),
 
@@ -796,18 +678,15 @@ class _NotificationScreenState
           height: 46,
           child: ElevatedButton(
             onPressed: () async {
-              final user =
-                  FirebaseAuth.instance.currentUser;
+              final user = FirebaseAuth.instance.currentUser;
 
               if (user == null) return;
 
               await AppNotification.create(
                 uid: user.uid,
                 type: 'chat',
-                title:
-                    'dr. Sarah Amelia membalas pesanmu',
-                body:
-                    '"Baik, coba hindari makanan asam & pedas dulu..."',
+                title: 'dr. Sarah Amelia membalas pesanmu',
+                body: '"Baik, coba hindari makanan asam & pedas dulu..."',
               );
 
               if (!mounted) return;
@@ -820,13 +699,11 @@ class _NotificationScreenState
               _loadNotifications();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  const Color(0xFF8068D3),
+              backgroundColor: const Color(0xFF8068D3),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(25),
               ),
             ),
             child: const Text(
@@ -850,8 +727,7 @@ class _NotificationScreenState
             onPressed: () async {
               try {
                 await NotificationService.showPatientMessage(
-                  messageId:
-                      'test-${DateTime.now().millisecondsSinceEpoch}',
+                  messageId: 'test-${DateTime.now().millisecondsSinceEpoch}',
                   patientName: 'Test Pasien',
                   message: 'Tes notif dokter dari Samsung A04',
                 );
@@ -861,9 +737,7 @@ class _NotificationScreenState
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     behavior: SnackBarBehavior.floating,
-                    content: Text(
-                      'Notifikasi Android berhasil dipanggil 🔔',
-                    ),
+                    content: Text('Notifikasi Android berhasil dipanggil 🔔'),
                   ),
                 );
               } catch (e) {
@@ -872,9 +746,7 @@ class _NotificationScreenState
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     behavior: SnackBarBehavior.floating,
-                    content: Text(
-                      'Gagal membuat notif: $e',
-                    ),
+                    content: Text('Gagal membuat notif: $e'),
                   ),
                 );
               }
@@ -899,15 +771,14 @@ class _NotificationScreenState
         ),
 
         const SizedBox(height: 10),
-        
+
         // NOTIFIKASI LAMA (2 HARI)
         SizedBox(
           width: 210,
           height: 46,
           child: ElevatedButton(
             onPressed: () async {
-              final user =
-                  FirebaseAuth.instance.currentUser;
+              final user = FirebaseAuth.instance.currentUser;
 
               if (user == null) return;
 
@@ -915,11 +786,8 @@ class _NotificationScreenState
                 uid: user.uid,
                 type: 'skrining',
                 title: 'Saatnya Skrining Mingguan',
-                body:
-                    'Pantau perkembangan lambungmu minggu ini',
-                createdAt: DateTime.now().subtract(
-                  const Duration(days: 2),
-                ),
+                body: 'Pantau perkembangan lambungmu minggu ini',
+                createdAt: DateTime.now().subtract(const Duration(days: 2)),
               );
 
               if (!mounted) return;
@@ -931,13 +799,11 @@ class _NotificationScreenState
               _loadNotifications();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  const Color(0xFF4E8D6E),
+              backgroundColor: const Color(0xFF4E8D6E),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(25),
               ),
             ),
             child: const Text(
@@ -959,14 +825,11 @@ class _NotificationScreenState
           height: 46,
           child: ElevatedButton(
             onPressed: () async {
-              final user =
-                  FirebaseAuth.instance.currentUser;
+              final user = FirebaseAuth.instance.currentUser;
 
               if (user == null) return;
 
-              await AppNotification.clearAll(
-                user.uid,
-              );
+              await AppNotification.clearAll(user.uid);
 
               if (!mounted) return;
 
@@ -975,24 +838,19 @@ class _NotificationScreenState
                 _read = [];
               });
 
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(
+              ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   behavior: SnackBarBehavior.floating,
-                  content: Text(
-                    'Semua notifikasi dihapus.',
-                  ),
+                  content: Text('Semua notifikasi dihapus.'),
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  const Color(0xFFB8B0AC),
+              backgroundColor: const Color(0xFFB8B0AC),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(25),
               ),
             ),
             child: const Text(

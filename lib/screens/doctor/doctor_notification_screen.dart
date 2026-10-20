@@ -25,8 +25,7 @@ class DoctorNotificationScreen extends StatefulWidget {
       _DoctorNotificationScreenState();
 }
 
-class _DoctorNotificationScreenState
-    extends State<DoctorNotificationScreen> {
+class _DoctorNotificationScreenState extends State<DoctorNotificationScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color accentBrown = const Color(0xFFB9543A);
 
@@ -61,20 +60,12 @@ class _DoctorNotificationScreenState
 
     // Belum dibaca DAN belum lewat 24 jam
     final List<LocalNotification> unread = items
-        .where(
-          (item) =>
-              !item.isRead &&
-              AppNotification.isFresh(item),
-        )
+        .where((item) => !item.isRead && AppNotification.isFresh(item))
         .toList();
 
     // Sudah dibaca ATAU sudah lewat 24 jam
     final List<LocalNotification> read = items
-        .where(
-          (item) =>
-              item.isRead ||
-              !AppNotification.isFresh(item),
-        )
+        .where((item) => item.isRead || !AppNotification.isFresh(item))
         .toList();
 
     if (!mounted) return;
@@ -94,34 +85,20 @@ class _DoctorNotificationScreenState
   // FORMAT WAKTU
   // ===============================================================
 
-  String _formatLabel(
-    DateTime date, {
-    required bool isUnread,
-  }) {
+  String _formatLabel(DateTime date, {required bool isUnread}) {
     if (isUnread) {
-      final hour =
-          date.hour.toString().padLeft(2, '0');
-      final minute =
-          date.minute.toString().padLeft(2, '0');
+      final hour = date.hour.toString().padLeft(2, '0');
+      final minute = date.minute.toString().padLeft(2, '0');
 
       return '$hour.$minute';
     }
 
     final now = DateTime.now();
-    final today = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    );
+    final today = DateTime(now.year, now.month, now.day);
 
-    final thatDay = DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    final thatDay = DateTime(date.year, date.month, date.day);
 
-    final int diffDays =
-        today.difference(thatDay).inDays;
+    final int diffDays = today.difference(thatDay).inDays;
 
     if (diffDays <= 7) {
       const days = [
@@ -164,51 +141,28 @@ class _DoctorNotificationScreenState
   // STYLE PER TIPE NOTIFIKASI
   // ===============================================================
 
-  ({String emoji, Color bg}) _typeStyle(
-    String type,
-  ) {
+  ({String emoji, Color bg}) _typeStyle(String type) {
     switch (type) {
       case 'chat':
-        return (
-          emoji: '🧑‍🦰',
-          bg: const Color(0xFFDFF2E4),
-        );
+        return (emoji: '🧑‍🦰', bg: const Color(0xFFDFF2E4));
 
       case 'artikel':
-        return (
-          emoji: '📰',
-          bg: const Color(0xFFE9E2F8),
-        );
+        return (emoji: '📰', bg: const Color(0xFFE9E2F8));
 
       case 'edukasi':
-        return (
-          emoji: '📚',
-          bg: const Color(0xFFE9E2F8),
-        );
+        return (emoji: '📚', bg: const Color(0xFFE9E2F8));
 
       case 'olahraga':
-        return (
-          emoji: '🏃',
-          bg: const Color(0xFFE2F1DB),
-        );
+        return (emoji: '🏃', bg: const Color(0xFFE2F1DB));
 
       case 'makanan':
-        return (
-          emoji: '🥗',
-          bg: const Color(0xFFE2F1DB),
-        );
+        return (emoji: '🥗', bg: const Color(0xFFE2F1DB));
 
       case 'skrining':
-        return (
-          emoji: '⏰',
-          bg: const Color(0xFFFCE0DB),
-        );
+        return (emoji: '⏰', bg: const Color(0xFFFCE0DB));
 
       default:
-        return (
-          emoji: '🔔',
-          bg: const Color(0xFFFFE8D8),
-        );
+        return (emoji: '🔔', bg: const Color(0xFFFFE8D8));
     }
   }
 
@@ -224,9 +178,7 @@ class _DoctorNotificationScreenState
       body: SafeArea(
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFFB9543A),
-                ),
+                child: CircularProgressIndicator(color: Color(0xFFB9543A)),
               )
             : _buildContent(),
       ),
@@ -238,8 +190,7 @@ class _DoctorNotificationScreenState
   // ===============================================================
 
   Widget _buildContent() {
-    final bool isEmpty =
-        _unread.isEmpty && _read.isEmpty;
+    final bool isEmpty = _unread.isEmpty && _read.isEmpty;
 
     if (isEmpty) {
       return _buildEmptyState();
@@ -247,12 +198,7 @@ class _DoctorNotificationScreenState
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        22,
-        12,
-        22,
-        30,
-      ),
+      padding: const EdgeInsets.fromLTRB(22, 12, 22, 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -261,7 +207,6 @@ class _DoctorNotificationScreenState
           // ================================================
           // BELUM DIBACA
           // ================================================
-
           if (_unread.isNotEmpty) ...[
             const SizedBox(height: 24),
 
@@ -278,20 +223,15 @@ class _DoctorNotificationScreenState
             const SizedBox(height: 12),
 
             for (int i = 0; i < _unread.length; i++) ...[
-              _buildNotificationCard(
-                item: _unread[i],
-                isUnread: true,
-              ),
+              _buildNotificationCard(item: _unread[i], isUnread: true),
 
-              if (i != _unread.length - 1)
-                const SizedBox(height: 11),
+              if (i != _unread.length - 1) const SizedBox(height: 11),
             ],
           ],
 
           // ================================================
           // SEBELUMNYA
           // ================================================
-
           if (_read.isNotEmpty) ...[
             const SizedBox(height: 22),
 
@@ -308,13 +248,9 @@ class _DoctorNotificationScreenState
             const SizedBox(height: 12),
 
             for (int i = 0; i < _read.length; i++) ...[
-              _buildNotificationCard(
-                item: _read[i],
-                isUnread: false,
-              ),
+              _buildNotificationCard(item: _read[i], isUnread: false),
 
-              if (i != _read.length - 1)
-                const SizedBox(height: 11),
+              if (i != _read.length - 1) const SizedBox(height: 11),
             ],
           ],
 
@@ -323,7 +259,6 @@ class _DoctorNotificationScreenState
           // ================================================
           // TOMBOL TES (SELALU TERLIHAT)
           // ================================================
-
           _buildTestButtons(),
 
           const SizedBox(height: 20),
@@ -391,10 +326,7 @@ class _DoctorNotificationScreenState
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 13,
-        vertical: 13,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -412,17 +344,9 @@ class _DoctorNotificationScreenState
           Container(
             width: 42,
             height: 42,
-            decoration: BoxDecoration(
-              color: style.bg,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: style.bg, shape: BoxShape.circle),
             child: Center(
-              child: Text(
-                style.emoji,
-                style: const TextStyle(
-                  fontSize: 19,
-                ),
-              ),
+              child: Text(style.emoji, style: const TextStyle(fontSize: 19)),
             ),
           ),
 
@@ -430,8 +354,7 @@ class _DoctorNotificationScreenState
 
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   item.title,
@@ -440,9 +363,7 @@ class _DoctorNotificationScreenState
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 13,
-                    fontWeight: isUnread
-                        ? FontWeight.w800
-                        : FontWeight.w700,
+                    fontWeight: isUnread ? FontWeight.w800 : FontWeight.w700,
                     color: const Color(0xFF30221E),
                   ),
                 ),
@@ -457,9 +378,7 @@ class _DoctorNotificationScreenState
                     fontFamily: 'Nunito',
                     fontSize: 11.5,
                     height: 1.25,
-                    fontWeight: isUnread
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+                    fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
                     color: const Color(0xFF675B57),
                   ),
                 ),
@@ -470,10 +389,7 @@ class _DoctorNotificationScreenState
           const SizedBox(width: 10),
 
           Text(
-            _formatLabel(
-              item.createdAt,
-              isUnread: isUnread,
-            ),
+            _formatLabel(item.createdAt, isUnread: isUnread),
             style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 12,
@@ -493,9 +409,7 @@ class _DoctorNotificationScreenState
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 34,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 34),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -507,12 +421,7 @@ class _DoctorNotificationScreenState
                 shape: BoxShape.circle,
               ),
               child: const Center(
-                child: Text(
-                  '🔔',
-                  style: TextStyle(
-                    fontSize: 52,
-                  ),
-                ),
+                child: Text('🔔', style: TextStyle(fontSize: 52)),
               ),
             ),
 
@@ -564,8 +473,7 @@ class _DoctorNotificationScreenState
           height: 46,
           child: ElevatedButton(
             onPressed: () async {
-              final user =
-                  FirebaseAuth.instance.currentUser;
+              final user = FirebaseAuth.instance.currentUser;
 
               if (user == null) return;
 
@@ -573,8 +481,7 @@ class _DoctorNotificationScreenState
                 uid: user.uid,
                 type: 'chat',
                 title: 'Pasien Rina mengirim pesan',
-                body:
-                    '"Dok, perut saya sakit setelah makan..."',
+                body: '"Dok, perut saya sakit setelah makan..."',
               );
 
               if (!mounted) return;
@@ -587,13 +494,11 @@ class _DoctorNotificationScreenState
               _loadNotifications();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  const Color(0xFF8068D3),
+              backgroundColor: const Color(0xFF8068D3),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(25),
               ),
             ),
             child: const Text(
@@ -617,8 +522,7 @@ class _DoctorNotificationScreenState
             onPressed: () async {
               try {
                 await NotificationService.showPatientMessage(
-                  messageId:
-                      'test-${DateTime.now().millisecondsSinceEpoch}',
+                  messageId: 'test-${DateTime.now().millisecondsSinceEpoch}',
                   patientName: 'Test Pasien',
                   message: 'Tes notif pasien dari HP dokter',
                 );
@@ -628,9 +532,7 @@ class _DoctorNotificationScreenState
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     behavior: SnackBarBehavior.floating,
-                    content: Text(
-                      'Notifikasi Android berhasil dipanggil 🔔',
-                    ),
+                    content: Text('Notifikasi Android berhasil dipanggil 🔔'),
                   ),
                 );
               } catch (e) {
@@ -639,9 +541,7 @@ class _DoctorNotificationScreenState
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     behavior: SnackBarBehavior.floating,
-                    content: Text(
-                      'Gagal membuat notif: $e',
-                    ),
+                    content: Text('Gagal membuat notif: $e'),
                   ),
                 );
               }
@@ -651,8 +551,7 @@ class _DoctorNotificationScreenState
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(25),
               ),
             ),
             child: const Text(
@@ -674,8 +573,7 @@ class _DoctorNotificationScreenState
           height: 46,
           child: ElevatedButton(
             onPressed: () async {
-              final user =
-                  FirebaseAuth.instance.currentUser;
+              final user = FirebaseAuth.instance.currentUser;
 
               if (user == null) return;
 
@@ -683,11 +581,8 @@ class _DoctorNotificationScreenState
                 uid: user.uid,
                 type: 'chat',
                 title: 'Pasien Budi mengirim pesan',
-                body:
-                    'Mau tanya soal pola makan, Dok',
-                createdAt: DateTime.now().subtract(
-                  const Duration(days: 2),
-                ),
+                body: 'Mau tanya soal pola makan, Dok',
+                createdAt: DateTime.now().subtract(const Duration(days: 2)),
               );
 
               if (!mounted) return;
@@ -699,13 +594,11 @@ class _DoctorNotificationScreenState
               _loadNotifications();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  const Color(0xFF4E8D6E),
+              backgroundColor: const Color(0xFF4E8D6E),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(25),
               ),
             ),
             child: const Text(
@@ -727,14 +620,11 @@ class _DoctorNotificationScreenState
           height: 46,
           child: ElevatedButton(
             onPressed: () async {
-              final user =
-                  FirebaseAuth.instance.currentUser;
+              final user = FirebaseAuth.instance.currentUser;
 
               if (user == null) return;
 
-              await AppNotification.clearAll(
-                user.uid,
-              );
+              await AppNotification.clearAll(user.uid);
 
               if (!mounted) return;
 
@@ -743,24 +633,19 @@ class _DoctorNotificationScreenState
                 _read = [];
               });
 
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(
+              ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   behavior: SnackBarBehavior.floating,
-                  content: Text(
-                    'Semua notifikasi dihapus.',
-                  ),
+                  content: Text('Semua notifikasi dihapus.'),
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  const Color(0xFFB8B0AC),
+              backgroundColor: const Color(0xFFB8B0AC),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(25),
               ),
             ),
             child: const Text(

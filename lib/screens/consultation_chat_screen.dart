@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../services/notification_service.dart';
 import 'notification_screen.dart';
 
@@ -24,17 +26,13 @@ class ConsultationChatScreen extends StatefulWidget {
   });
 
   @override
-  State<ConsultationChatScreen> createState() =>
-      _ConsultationChatScreenState();
+  State<ConsultationChatScreen> createState() => _ConsultationChatScreenState();
 }
 
-class _ConsultationChatScreenState
-    extends State<ConsultationChatScreen> {
-  final TextEditingController messageController =
-      TextEditingController();
+class _ConsultationChatScreenState extends State<ConsultationChatScreen> {
+  final TextEditingController messageController = TextEditingController();
 
-  final ScrollController scrollController =
-      ScrollController();
+  final ScrollController scrollController = ScrollController();
 
   bool _isSending = false;
 
@@ -61,11 +59,9 @@ class _ConsultationChatScreenState
   // tidak dianggap sebagai pesan baru.
   bool _notificationBaselineReady = false;
 
-  final Color backgroundColor =
-      const Color(0xFFFFF5EF);
+  final Color backgroundColor = const Color(0xFFFFF5EF);
 
-  final Color primaryBrown =
-      const Color(0xFFB65339);
+  final Color primaryBrown = const Color(0xFFB65339);
 
   @override
   void initState() {
@@ -85,14 +81,10 @@ class _ConsultationChatScreenState
       await FirebaseFirestore.instance
           .collection('consultations')
           .doc(widget.consultationId)
-          .set(
-        {
-          'unreadForUser': 0,
-          'lastReadByUserAt':
-              FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+          .set({
+            'unreadForUser': 0,
+            'lastReadByUserAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
     } catch (_) {}
   }
 
@@ -107,10 +99,7 @@ class _ConsultationChatScreenState
           .doc(widget.consultationId)
           .get();
 
-      return (doc.data()?['status'] ?? '')
-              .toString()
-              .toLowerCase() ==
-          'active';
+      return (doc.data()?['status'] ?? '').toString().toLowerCase() == 'active';
     } catch (_) {
       return false;
     }
@@ -129,13 +118,9 @@ class _ConsultationChatScreenState
 
       if (!mounted) return;
 
-      final status =
-          (doc.data()?['status'] ?? '')
-              .toString()
-              .toLowerCase();
+      final status = (doc.data()?['status'] ?? '').toString().toLowerCase();
 
-      final ts =
-          doc.data()?['consultationTimestamp'];
+      final ts = doc.data()?['consultationTimestamp'];
 
       String dateText = '';
 
@@ -147,10 +132,7 @@ class _ConsultationChatScreenState
             '${d.month.toString().padLeft(2, '0')}-'
             '${d.day.toString().padLeft(2, '0')}';
 
-        final time =
-            widget.selectedTime
-                .trim()
-                .replaceAll(' WIB', '');
+        final time = widget.selectedTime.trim().replaceAll(' WIB', '');
 
         if (time.isNotEmpty) {
           dateText = '$date • $time WIB';
@@ -184,16 +166,12 @@ class _ConsultationChatScreenState
   // STREAM PESAN
   // ===============================================================
 
-  Stream<QuerySnapshot<Map<String, dynamic>>>
-      _messageStream() {
+  Stream<QuerySnapshot<Map<String, dynamic>>> _messageStream() {
     return FirebaseFirestore.instance
         .collection('consultations')
         .doc(widget.consultationId)
         .collection('messages')
-        .orderBy(
-          'createdAt',
-          descending: false,
-        )
+        .orderBy('createdAt', descending: false)
         .snapshots();
   }
 
@@ -202,11 +180,9 @@ class _ConsultationChatScreenState
   // ===============================================================
 
   void _checkForNewDoctorMessages(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>>
-        messages,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> messages,
   ) {
-    final User? currentUser =
-        FirebaseAuth.instance.currentUser;
+    final User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) return;
 
@@ -243,19 +219,14 @@ class _ConsultationChatScreenState
 
       final data = doc.data();
 
-      final String senderId =
-          (data['senderId'] ?? '').toString();
+      final String senderId = (data['senderId'] ?? '').toString();
 
-      final String senderRole =
-          (data['senderRole'] ?? '')
-              .toString()
-              .trim()
-              .toLowerCase();
+      final String senderRole = (data['senderRole'] ?? '')
+          .toString()
+          .trim()
+          .toLowerCase();
 
-      final String message =
-          (data['message'] ?? '')
-              .toString()
-              .trim();
+      final String message = (data['message'] ?? '').toString().trim();
 
       // -----------------------------------------------------------
       // HANYA PESAN DARI DOKTER
@@ -264,16 +235,12 @@ class _ConsultationChatScreenState
       // -----------------------------------------------------------
 
       final bool isDoctorMessage =
-          senderRole == 'doctor' ||
-          senderRole == 'dokter';
+          senderRole == 'doctor' || senderRole == 'dokter';
 
       final bool isNotCurrentUser =
-          senderId.isEmpty ||
-          senderId != currentUser.uid;
+          senderId.isEmpty || senderId != currentUser.uid;
 
-      if (!isDoctorMessage ||
-          !isNotCurrentUser ||
-          message.isEmpty) {
+      if (!isDoctorMessage || !isNotCurrentUser || message.isEmpty) {
         _notifiedDoctorMessageIds.add(doc.id);
         continue;
       }
@@ -290,16 +257,11 @@ class _ConsultationChatScreenState
       // akan pernah membuat dua notifikasi.
       // -----------------------------------------------------------
 
-      if (!NotificationService.registerChatMessageIfNew(
-        doc.id,
-      )) {
+      if (!NotificationService.registerChatMessageIfNew(doc.id)) {
         continue;
       }
 
-      _createDoctorMessageNotification(
-        messageId: doc.id,
-        message: message,
-      );
+      _createDoctorMessageNotification(messageId: doc.id, message: message);
     }
   }
 
@@ -311,16 +273,14 @@ class _ConsultationChatScreenState
     required String messageId,
     required String message,
   }) async {
-    final User? currentUser =
-        FirebaseAuth.instance.currentUser;
+    final User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) return;
 
     try {
-      final String doctorName =
-          widget.doctorName.trim().isEmpty
-              ? 'Dokter'
-              : widget.doctorName.trim();
+      final String doctorName = widget.doctorName.trim().isEmpty
+          ? 'Dokter'
+          : widget.doctorName.trim();
 
       // -----------------------------------------------------------
       // 1. NOTIFIKASI POPUP HP
@@ -353,9 +313,7 @@ class _ConsultationChatScreenState
         '(messageId: $messageId)',
       );
     } catch (e) {
-      debugPrint(
-        'NOTIFIKASI CHAT USER ERROR: $e',
-      );
+      debugPrint('NOTIFIKASI CHAT USER ERROR: $e');
     }
   }
 
@@ -386,16 +344,11 @@ class _ConsultationChatScreenState
             const SizedBox(height: 12),
 
             Expanded(
-              child: StreamBuilder<
-                  QuerySnapshot<Map<String, dynamic>>>(
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: _messageStream(),
 
-                builder: (
-                  context,
-                  snapshot,
-                ) {
-                  if (snapshot.connectionState ==
-                      ConnectionState.waiting) {
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
                       child: CircularProgressIndicator(
                         color: Color(0xFFB65339),
@@ -407,37 +360,28 @@ class _ConsultationChatScreenState
                     return _buildError();
                   }
 
-                  final List<
-                          QueryDocumentSnapshot<
-                              Map<String, dynamic>>>
-                      messages =
-                      snapshot.data?.docs ?? [];
+                  final List<QueryDocumentSnapshot<Map<String, dynamic>>>
+                  messages = snapshot.data?.docs ?? [];
 
                   // =================================================
                   // CEK PESAN BARU DARI DOKTER
                   // =================================================
 
-                  _checkForNewDoctorMessages(
-                    messages,
-                  );
+                  _checkForNewDoctorMessages(messages);
 
                   // =================================================
                   // AUTO SCROLL
                   // =================================================
 
-                  final int currentMessageCount =
-                      messages.length;
+                  final int currentMessageCount = messages.length;
 
                   final bool shouldScroll =
                       !_hasLoadedMessages ||
-                      currentMessageCount >
-                          _lastMessageCount;
+                      currentMessageCount > _lastMessageCount;
 
                   if (shouldScroll) {
-                    WidgetsBinding.instance
-                        .addPostFrameCallback((_) {
-                      if (!mounted ||
-                          !scrollController.hasClients) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted || !scrollController.hasClients) {
                         return;
                       }
 
@@ -445,8 +389,7 @@ class _ConsultationChatScreenState
                     });
                   }
 
-                  _lastMessageCount =
-                      currentMessageCount;
+                  _lastMessageCount = currentMessageCount;
 
                   _hasLoadedMessages = true;
 
@@ -457,28 +400,17 @@ class _ConsultationChatScreenState
                   return ListView.builder(
                     controller: scrollController,
 
-                    padding:
-                        const EdgeInsets.fromLTRB(
-                      10,
-                      0,
-                      10,
-                      8,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
 
-                    physics:
-                        const ClampingScrollPhysics(),
+                    physics: const ClampingScrollPhysics(),
 
                     itemCount: messages.length,
 
-                    itemBuilder:
-                        (context, index) {
-                      final Map<String, dynamic>
-                          message =
-                          messages[index].data();
+                    itemBuilder: (context, index) {
+                      final Map<String, dynamic> message = messages[index]
+                          .data();
 
-                      return _buildChatBubble(
-                        message,
-                      );
+                      return _buildChatBubble(message);
                     },
                   );
                 },
@@ -508,8 +440,7 @@ class _ConsultationChatScreenState
       child: Row(
         children: [
           GestureDetector(
-            onTap: () =>
-                Navigator.pop(context),
+            onTap: () => Navigator.pop(context),
             child: const SizedBox(
               width: 55,
               height: 55,
@@ -527,9 +458,7 @@ class _ConsultationChatScreenState
           Expanded(
             child: Center(
               child: Text(
-                _isCompleted
-                    ? 'Riwayat Chat'
-                    : 'Konsultasi dengan Dokter',
+                _isCompleted ? 'Riwayat Chat' : 'Konsultasi dengan Dokter',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontFamily: 'Fredoka',
@@ -548,8 +477,7 @@ class _ConsultationChatScreenState
   }
 
   String _displayDoctorName() {
-    final name =
-        widget.doctorName.trim();
+    final name = widget.doctorName.trim();
 
     if (name.isEmpty) {
       return 'dr. Dokter';
@@ -568,21 +496,13 @@ class _ConsultationChatScreenState
 
   Widget _buildDoctorCard() {
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 27,
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: 27),
 
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        10,
-        12,
-        10,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
 
       decoration: BoxDecoration(
         color: const Color(0xFFFFFCFA),
-        borderRadius:
-            BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20),
       ),
 
       child: Row(
@@ -593,19 +513,16 @@ class _ConsultationChatScreenState
 
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   _displayDoctorName(),
                   maxLines: 1,
-                  overflow:
-                      TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 12,
-                    fontWeight:
-                        FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                     color: Color(0xFF211914),
                   ),
                 ),
@@ -615,8 +532,7 @@ class _ConsultationChatScreenState
                 Text(
                   widget.specialty,
                   maxLines: 1,
-                  overflow:
-                      TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 12,
@@ -629,14 +545,13 @@ class _ConsultationChatScreenState
                 Text(
                   _consultationDateText.isNotEmpty
                       ? _consultationDateText
-                      : (widget.selectedTime
-                              .isNotEmpty
-                          ? widget.selectedTime
-                                  .trim()
-                                  .replaceAll(
-                                      ' WIB', '') +
-                              ' WIB'
-                          : 'Konsultasi Aktif'),
+                      : (widget.selectedTime.isNotEmpty
+                            ? widget.selectedTime.trim().replaceAll(
+                                    ' WIB',
+                                    '',
+                                  ) +
+                                  ' WIB'
+                            : 'Konsultasi Aktif'),
                   style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 10,
@@ -656,8 +571,7 @@ class _ConsultationChatScreenState
   // ===============================================================
 
   Widget _buildDoctorImage() {
-    final String image =
-        widget.doctorImage.trim();
+    final String image = widget.doctorImage.trim();
 
     if (image.isEmpty) {
       return _fallbackDoctorImage();
@@ -667,18 +581,15 @@ class _ConsultationChatScreenState
       return Container(
         width: 62,
         height: 62,
-        decoration:
-            const BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: Color(0xFFEDE5DF),
         ),
-        clipBehavior:
-            Clip.antiAlias,
+        clipBehavior: Clip.antiAlias,
         child: Image.network(
           image,
           fit: BoxFit.cover,
-          errorBuilder:
-              (context, error, stackTrace) {
+          errorBuilder: (context, error, stackTrace) {
             return _fallbackDoctorIcon();
           },
         ),
@@ -686,8 +597,7 @@ class _ConsultationChatScreenState
     }
 
     try {
-      final Uint8List bytes =
-          base64Decode(image);
+      final Uint8List bytes = base64Decode(image);
 
       if (bytes.isEmpty) {
         return _fallbackDoctorImage();
@@ -696,18 +606,15 @@ class _ConsultationChatScreenState
       return Container(
         width: 62,
         height: 62,
-        decoration:
-            const BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: Color(0xFFEDE5DF),
         ),
-        clipBehavior:
-            Clip.antiAlias,
+        clipBehavior: Clip.antiAlias,
         child: Image.memory(
           bytes,
           fit: BoxFit.cover,
-          errorBuilder:
-              (context, error, stackTrace) {
+          errorBuilder: (context, error, stackTrace) {
             return _fallbackDoctorIcon();
           },
         ),
@@ -721,8 +628,7 @@ class _ConsultationChatScreenState
     return Container(
       width: 62,
       height: 62,
-      decoration:
-          const BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
         color: Color(0xFFEDE5DF),
       ),
@@ -731,11 +637,7 @@ class _ConsultationChatScreenState
   }
 
   Widget _fallbackDoctorIcon() {
-    return const Icon(
-      Icons.person_rounded,
-      size: 42,
-      color: Color(0xFFB65339),
-    );
+    return const Icon(Icons.person_rounded, size: 42, color: Color(0xFFB65339));
   }
 
   // ===============================================================
@@ -744,19 +646,13 @@ class _ConsultationChatScreenState
 
   Widget _buildPrivacyWarning() {
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 28,
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: 28),
 
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
 
       decoration: BoxDecoration(
         color: const Color(0xFFFFE4D3),
-        borderRadius:
-            BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
       ),
 
       child: Row(
@@ -791,16 +687,11 @@ class _ConsultationChatScreenState
 
   Widget _buildTodayLabel() {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
 
       decoration: BoxDecoration(
         color: const Color(0xFFFFE8DC),
-        borderRadius:
-            BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
 
         boxShadow: const [
           BoxShadow(
@@ -830,19 +721,16 @@ class _ConsultationChatScreenState
   Widget _buildEmptyChat() {
     return Center(
       child: Padding(
-        padding:
-            const EdgeInsets.all(30),
+        padding: const EdgeInsets.all(30),
 
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
 
           children: [
             Container(
               width: 72,
               height: 72,
-              decoration:
-                  const BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Color(0xFFFFE3D1),
                 shape: BoxShape.circle,
               ),
@@ -860,8 +748,7 @@ class _ConsultationChatScreenState
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 14,
-                fontWeight:
-                    FontWeight.w800,
+                fontWeight: FontWeight.w800,
                 color: Color(0xFF30221E),
               ),
             ),
@@ -889,116 +776,72 @@ class _ConsultationChatScreenState
   // CHAT BUBBLE
   // ===============================================================
 
-  Widget _buildChatBubble(
-    Map<String, dynamic> message,
-  ) {
-    final User? currentUser =
-        FirebaseAuth.instance.currentUser;
+  Widget _buildChatBubble(Map<String, dynamic> message) {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
 
-    final String senderId =
-        (message['senderId'] ?? '')
-            .toString();
+    final String senderId = (message['senderId'] ?? '').toString();
 
-    final bool isMine =
-        currentUser != null &&
-            senderId == currentUser.uid;
+    final bool isMine = currentUser != null && senderId == currentUser.uid;
 
-    final String text =
-        (message['message'] ?? '')
-            .toString();
+    final String text = (message['message'] ?? '').toString();
 
-    final String time =
-        _formatTime(
-      message['createdAt'],
-    );
+    final String time = _formatTime(message['createdAt']);
 
     return Padding(
-      padding:
-          const EdgeInsets.only(
-        bottom: 14,
-      ),
+      padding: const EdgeInsets.only(bottom: 14),
 
       child: Row(
         mainAxisAlignment: isMine
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
 
-        crossAxisAlignment:
-            CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
 
         children: [
-          if (!isMine) ...[
-            _buildSmallDoctorImage(),
-            const SizedBox(width: 8),
-          ],
+          if (!isMine) ...[_buildSmallDoctorImage(), const SizedBox(width: 8)],
 
           Flexible(
             child: Container(
-              constraints:
-                  const BoxConstraints(
-                maxWidth: 310,
-              ),
+              constraints: const BoxConstraints(maxWidth: 310),
 
-              padding:
-                  const EdgeInsets.fromLTRB(
-                13,
-                9,
-                10,
-                6,
-              ),
+              padding: const EdgeInsets.fromLTRB(13, 9, 10, 6),
 
-              decoration:
-                  BoxDecoration(
+              decoration: BoxDecoration(
                 color: isMine
                     ? const Color(0xFFFFE7D8)
                     : const Color(0xFFFFFCFA),
 
-                borderRadius:
-                    BorderRadius.only(
-                  topLeft:
-                      const Radius.circular(18),
-                  topRight:
-                      const Radius.circular(18),
-                  bottomLeft:
-                      Radius.circular(
-                    isMine ? 18 : 4,
-                  ),
-                  bottomRight:
-                      Radius.circular(
-                    isMine ? 4 : 18,
-                  ),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(isMine ? 18 : 4),
+                  bottomRight: Radius.circular(isMine ? 4 : 18),
                 ),
 
                 boxShadow: isMine
                     ? const [
                         BoxShadow(
-                          color:
-                              Color(0x28000000),
+                          color: Color(0x28000000),
                           blurRadius: 4,
-                          offset:
-                              Offset(0, 3),
+                          offset: Offset(0, 3),
                         ),
                       ]
                     : [],
               ),
 
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
 
                 children: [
                   Align(
-                    alignment:
-                        Alignment.centerLeft,
+                    alignment: Alignment.centerLeft,
                     child: Text(
                       text,
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 12,
                         height: 1.35,
-                        color:
-                            Color(0xFF211914),
+                        color: Color(0xFF211914),
                       ),
                     ),
                   ),
@@ -1006,31 +849,24 @@ class _ConsultationChatScreenState
                   const SizedBox(height: 2),
 
                   Row(
-                    mainAxisSize:
-                        MainAxisSize.min,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         time,
                         style: TextStyle(
-                          fontFamily:
-                              'Nunito',
+                          fontFamily: 'Nunito',
                           fontSize: 8,
-                          color:
-                              Colors.grey[600],
+                          color: Colors.grey[600],
                         ),
                       ),
 
                       if (isMine) ...[
-                        const SizedBox(
-                          width: 3,
-                        ),
+                        const SizedBox(width: 3),
 
                         const Icon(
-                          Icons
-                              .done_all_rounded,
+                          Icons.done_all_rounded,
                           size: 12,
-                          color:
-                              Color(0xFFB65339),
+                          color: Color(0xFFB65339),
                         ),
                       ],
                     ],
@@ -1049,25 +885,21 @@ class _ConsultationChatScreenState
   // ===============================================================
 
   Widget _buildSmallDoctorImage() {
-    final String image =
-        widget.doctorImage.trim();
+    final String image = widget.doctorImage.trim();
 
     if (image.startsWith('http')) {
       return Container(
         width: 36,
         height: 36,
-        decoration:
-            const BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: Color(0xFFEDE5DF),
         ),
-        clipBehavior:
-            Clip.antiAlias,
+        clipBehavior: Clip.antiAlias,
         child: Image.network(
           image,
           fit: BoxFit.cover,
-          errorBuilder:
-              (context, error, stackTrace) {
+          errorBuilder: (context, error, stackTrace) {
             return _smallDoctorFallback();
           },
         ),
@@ -1079,18 +911,15 @@ class _ConsultationChatScreenState
         return Container(
           width: 36,
           height: 36,
-          decoration:
-              const BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: Color(0xFFEDE5DF),
           ),
-          clipBehavior:
-              Clip.antiAlias,
+          clipBehavior: Clip.antiAlias,
           child: Image.memory(
             base64Decode(image),
             fit: BoxFit.cover,
-            errorBuilder:
-                (context, error, stackTrace) {
+            errorBuilder: (context, error, stackTrace) {
               return _smallDoctorFallback();
             },
           ),
@@ -1105,8 +934,7 @@ class _ConsultationChatScreenState
     return Container(
       width: 36,
       height: 36,
-      decoration:
-          const BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
         color: Color(0xFFEDE5DF),
       ),
@@ -1124,24 +952,13 @@ class _ConsultationChatScreenState
 
   Widget _buildMessageInput() {
     return Container(
-      margin:
-          const EdgeInsets.fromLTRB(
-        9,
-        0,
-        9,
-        8,
-      ),
+      margin: const EdgeInsets.fromLTRB(9, 0, 9, 8),
 
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
 
       decoration: BoxDecoration(
         color: const Color(0xFFEFD1BC),
-        borderRadius:
-            BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(13),
       ),
 
       child: Row(
@@ -1149,8 +966,7 @@ class _ConsultationChatScreenState
           Container(
             width: 32,
             height: 32,
-            decoration:
-                const BoxDecoration(
+            decoration: const BoxDecoration(
               color: Color(0xFFFFFCFA),
               shape: BoxShape.circle,
             ),
@@ -1170,23 +986,18 @@ class _ConsultationChatScreenState
 
           Expanded(
             child: TextField(
-              controller:
-                  messageController,
+              controller: messageController,
 
-              textInputAction:
-                  TextInputAction.send,
+              textInputAction: TextInputAction.send,
 
               onSubmitted: (_) {
                 _sendMessage();
               },
 
-              decoration:
-                  InputDecoration(
-                hintText:
-                    'Ketik pesan...',
+              decoration: InputDecoration(
+                hintText: 'Ketik pesan...',
 
-                hintStyle:
-                    TextStyle(
+                hintStyle: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 11,
                   color: Colors.grey[500],
@@ -1194,58 +1005,41 @@ class _ConsultationChatScreenState
 
                 filled: true,
 
-                fillColor:
-                    const Color(0xFFFFFCFA),
+                fillColor: const Color(0xFFFFFCFA),
 
-                border:
-                    OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(
-                    18,
-                  ),
-                  borderSide:
-                      BorderSide.none,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide.none,
                 ),
 
-                contentPadding:
-                    const EdgeInsets.symmetric(
+                contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
               ),
 
-              style:
-                  const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 12,
-              ),
+              style: const TextStyle(fontFamily: 'Nunito', fontSize: 12),
             ),
           ),
 
           const SizedBox(width: 7),
 
           GestureDetector(
-            onTap:
-                _isSending
-                    ? null
-                    : _sendMessage,
+            onTap: _isSending ? null : _sendMessage,
 
             child: Container(
               width: 34,
               height: 34,
 
-              decoration:
-                  const BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Color(0xFFB65339),
                 shape: BoxShape.circle,
               ),
 
               child: _isSending
                   ? const Padding(
-                      padding:
-                          EdgeInsets.all(9),
-                      child:
-                          CircularProgressIndicator(
+                      padding: EdgeInsets.all(9),
+                      child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: Colors.white,
                       ),
@@ -1268,35 +1062,19 @@ class _ConsultationChatScreenState
 
   Widget _buildReadOnlyNotice() {
     return Container(
-      margin:
-          const EdgeInsets.fromLTRB(
-        9,
-        0,
-        9,
-        8,
-      ),
+      margin: const EdgeInsets.fromLTRB(9, 0, 9, 8),
 
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 9,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
 
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(13),
       ),
 
       child: const Row(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.lock_outline_rounded,
-            size: 16,
-            color: Color(0xFFB65339),
-          ),
+          Icon(Icons.lock_outline_rounded, size: 16, color: Color(0xFFB65339)),
 
           SizedBox(width: 7),
 
@@ -1321,26 +1099,17 @@ class _ConsultationChatScreenState
 
   Widget _buildMedicalNote() {
     return Container(
-      margin:
-          const EdgeInsets.symmetric(
-        horizontal: 9,
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: 9),
 
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
 
       decoration: BoxDecoration(
         color: const Color(0xFFFFE7D8),
-        borderRadius:
-            BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
       ),
 
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
           const Icon(
@@ -1377,15 +1146,13 @@ class _ConsultationChatScreenState
   // ===============================================================
 
   Future<void> _sendMessage() async {
-    final String message =
-        messageController.text.trim();
+    final String message = messageController.text.trim();
 
     if (message.isEmpty) {
       return;
     }
 
-    final User? user =
-        FirebaseAuth.instance.currentUser;
+    final User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null || _isSending) {
       return;
@@ -1393,12 +1160,8 @@ class _ConsultationChatScreenState
 
     if (!await _isChatActive()) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          const SnackBar(
-            content:
-                Text('Belum waktunya konsultasi.'),
-          ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Belum waktunya konsultasi.')),
         );
       }
 
@@ -1408,38 +1171,26 @@ class _ConsultationChatScreenState
     setState(() => _isSending = true);
 
     try {
-      final DocumentReference<
-              Map<String, dynamic>>
-          consultationReference =
+      final DocumentReference<Map<String, dynamic>> consultationReference =
           FirebaseFirestore.instance
               .collection('consultations')
               .doc(widget.consultationId);
 
-      final DocumentReference<
-              Map<String, dynamic>>
-          messageDoc =
-          await consultationReference
-              .collection('messages')
-              .add({
-        'senderId': user.uid,
-        'senderRole': 'user',
-        'message': message,
-        'createdAt':
-            FieldValue.serverTimestamp(),
-      });
+      final DocumentReference<Map<String, dynamic>> messageDoc =
+          await consultationReference.collection('messages').add({
+            'senderId': user.uid,
+            'senderRole': 'user',
+            'message': message,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
 
-      await consultationReference.set(
-        {
-          'updatedAt':
-              FieldValue.serverTimestamp(),
-          'lastMessage': message,
-          'lastSenderId': user.uid,
-          'lastMessageId': messageDoc.id,
-          'unreadForDoctor':
-              FieldValue.increment(1),
-        },
-        SetOptions(merge: true),
-      );
+      await consultationReference.set({
+        'updatedAt': FieldValue.serverTimestamp(),
+        'lastMessage': message,
+        'lastSenderId': user.uid,
+        'lastMessageId': messageDoc.id,
+        'unreadForDoctor': FieldValue.increment(1),
+      }, SetOptions(merge: true));
 
       messageController.clear();
     } catch (_) {
@@ -1447,18 +1198,13 @@ class _ConsultationChatScreenState
         return;
       }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Pesan gagal dikirim.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
-          behavior:
-              SnackBarBehavior.floating,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {
@@ -1479,10 +1225,7 @@ class _ConsultationChatScreenState
       return;
     }
 
-    final double maxScroll =
-        scrollController
-            .position
-            .maxScrollExtent;
+    final double maxScroll = scrollController.position.maxScrollExtent;
 
     scrollController.jumpTo(maxScroll);
   }
@@ -1496,18 +1239,11 @@ class _ConsultationChatScreenState
       return '';
     }
 
-    final DateTime date =
-        timestamp.toDate();
+    final DateTime date = timestamp.toDate();
 
-    final String hour =
-        date.hour
-            .toString()
-            .padLeft(2, '0');
+    final String hour = date.hour.toString().padLeft(2, '0');
 
-    final String minute =
-        date.minute
-            .toString()
-            .padLeft(2, '0');
+    final String minute = date.minute.toString().padLeft(2, '0');
 
     return '$hour:$minute';
   }

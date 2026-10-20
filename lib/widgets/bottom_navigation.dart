@@ -36,12 +36,7 @@ class AppBottomNavigation extends StatelessWidget {
           // MARGIN
           // =====================================================
 
-          margin: const EdgeInsets.fromLTRB(
-            14,
-            0,
-            14,
-            14,
-          ),
+          margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
 
           decoration: BoxDecoration(
             color: Colors.white,
@@ -63,14 +58,10 @@ class AppBottomNavigation extends StatelessWidget {
             // CARD DIPENDEKKAN
             // ===================================================
 
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
 
             child: Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(
                   index: 0,
@@ -82,16 +73,14 @@ class AppBottomNavigation extends StatelessWidget {
                 _buildNavItem(
                   index: 1,
                   icon: Icons.health_and_safety_outlined,
-                  activeIcon:
-                      Icons.health_and_safety_rounded,
+                  activeIcon: Icons.health_and_safety_rounded,
                   label: 'Skrining',
                 ),
 
                 _buildNavItem(
                   index: 2,
                   icon: Icons.medical_services_outlined,
-                  activeIcon:
-                      Icons.medical_services_rounded,
+                  activeIcon: Icons.medical_services_rounded,
                   label: 'Dokter',
                 ),
 
@@ -138,40 +127,30 @@ class AppBottomNavigation extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
 
-          margin: const EdgeInsets.symmetric(
-            horizontal: 2,
-          ),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
 
           // =====================================================
           // ITEM DIPENDEKKAN
           // =====================================================
-
           height: 48,
 
           decoration: BoxDecoration(
-            color: active
-                ? const Color(0xFFFFE5D8)
-                : Colors.transparent,
+            color: active ? const Color(0xFFFFE5D8) : Colors.transparent,
 
             borderRadius: BorderRadius.circular(15),
           ),
 
           child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // =================================================
               // ICON DIPERKECIL
               // =================================================
 
               AnimatedSwitcher(
-                duration:
-                    const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 200),
                 transitionBuilder: (child, animation) {
-                  return ScaleTransition(
-                    scale: animation,
-                    child: child,
-                  );
+                  return ScaleTransition(scale: animation, child: child);
                 },
                 child: Icon(
                   active ? activeIcon : icon,
@@ -184,22 +163,18 @@ class AppBottomNavigation extends StatelessWidget {
               // =================================================
               // JARAK ICON - TEXT DIPERKECIL
               // =================================================
-
               const SizedBox(height: 1),
 
               // =================================================
               // FONT DIPERKECIL
               // =================================================
-
               Text(
                 label,
                 style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 9,
                   color: primaryBrown,
-                  fontWeight: active
-                      ? FontWeight.w800
-                      : FontWeight.w700,
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w700,
                 ),
               ),
             ],

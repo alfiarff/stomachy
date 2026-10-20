@@ -34,9 +34,7 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -45,9 +43,7 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -56,9 +52,7 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -67,9 +61,7 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -78,9 +70,7 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -98,12 +88,7 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            18,
-            8,
-            18,
-            20,
-          ),
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -118,7 +103,6 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
               // =====================================================
               // GAMBAR UTAMA
               // =====================================================
-
               _buildHeroImage(),
 
               const SizedBox(height: 15),
@@ -126,7 +110,6 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
               // =====================================================
               // JUDUL ARTIKEL
               // =====================================================
-
               const Text(
                 'Tips Tidur Nyenyak untuk Penderita GERD',
                 style: TextStyle(
@@ -141,7 +124,6 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
               // =====================================================
               // PEMBUKA ARTIKEL
               // =====================================================
-
               const Text(
                 'Tidur yang cukup dan berkualitas sangat penting untuk menjaga '
                 'kesehatan tubuh, termasuk bagi penderita GERD. Kurang tidur dapat '
@@ -159,7 +141,6 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
               // =====================================================
               // CARD TIPS
               // =====================================================
-
               _buildTipCard(
                 icon: Icons.schedule_rounded,
                 iconColor: const Color(0xFFE8804C),
@@ -224,7 +205,6 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
               // =====================================================
               // BOX INGAT
               // =====================================================
-
               _buildRememberBox(),
 
               const SizedBox(height: 15),
@@ -236,7 +216,6 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
       // =============================================================
       // BOTTOM NAVIGATION
       // =============================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -335,12 +314,7 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        14,
-        13,
-        14,
-        13,
-      ),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -366,11 +340,7 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
               color: iconBackground,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              size: 19,
-              color: iconColor,
-            ),
+            child: Icon(icon, size: 19, color: iconColor),
           ),
 
           const SizedBox(width: 12),
@@ -378,7 +348,6 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
           // =========================================================
           // TEKS
           // =========================================================
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,12 +388,7 @@ class _ArtikelTidurScreenState extends State<ArtikelTidurScreen> {
   Widget _buildRememberBox() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        13,
-        10,
-        13,
-        10,
-      ),
+      padding: const EdgeInsets.fromLTRB(13, 10, 13, 10),
       decoration: BoxDecoration(
         color: const Color(0xFFFFE7D8),
         borderRadius: BorderRadius.circular(10),

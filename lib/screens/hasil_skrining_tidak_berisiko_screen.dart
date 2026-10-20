@@ -41,9 +41,7 @@ class _HasilSkriningTidakBerisikoScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -51,9 +49,7 @@ class _HasilSkriningTidakBerisikoScreenState
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -61,9 +57,7 @@ class _HasilSkriningTidakBerisikoScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -71,9 +65,7 @@ class _HasilSkriningTidakBerisikoScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -81,9 +73,7 @@ class _HasilSkriningTidakBerisikoScreenState
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -101,12 +91,7 @@ class _HasilSkriningTidakBerisikoScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            26,
-            8,
-            26,
-            20,
-          ),
+          padding: const EdgeInsets.fromLTRB(26, 8, 26, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -203,7 +188,6 @@ class _HasilSkriningTidakBerisikoScreenState
           // ---------------------------------------------------------
           // MASKOT
           // ---------------------------------------------------------
-
           SizedBox(
             width: 150,
             height: 150,
@@ -218,7 +202,6 @@ class _HasilSkriningTidakBerisikoScreenState
           // ---------------------------------------------------------
           // HASIL
           // ---------------------------------------------------------
-
           RichText(
             textAlign: TextAlign.center,
             text: const TextSpan(
@@ -229,18 +212,12 @@ class _HasilSkriningTidakBerisikoScreenState
                 color: primaryBrown,
               ),
               children: [
-                TextSpan(
-                  text: 'Kamu ',
-                ),
+                TextSpan(text: 'Kamu '),
                 TextSpan(
                   text: 'tidak berisiko',
-                  style: TextStyle(
-                    color: greenColor,
-                  ),
+                  style: TextStyle(color: greenColor),
                 ),
-                TextSpan(
-                  text: ' mengalami',
-                ),
+                TextSpan(text: ' mengalami'),
               ],
             ),
           ),
@@ -260,9 +237,7 @@ class _HasilSkriningTidakBerisikoScreenState
           const SizedBox(height: 2),
 
           const Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 20,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               'Berdasarkan jawaban yang kamu masukkan, tidak\n'
               'ditemukan pola gejala yang mengarah pada risiko\n'
@@ -289,9 +264,7 @@ class _HasilSkriningTidakBerisikoScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: EdgeInsets.only(
-            left: 8,
-          ),
+          padding: EdgeInsets.only(left: 8),
           child: Text(
             'Saran untuk tetap sehat',
             style: TextStyle(
@@ -305,21 +278,13 @@ class _HasilSkriningTidakBerisikoScreenState
 
         const SizedBox(height: 9),
 
-        _buildAdviceItem(
-          'Jaga pola makan teratur',
-        ),
+        _buildAdviceItem('Jaga pola makan teratur'),
 
-        _buildAdviceItem(
-          'Hindari makanan yang memicu keluhan',
-        ),
+        _buildAdviceItem('Hindari makanan yang memicu keluhan'),
 
-        _buildAdviceItem(
-          'Istirahat yang cukup',
-        ),
+        _buildAdviceItem('Istirahat yang cukup'),
 
-        _buildAdviceItem(
-          'Tetap perhatikan perubahan gejala',
-        ),
+        _buildAdviceItem('Tetap perhatikan perubahan gejala'),
       ],
     );
   }
@@ -330,10 +295,7 @@ class _HasilSkriningTidakBerisikoScreenState
 
   Widget _buildAdviceItem(String text) {
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 17,
-        bottom: 6,
-      ),
+      padding: const EdgeInsets.only(left: 17, bottom: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -344,11 +306,7 @@ class _HasilSkriningTidakBerisikoScreenState
               color: accentBrown,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.check,
-              size: 10,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.check, size: 10, color: Colors.white),
           ),
 
           const SizedBox(width: 14),
@@ -377,16 +335,11 @@ class _HasilSkriningTidakBerisikoScreenState
     return Container(
       width: double.infinity,
       height: 37,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 13,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 13),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFCFA),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFFFD7B8),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFFFD7B8), width: 1),
       ),
       child: Row(
         children: [
@@ -395,10 +348,7 @@ class _HasilSkriningTidakBerisikoScreenState
             height: 15,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: accentBrown,
-                width: 1,
-              ),
+              border: Border.all(color: accentBrown, width: 1),
             ),
             child: const Center(
               child: Text(
@@ -417,10 +367,7 @@ class _HasilSkriningTidakBerisikoScreenState
           const Expanded(
             child: Text(
               'Hasil skrining ini bukan merupakan diagnosis medis.',
-              style: TextStyle(
-                fontSize: 8.5,
-                color: Color(0xFF332823),
-              ),
+              style: TextStyle(fontSize: 8.5, color: Color(0xFF332823)),
             ),
           ),
         ],

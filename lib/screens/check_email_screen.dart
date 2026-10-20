@@ -5,23 +5,17 @@ import 'login_screen.dart';
 class CheckEmailScreen extends StatelessWidget {
   final String email;
 
-  const CheckEmailScreen({
-    super.key,
-    required this.email,
-  });
+  const CheckEmailScreen({super.key, required this.email});
 
   // ===============================================================
   // WARNA
   // ===============================================================
 
-  static const Color backgroundColor =
-      Color(0xFFFFF4EC);
+  static const Color backgroundColor = Color(0xFFFFF4EC);
 
-  static const Color brown =
-      Color(0xFFB05039);
+  static const Color brown = Color(0xFFB05039);
 
-  static const Color darkText =
-      Color(0xFF493C37);
+  static const Color darkText = Color(0xFF493C37);
 
   // ===============================================================
   // KEMBALI KE LOGIN
@@ -30,9 +24,7 @@ class CheckEmailScreen extends StatelessWidget {
   void _backToLogin(BuildContext context) {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
       (route) => false,
     );
   }
@@ -50,9 +42,7 @@ class CheckEmailScreen extends StatelessWidget {
 
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.085,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: size.width * 0.085),
 
           child: Column(
             children: [
@@ -83,7 +73,6 @@ class CheckEmailScreen extends StatelessWidget {
               // =====================================================
               // KONTEN
               // =====================================================
-
               Expanded(
                 child: Center(
                   child: Column(
@@ -98,8 +87,7 @@ class CheckEmailScreen extends StatelessWidget {
                         width: 100,
                         height: 100,
 
-                        decoration:
-                            const BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: Color(0xFFFFE0D4),
                         ),
@@ -116,7 +104,6 @@ class CheckEmailScreen extends StatelessWidget {
                       // =================================================
                       // TITLE
                       // =================================================
-
                       Text(
                         'Cek Email Kamu',
 
@@ -124,10 +111,8 @@ class CheckEmailScreen extends StatelessWidget {
 
                         style: TextStyle(
                           fontFamily: 'Nunito',
-                          fontSize:
-                              size.width * 0.060,
-                          fontWeight:
-                              FontWeight.bold,
+                          fontSize: size.width * 0.060,
+                          fontWeight: FontWeight.bold,
                           color: brown,
                         ),
                       ),
@@ -137,7 +122,6 @@ class CheckEmailScreen extends StatelessWidget {
                       // =================================================
                       // DESCRIPTION
                       // =================================================
-
                       Text(
                         'Kami telah mengirimkan link '
                         'untuk mengatur ulang kata sandi '
@@ -147,8 +131,7 @@ class CheckEmailScreen extends StatelessWidget {
 
                         style: TextStyle(
                           fontFamily: 'Nunito',
-                          fontSize:
-                              size.width * 0.035,
+                          fontSize: size.width * 0.035,
                           height: 1.4,
                           color: darkText,
                         ),
@@ -159,7 +142,6 @@ class CheckEmailScreen extends StatelessWidget {
                       // =================================================
                       // EMAIL
                       // =================================================
-
                       Text(
                         email,
 
@@ -167,10 +149,8 @@ class CheckEmailScreen extends StatelessWidget {
 
                         style: TextStyle(
                           fontFamily: 'Nunito',
-                          fontSize:
-                              size.width * 0.037,
-                          fontWeight:
-                              FontWeight.w800,
+                          fontSize: size.width * 0.037,
+                          fontWeight: FontWeight.w800,
                           color: brown,
                         ),
                       ),
@@ -180,7 +160,6 @@ class CheckEmailScreen extends StatelessWidget {
                       // =================================================
                       // INSTRUCTION
                       // =================================================
-
                       Text(
                         'Silakan buka email tersebut dan '
                         'klik link reset password untuk '
@@ -190,13 +169,9 @@ class CheckEmailScreen extends StatelessWidget {
 
                         style: TextStyle(
                           fontFamily: 'Nunito',
-                          fontSize:
-                              size.width * 0.034,
+                          fontSize: size.width * 0.034,
                           height: 1.4,
-                          color:
-                              const Color(
-                            0xFF5E5753,
-                          ),
+                          color: const Color(0xFF5E5753),
                         ),
                       ),
 
@@ -205,28 +180,19 @@ class CheckEmailScreen extends StatelessWidget {
                       // =================================================
                       // INFO
                       // =================================================
-
                       Container(
                         width: double.infinity,
 
-                        padding:
-                            const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(14),
 
                         decoration: BoxDecoration(
-                          color:
-                              const Color(
-                            0xFFFFE9DC,
-                          ),
+                          color: const Color(0xFFFFE9DC),
 
-                          borderRadius:
-                              BorderRadius.circular(
-                            14,
-                          ),
+                          borderRadius: BorderRadius.circular(14),
                         ),
 
                         child: Row(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
 
                           children: [
                             const Icon(
@@ -243,8 +209,7 @@ class CheckEmailScreen extends StatelessWidget {
                                 'coba periksa folder Spam atau '
                                 'Promosi.',
 
-                                style:
-                                    const TextStyle(
+                                style: const TextStyle(
                                   fontFamily: 'Nunito',
                                   fontSize: 12,
                                   height: 1.4,
@@ -263,7 +228,6 @@ class CheckEmailScreen extends StatelessWidget {
               // =====================================================
               // KEMBALI
               // =====================================================
-
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -273,16 +237,13 @@ class CheckEmailScreen extends StatelessWidget {
                     _backToLogin(context);
                   },
 
-                  style:
-                      ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: brown,
                     foregroundColor: Colors.white,
                     elevation: 3,
 
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
 
@@ -297,9 +258,7 @@ class CheckEmailScreen extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(
-                height: size.height * 0.04,
-              ),
+              SizedBox(height: size.height * 0.04),
             ],
           ),
         ),

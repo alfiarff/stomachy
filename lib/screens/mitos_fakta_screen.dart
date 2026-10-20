@@ -11,8 +11,7 @@ class MitosFaktaScreen extends StatefulWidget {
   const MitosFaktaScreen({super.key});
 
   @override
-  State<MitosFaktaScreen> createState() =>
-      _MitosFaktaScreenState();
+  State<MitosFaktaScreen> createState() => _MitosFaktaScreenState();
 }
 
 // =====================================================================
@@ -37,8 +36,7 @@ class _MitosFaktaItem {
   });
 }
 
-class _MitosFaktaScreenState
-    extends State<MitosFaktaScreen> {
+class _MitosFaktaScreenState extends State<MitosFaktaScreen> {
   int _selectedIndex = 3;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
@@ -56,8 +54,7 @@ class _MitosFaktaScreenState
       iconColor: Color(0xFFE8804C),
       iconBackground: Color(0xFFFFE9DC),
       title: 'GERD Hanya karena Makanan Pedas?',
-      mitos:
-          'GERD hanya terjadi setelah makan makanan pedas.',
+      mitos: 'GERD hanya terjadi setelah makan makanan pedas.',
       fakta:
           'GERD bisa dipicu oleh berbagai jenis makanan, '
           'termasuk makanan berlemak, asam, kopi, cokelat, '
@@ -97,8 +94,7 @@ class _MitosFaktaScreenState
       iconColor: Color(0xFF4AA978),
       iconBackground: Color(0xFFDFF2E7),
       title: 'Susu Meredakan Asam Lambung?',
-      mitos:
-          'Susu bisa langsung meredakan asam lambung.',
+      mitos: 'Susu bisa langsung meredakan asam lambung.',
       fakta:
           'Susu memang bisa menenangkan sementara, tetapi '
           'pada sebagian orang justru dapat meningkatkan '
@@ -118,9 +114,7 @@ class _MitosFaktaScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -128,9 +122,7 @@ class _MitosFaktaScreenState
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -138,9 +130,7 @@ class _MitosFaktaScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -148,9 +138,7 @@ class _MitosFaktaScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -158,9 +146,7 @@ class _MitosFaktaScreenState
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -178,12 +164,7 @@ class _MitosFaktaScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            27,
-            5,
-            27,
-            105,
-          ),
+          padding: const EdgeInsets.fromLTRB(27, 5, 27, 105),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -221,13 +202,10 @@ class _MitosFaktaScreenState
 
               const SizedBox(height: 16),
 
-              for (int i = 0;
-                  i < _items.length;
-                  i++) ...[
+              for (int i = 0; i < _items.length; i++) ...[
                 _buildMitosFaktaCard(_items[i]),
 
-                if (i != _items.length - 1)
-                  const SizedBox(height: 12),
+                if (i != _items.length - 1) const SizedBox(height: 12),
               ],
 
               const SizedBox(height: 16),
@@ -313,12 +291,7 @@ class _MitosFaktaScreenState
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) {
             return const Center(
-              child: Text(
-                '🧐',
-                style: TextStyle(
-                  fontSize: 60,
-                ),
-              ),
+              child: Text('🧐', style: TextStyle(fontSize: 60)),
             );
           },
         ),
@@ -330,11 +303,8 @@ class _MitosFaktaScreenState
   // CARD MITOS & FAKTA (EXPANDABLE)
   // ===============================================================
 
-  Widget _buildMitosFaktaCard(
-    _MitosFaktaItem item,
-  ) {
-    final bool isExpanded =
-        _expandedSections.contains(item.title);
+  Widget _buildMitosFaktaCard(_MitosFaktaItem item) {
+    final bool isExpanded = _expandedSections.contains(item.title);
 
     return Container(
       width: double.infinity,
@@ -355,22 +325,15 @@ class _MitosFaktaScreenState
             onTap: () {
               setState(() {
                 if (isExpanded) {
-                  _expandedSections
-                      .remove(item.title);
+                  _expandedSections.remove(item.title);
                 } else {
-                  _expandedSections
-                      .add(item.title);
+                  _expandedSections.add(item.title);
                 }
               });
             },
             borderRadius: BorderRadius.circular(16),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                14,
-                13,
-                12,
-                13,
-              ),
+              padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
               child: Row(
                 children: [
                   Container(
@@ -378,14 +341,9 @@ class _MitosFaktaScreenState
                     height: 38,
                     decoration: BoxDecoration(
                       color: item.iconBackground,
-                      borderRadius:
-                          BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
-                      item.icon,
-                      size: 19,
-                      color: item.iconColor,
-                    ),
+                    child: Icon(item.icon, size: 19, color: item.iconColor),
                   ),
 
                   const SizedBox(width: 12),
@@ -416,12 +374,9 @@ class _MitosFaktaScreenState
 
                   AnimatedRotation(
                     turns: isExpanded ? 0.5 : 0,
-                    duration: const Duration(
-                      milliseconds: 250,
-                    ),
+                    duration: const Duration(milliseconds: 250),
                     child: const Icon(
-                      Icons
-                          .keyboard_arrow_down_rounded,
+                      Icons.keyboard_arrow_down_rounded,
                       size: 22,
                       color: Color(0xFF9A8F89),
                     ),
@@ -437,25 +392,16 @@ class _MitosFaktaScreenState
             crossFadeState: isExpanded
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
-            firstChild: const SizedBox(
-              width: double.infinity,
-            ),
+            firstChild: const SizedBox(width: double.infinity),
             secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                14,
-                0,
-                16,
-                14,
-              ),
+              padding: const EdgeInsets.fromLTRB(14, 0, 16, 14),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // MITOS
                   _buildLabelRow(
                     label: '✕ Mitos',
-                    labelColor:
-                        const Color(0xFFB83D27),
+                    labelColor: const Color(0xFFB83D27),
                     text: item.mitos,
                   ),
 
@@ -464,8 +410,7 @@ class _MitosFaktaScreenState
                   // FAKTA
                   _buildLabelRow(
                     label: '✓ Fakta',
-                    labelColor:
-                        const Color(0xFF168B65),
+                    labelColor: const Color(0xFF168B65),
                     text: item.fakta,
                   ),
                 ],
@@ -487,9 +432,7 @@ class _MitosFaktaScreenState
     required String text,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 44,
-      ),
+      padding: const EdgeInsets.only(left: 44),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -526,12 +469,7 @@ class _MitosFaktaScreenState
   Widget _buildRememberBox() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        14,
-        10,
-        14,
-        10,
-      ),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       decoration: BoxDecoration(
         color: const Color(0xFFFFE4D2),
         borderRadius: BorderRadius.circular(11),

@@ -1,23 +1,21 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'check_email_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState
-    extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   // ===============================================================
   // CONTROLLER
   // ===============================================================
 
-  final TextEditingController emailController =
-      TextEditingController();
+  final TextEditingController emailController = TextEditingController();
 
   // ===============================================================
   // STATE
@@ -29,14 +27,11 @@ class _ForgotPasswordScreenState
   // WARNA
   // ===============================================================
 
-  final Color backgroundColor =
-      const Color(0xFFFFF4EC);
+  final Color backgroundColor = const Color(0xFFFFF4EC);
 
-  final Color brown =
-      const Color(0xFFB05039);
+  final Color brown = const Color(0xFFB05039);
 
-  final Color borderColor =
-      const Color(0xFFFF7775);
+  final Color borderColor = const Color(0xFFFF7775);
 
   @override
   void dispose() {
@@ -56,9 +51,7 @@ class _ForgotPasswordScreenState
     // =============================================================
 
     if (email.isEmpty) {
-      _showMessage(
-        'Silakan masukkan email terlebih dahulu.',
-      );
+      _showMessage('Silakan masukkan email terlebih dahulu.');
       return;
     }
 
@@ -66,11 +59,8 @@ class _ForgotPasswordScreenState
     // CEK FORMAT EMAIL
     // =============================================================
 
-    if (!email.contains('@') ||
-        !email.contains('.')) {
-      _showMessage(
-        'Silakan masukkan email yang valid.',
-      );
+    if (!email.contains('@') || !email.contains('.')) {
+      _showMessage('Silakan masukkan email yang valid.');
       return;
     }
 
@@ -87,10 +77,7 @@ class _ForgotPasswordScreenState
       // FIREBASE AUTHENTICATION
       // ===========================================================
 
-      await FirebaseAuth.instance
-          .sendPasswordResetEmail(
-        email: email,
-      );
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
       if (!mounted) {
         return;
@@ -102,11 +89,7 @@ class _ForgotPasswordScreenState
 
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => CheckEmailScreen(
-            email: email,
-          ),
-        ),
+        MaterialPageRoute(builder: (context) => CheckEmailScreen(email: email)),
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) {
@@ -121,8 +104,7 @@ class _ForgotPasswordScreenState
           break;
 
         case 'user-not-found':
-          message =
-              'Email tersebut belum terdaftar.';
+          message = 'Email tersebut belum terdaftar.';
           break;
 
         case 'too-many-requests':
@@ -143,9 +125,7 @@ class _ForgotPasswordScreenState
         return;
       }
 
-      _showMessage(
-        'Terjadi kesalahan. Silakan coba lagi.',
-      );
+      _showMessage('Terjadi kesalahan. Silakan coba lagi.');
     } finally {
       if (mounted) {
         setState(() {
@@ -160,8 +140,7 @@ class _ForgotPasswordScreenState
   // ===============================================================
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -175,9 +154,7 @@ class _ForgotPasswordScreenState
         backgroundColor: brown,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -198,13 +175,10 @@ class _ForgotPasswordScreenState
           physics: const BouncingScrollPhysics(),
 
           child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.085,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.085),
 
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
                 // ===================================================
@@ -234,7 +208,6 @@ class _ForgotPasswordScreenState
                 // ===================================================
                 // JUDUL
                 // ===================================================
-
                 Text(
                   'Lupa Kata Sandi?',
 
@@ -251,7 +224,6 @@ class _ForgotPasswordScreenState
                 // ===================================================
                 // SUB JUDUL
                 // ===================================================
-
                 Text(
                   'Masukkan email yang\n'
                   'terdaftar pada akun anda.',
@@ -264,47 +236,34 @@ class _ForgotPasswordScreenState
                   ),
                 ),
 
-                SizedBox(
-                  height: size.height * 0.025,
-                ),
+                SizedBox(height: size.height * 0.025),
 
                 // ===================================================
                 // EMAIL
                 // ===================================================
-
                 _buildInputField(size),
 
-                SizedBox(
-                  height: size.height * 0.040,
-                ),
+                SizedBox(height: size.height * 0.040),
 
                 // ===================================================
                 // BUTTON
                 // ===================================================
-
                 SizedBox(
                   width: double.infinity,
                   height: 48,
 
                   child: ElevatedButton(
-                    onPressed:
-                        _isLoading
-                            ? null
-                            : _sendResetLink,
+                    onPressed: _isLoading ? null : _sendResetLink,
 
                     style: ElevatedButton.styleFrom(
                       backgroundColor: brown,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor:
-                          brown.withOpacity(0.6),
+                      disabledBackgroundColor: brown.withOpacity(0.6),
                       elevation: 3,
-                      shadowColor:
-                          Colors.black.withOpacity(0.25),
+                      shadowColor: Colors.black.withOpacity(0.25),
 
-                      shape:
-                          RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(13),
                       ),
                     ),
 
@@ -312,8 +271,7 @@ class _ForgotPasswordScreenState
                         ? const SizedBox(
                             width: 21,
                             height: 21,
-                            child:
-                                CircularProgressIndicator(
+                            child: CircularProgressIndicator(
                               strokeWidth: 2.5,
                               color: Colors.white,
                             ),
@@ -322,18 +280,14 @@ class _ForgotPasswordScreenState
                             'Kirim Link Reset',
                             style: TextStyle(
                               fontFamily: 'Nunito',
-                              fontSize:
-                                  size.width * 0.035,
-                              fontWeight:
-                                  FontWeight.w800,
+                              fontSize: size.width * 0.035,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                   ),
                 ),
 
-                SizedBox(
-                  height: size.height * 0.05,
-                ),
+                SizedBox(height: size.height * 0.05),
               ],
             ),
           ),
@@ -354,13 +308,9 @@ class _ForgotPasswordScreenState
       decoration: BoxDecoration(
         color: const Color(0xFFFFFCF9),
 
-        borderRadius:
-            BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14),
 
-        border: Border.all(
-          color: borderColor,
-          width: 1,
-        ),
+        border: Border.all(color: borderColor, width: 1),
 
         boxShadow: const [
           BoxShadow(
@@ -374,11 +324,9 @@ class _ForgotPasswordScreenState
       child: TextField(
         controller: emailController,
 
-        keyboardType:
-            TextInputType.emailAddress,
+        keyboardType: TextInputType.emailAddress,
 
-        textInputAction:
-            TextInputAction.done,
+        textInputAction: TextInputAction.done,
 
         style: TextStyle(
           fontFamily: 'Nunito',
@@ -409,8 +357,7 @@ class _ForgotPasswordScreenState
 
           border: InputBorder.none,
 
-          contentPadding:
-              const EdgeInsets.symmetric(
+          contentPadding: const EdgeInsets.symmetric(
             horizontal: 5,
             vertical: 14,
           ),

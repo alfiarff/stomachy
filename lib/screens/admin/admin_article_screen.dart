@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../services/admin_content_service.dart';
 import '../../widgets/admin_bottom_navigation.dart';
@@ -45,26 +45,31 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
   void _onNavigationTap(int index) {
     if (index == 1) return;
 
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
-      );
-      return;
-    }
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminContentScreen()),
-      );
-      return;
-    }
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminProfileScreen()),
-      );
-      return;
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+        );
+        break;
+
+      case 1:
+        // Tetap di halaman Artikel.
+        return;
+
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminContentScreen()),
+        );
+        break;
+
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminProfileScreen()),
+        );
+        break;
     }
   }
 
@@ -192,7 +197,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 
-    Widget _buildArticleCard(AdminArticle article) {
+  Widget _buildArticleCard(AdminArticle article) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -417,9 +422,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                 ),
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(22),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
                 ),
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 child: SingleChildScrollView(
@@ -464,7 +467,8 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                         controller: _categoryController,
                         textCapitalization: TextCapitalization.sentences,
                         decoration: _inputDecoration(
-                            'Contoh: Saluran Cerna, Tips Makan'),
+                          'Contoh: Saluran Cerna, Tips Makan',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       const Text(
@@ -482,7 +486,8 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                         maxLines: 2,
                         textCapitalization: TextCapitalization.sentences,
                         decoration: _inputDecoration(
-                            'Contoh: Waspadai GERD: Bukan Sekadar Asam Lambung Naik'),
+                          'Contoh: Waspadai GERD: Bukan Sekadar Asam Lambung Naik',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       const Text(
@@ -500,7 +505,8 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                         maxLines: 3,
                         textCapitalization: TextCapitalization.sentences,
                         decoration: _inputDecoration(
-                            'Tulis ringkasan singkat artikel...'),
+                          'Tulis ringkasan singkat artikel...',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       const Text(
@@ -518,7 +524,8 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                         maxLines: 5,
                         textCapitalization: TextCapitalization.sentences,
                         decoration: _inputDecoration(
-                            'Tulis isi lengkap artikel di sini...'),
+                          'Tulis isi lengkap artikel di sini...',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       Row(
@@ -593,16 +600,10 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(
-        fontSize: 12,
-        color: Color(0xFFB6A8A2),
-      ),
+      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFB6A8A2)),
       filled: true,
       fillColor: const Color(0xFFFFF5EF),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 12,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -760,7 +761,9 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.zero,
                             side: const BorderSide(
-                                color: Color(0xFFB05039), width: 0.9),
+                              color: Color(0xFFB05039),
+                              width: 0.9,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -785,7 +788,9 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                           onPressed: () async {
                             Navigator.pop(dialogContext);
                             try {
-                              await AdminContentService.deleteArticle(article.id);
+                              await AdminContentService.deleteArticle(
+                                article.id,
+                              );
                               if (!mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -920,6 +925,3 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 }
-
-
-

@@ -14,8 +14,7 @@ class ScreeningHistoryScreen extends StatefulWidget {
   const ScreeningHistoryScreen({super.key});
 
   @override
-  State<ScreeningHistoryScreen> createState() =>
-      _ScreeningHistoryScreenState();
+  State<ScreeningHistoryScreen> createState() => _ScreeningHistoryScreenState();
 }
 
 class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
@@ -48,9 +47,7 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => DoctorScreen()),
       );
       return;
     }
@@ -106,17 +103,13 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
                     }
 
                     if (snapshot.hasError) {
-                      return _buildEmptyHistory(
-                        'Belum ada riwayat skrining.',
-                      );
+                      return _buildEmptyHistory('Belum ada riwayat skrining.');
                     }
 
                     final documents = snapshot.data?.docs ?? [];
 
                     if (documents.isEmpty) {
-                      return _buildEmptyHistory(
-                        'Belum ada riwayat skrining.',
-                      );
+                      return _buildEmptyHistory('Belum ada riwayat skrining.');
                     }
 
                     return Column(
@@ -147,10 +140,7 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
   Widget _buildEmptyHistory(String message) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        vertical: 35,
-        horizontal: 20,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 35, horizontal: 20),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFCF9),
         borderRadius: BorderRadius.circular(15),
@@ -164,11 +154,7 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.history_rounded,
-            size: 45,
-            color: Color(0xFFB9543A),
-          ),
+          const Icon(Icons.history_rounded, size: 45, color: Color(0xFFB9543A)),
           const SizedBox(height: 12),
           Text(
             message,
@@ -189,45 +175,35 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
   ) {
     final data = document.data();
 
-    final String date = _formatDate(
-      data['createdAt'],
-      data['date'],
-    );
+    final String date = _formatDate(data['createdAt'], data['date']);
 
     final bool isRisk = data['isRisk'] == true;
 
-    final String status =
-        isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
+    final String status = isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
 
-    final String age =
-        data['age']?.toString().isNotEmpty == true
-            ? data['age'].toString()
-            : '-';
+    final String age = data['age']?.toString().isNotEmpty == true
+        ? data['age'].toString()
+        : '-';
 
-    final String gender =
-        data['gender']?.toString().isNotEmpty == true
-            ? data['gender'].toString()
-            : '-';
+    final String gender = data['gender']?.toString().isNotEmpty == true
+        ? data['gender'].toString()
+        : '-';
 
-    final String symptom =
-        data['symptom']?.toString().isNotEmpty == true
-            ? data['symptom'].toString()
-            : '0 Gejala utama';
+    final String symptom = data['symptom']?.toString().isNotEmpty == true
+        ? data['symptom'].toString()
+        : '0 Gejala utama';
 
-    final String complaint =
-        data['complaint']?.toString().isNotEmpty == true
-            ? data['complaint'].toString()
-            : '';
+    final String complaint = data['complaint']?.toString().isNotEmpty == true
+        ? data['complaint'].toString()
+        : '';
 
-    final double probability =
-        data['probability'] is num
-            ? (data['probability'] as num).toDouble()
-            : 0.0;
+    final double probability = data['probability'] is num
+        ? (data['probability'] as num).toDouble()
+        : 0.0;
 
-    final String? prediction =
-        data['prediction']?.toString().isNotEmpty == true
-            ? data['prediction'].toString()
-            : null;
+    final String? prediction = data['prediction']?.toString().isNotEmpty == true
+        ? data['prediction'].toString()
+        : null;
 
     final String image = isRisk
         ? 'assets/images/riwayat_berisiko_gerd.png'
@@ -540,10 +516,7 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: borderColor,
-          width: 0.8,
-        ),
+        border: Border.all(color: borderColor, width: 0.8),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.10),
@@ -555,11 +528,7 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 13,
-            color: borderColor,
-          ),
+          Icon(icon, size: 13, color: borderColor),
           const SizedBox(width: 4),
           Flexible(
             child: Text(
@@ -598,11 +567,7 @@ class _ScreeningHistoryScreenState extends State<ScreeningHistoryScreen> {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.lock_rounded,
-            size: 18,
-            color: Color(0xFFB9543A),
-          ),
+          const Icon(Icons.lock_rounded, size: 18, color: Color(0xFFB9543A)),
           const SizedBox(width: 13),
           const Expanded(
             child: Text(

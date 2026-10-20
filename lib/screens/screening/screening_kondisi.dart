@@ -24,48 +24,42 @@ class ScreeningKondisi extends StatelessWidget {
       children: [
         _buildYesNoCard(
           title: 'Perut terasa penuh',
-          question:
-              'Apakah kamu sering merasa perut penuh setelah makan?',
+          question: 'Apakah kamu sering merasa perut penuh setelah makan?',
         ),
 
         const SizedBox(height: 15),
 
         _buildYesNoCard(
           title: 'Waktu tidur',
-          question:
-              'Apakah kamu mendapatkan waktu tidur yang cukup?',
+          question: 'Apakah kamu mendapatkan waktu tidur yang cukup?',
         ),
 
         const SizedBox(height: 15),
 
         _buildYesNoCard(
           title: 'Penggunaan obat',
-          question:
-              'Apakah kamu sedang mengonsumsi obat tertentu saat ini?',
+          question: 'Apakah kamu sedang mengonsumsi obat tertentu saat ini?',
         ),
 
         const SizedBox(height: 15),
 
         _buildYesNoCard(
           title: 'Panas di dada',
-          question:
-              'Apakah kamu sering merasakan sensasi panas atau terbakar di dada?',
+          question: 'Apakah kamu sering merasakan sensasi panas atau terbakar di dada?',
         ),
 
         const SizedBox(height: 15),
 
         _buildYesNoCard(
           title: 'Asam lambung naik',
-          question:
-              'Apakah kamu pernah merasakan asam atau rasa pahit naik ke tenggorokan?',
+          question: 'Apakah kamu pernah merasakan asam atau rasa pahit naik ke tenggorokan?',
         ),
 
         const SizedBox(height: 15),
 
         _buildYesNoCard(
           title: 'Nyeri dada atau ulu hati',
-          question:
-              'Apakah kamu sering merasakan nyeri atau tidak nyaman di dada atau ulu hati?',
+          question: 'Apakah kamu sering merasakan nyeri atau tidak nyaman di dada atau ulu hati?',
         ),
       ],
     );
@@ -75,21 +69,13 @@ class ScreeningKondisi extends StatelessWidget {
   // KARTU YA / TIDAK
   // ============================================================
 
-  Widget _buildYesNoCard({
-    required String title,
-    required String question,
-  }) {
+  Widget _buildYesNoCard({required String title, required String question}) {
     return StomachyCard(
       color: cardColor,
       radius: 17,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 9,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          minHeight: 110,
-        ),
+        constraints: const BoxConstraints(minHeight: 110),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -137,7 +123,6 @@ class ScreeningKondisi extends StatelessWidget {
                   // ==================================================
                   // ISI / PENJELASAN
                   // ==================================================
-
                   Text(
                     question,
                     maxLines: 2,
@@ -155,11 +140,7 @@ class ScreeningKondisi extends StatelessWidget {
 
                   Row(
                     children: [
-                      _buildYesNoButton(
-                        title: title,
-                        value: true,
-                        label: 'Ya',
-                      ),
+                      _buildYesNoButton(title: title, value: true, label: 'Ya'),
 
                       const SizedBox(width: 18),
 
@@ -192,25 +173,19 @@ class ScreeningKondisi extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        onAnswer(
-          MapEntry(title, value),
-        );
+        onAnswer(MapEntry(title, value));
       },
       child: Container(
         width: 70,
         height: 21,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFFFE0D5)
-              : Colors.white,
+          color: selected ? const Color(0xFFFFE0D5) : Colors.white,
           borderRadius: BorderRadius.circular(15),
 
           // BORDER TOMBOL TETAP
           border: Border.all(
-            color: selected
-                ? brown
-                : const Color(0xFFFF765B),
+            color: selected ? brown : const Color(0xFFFF765B),
             width: 1,
           ),
 
@@ -227,9 +202,7 @@ class ScreeningKondisi extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'Nunito',
             fontSize: 10,
-            fontWeight: selected
-                ? FontWeight.w700
-                : FontWeight.w400,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             color: Colors.black,
           ),
         ),

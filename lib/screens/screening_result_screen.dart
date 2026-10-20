@@ -15,8 +15,7 @@ import '../widgets/bottom_navigation.dart';
 // Tidak berisiko -> maskot senyum (tampilan HIJAU)
 // Kalau punya asset khusus sesuai Figma, ganti path di bawah.
 // ===============================================================
-const String kResultMascotRisk =
-    'assets/images/riwayat_berisiko_gerd.png';
+const String kResultMascotRisk = 'assets/images/riwayat_berisiko_gerd.png';
 
 const String kResultMascotSafe =
     'assets/images/riwayat_tidak_berisiko_gerd.png';
@@ -30,10 +29,7 @@ class ResultTheme {
   final Color accent;
   final Color accentSoft;
 
-  const ResultTheme({
-    required this.accent,
-    required this.accentSoft,
-  });
+  const ResultTheme({required this.accent, required this.accentSoft});
 
   static const ResultTheme risk = ResultTheme(
     accent: Color(0xFFE93636),
@@ -82,33 +78,26 @@ class ScreeningResultScreen extends StatefulWidget {
   });
 
   @override
-  State<ScreeningResultScreen> createState() =>
-      _ScreeningResultScreenState();
+  State<ScreeningResultScreen> createState() => _ScreeningResultScreenState();
 }
 
-class _ScreeningResultScreenState
-    extends State<ScreeningResultScreen> {
+class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
   int _selectedIndex = 1;
 
-  static const Color backgroundColor =
-      Color(0xFFFFF5EF);
+  static const Color backgroundColor = Color(0xFFFFF5EF);
 
-  static const Color cardColor =
-      Color(0xFFFFE8D7);
+  static const Color cardColor = Color(0xFFFFE8D7);
 
-  static const Color primaryBrown =
-      Color(0xFF493028);
+  static const Color primaryBrown = Color(0xFF493028);
 
-  static const Color bodyText =
-      Color(0xFF4A382F);
+  static const Color bodyText = Color(0xFF4A382F);
 
   // ===============================================================
   // HASIL + TEMA
   // ===============================================================
 
   bool get isRiskResult {
-    if (widget.prediction != null &&
-        widget.prediction!.isNotEmpty) {
+    if (widget.prediction != null && widget.prediction!.isNotEmpty) {
       return widget.prediction == 'GORD+';
     }
 
@@ -118,12 +107,10 @@ class _ScreeningResultScreenState
   ResultTheme get resultTheme =>
       isRiskResult ? ResultTheme.risk : ResultTheme.safe;
 
-  String get resultImage => isRiskResult
-      ? kResultMascotRisk
-      : kResultMascotSafe;
+  String get resultImage =>
+      isRiskResult ? kResultMascotRisk : kResultMascotSafe;
 
-  String get resultStatus =>
-      isRiskResult ? 'GORD+' : 'GORD-';
+  String get resultStatus => isRiskResult ? 'GORD+' : 'GORD-';
 
   String get resultDescription {
     if (isRiskResult) {
@@ -137,9 +124,8 @@ class _ScreeningResultScreenState
         'Reflux Disease (GERD).';
   }
 
-  String get adviceTitle => isRiskResult
-      ? 'Saran untuk kamu'
-      : 'Saran untuk tetap sehat';
+  String get adviceTitle =>
+      isRiskResult ? 'Saran untuk kamu' : 'Saran untuk tetap sehat';
 
   List<String> get adviceList {
     if (isRiskResult) {
@@ -164,8 +150,7 @@ class _ScreeningResultScreenState
       return '-';
     }
 
-    final double percentage =
-        widget.probability! * 100;
+    final double percentage = widget.probability! * 100;
 
     return '${percentage.toStringAsFixed(2)}%';
   }
@@ -240,171 +225,120 @@ class _ScreeningResultScreenState
 
   Future<void> _saveScreeningResult() async {
     try {
-      final FirebaseAuth auth =
-          FirebaseAuth.instance;
+      final FirebaseAuth auth = FirebaseAuth.instance;
 
-      final FirebaseFirestore firestore =
-          FirebaseFirestore.instance;
+      final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-      final User? user =
-          auth.currentUser;
+      final User? user = auth.currentUser;
 
       if (user == null) {
-        debugPrint(
-          'SCREENING ERROR: Tidak ada user yang sedang login.',
-        );
+        debugPrint('SCREENING ERROR: Tidak ada user yang sedang login.');
 
         return;
       }
 
-      debugPrint(
-        'SCREENING: User login = ${user.email}',
-      );
+      debugPrint('SCREENING: User login = ${user.email}');
 
-      debugPrint(
-        'SCREENING: UID = ${user.uid}',
-      );
+      debugPrint('SCREENING: UID = ${user.uid}');
 
       // ===========================================================
       // STEP 2
       // ===========================================================
 
-      final Map<String, dynamic> step2Data =
-          {};
+      final Map<String, dynamic> step2Data = {};
 
-      final Map<String, bool?>? answersStep2 =
-          widget.step2Answers;
+      final Map<String, bool?>? answersStep2 = widget.step2Answers;
 
       if (answersStep2 != null) {
-        answersStep2.forEach(
-          (key, value) {
-            if (value != null) {
-              step2Data[key] = value;
-            }
-          },
-        );
+        answersStep2.forEach((key, value) {
+          if (value != null) {
+            step2Data[key] = value;
+          }
+        });
       }
 
       // ===========================================================
       // STEP 3
       // ===========================================================
 
-      final Map<String, dynamic> step3Data =
-          {};
+      final Map<String, dynamic> step3Data = {};
 
-      final Map<String, String?>? answersStep3 =
-          widget.step3Answers;
+      final Map<String, String?>? answersStep3 = widget.step3Answers;
 
       if (answersStep3 != null) {
-        answersStep3.forEach(
-          (key, value) {
-            if (value != null) {
-              step3Data[key] = value;
-            }
-          },
-        );
+        answersStep3.forEach((key, value) {
+          if (value != null) {
+            step3Data[key] = value;
+          }
+        });
       }
 
       // ===========================================================
       // DATA SCREENING
       // ===========================================================
 
-      final Map<String, dynamic> screeningData =
-          {
-        'date':
-            widget.date ??
-            DateTime.now()
-                .toIso8601String(),
+      final Map<String, dynamic> screeningData = {
+        'date': widget.date ?? DateTime.now().toIso8601String(),
 
-        'status':
-            resultStatus,
+        'status': resultStatus,
 
-        'complaint':
-            generatedComplaint,
+        'complaint': generatedComplaint,
 
-        'age':
-            widget.age ?? '',
+        'age': widget.age ?? '',
 
-        'gender':
-            widget.gender ?? '',
+        'gender': widget.gender ?? '',
 
-        'symptom':
-            generatedSymptomCount,
+        'symptom': generatedSymptomCount,
 
-        'image':
-            isRiskResult
-                ? 'assets/images/riwayat_berisiko_gerd.png'
-                : 'assets/images/riwayat_tidak_berisiko_gerd.png',
+        'image': isRiskResult
+            ? 'assets/images/riwayat_berisiko_gerd.png'
+            : 'assets/images/riwayat_tidak_berisiko_gerd.png',
 
-        'isRisk':
-            isRiskResult,
+        'isRisk': isRiskResult,
 
-        'probability':
-            widget.probability ?? 0.0,
+        'probability': widget.probability ?? 0.0,
 
-        'prediction':
-            resultStatus,
+        'prediction': resultStatus,
 
-        'createdAt':
-            FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
 
-        'step2Answers':
-            step2Data,
+        'step2Answers': step2Data,
 
-        'step3Answers':
-            step3Data,
+        'step3Answers': step3Data,
       };
 
-      debugPrint(
-        'SCREENING: Data siap disimpan.',
-      );
+      debugPrint('SCREENING: Data siap disimpan.');
 
       // ===========================================================
       // FIRESTORE
       // ===========================================================
 
-      final CollectionReference historyCollection =
-          firestore
-              .collection('users')
-              .doc(user.uid)
-              .collection('screening_history');
+      final CollectionReference historyCollection = firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('screening_history');
 
-      final DocumentReference document =
-          await historyCollection.add(
+      final DocumentReference document = await historyCollection.add(
         screeningData,
       );
 
-      debugPrint(
-        'SCREENING: BERHASIL disimpan.',
-      );
+      debugPrint('SCREENING: BERHASIL disimpan.');
 
-      debugPrint(
-        'SCREENING: Document ID = ${document.id}',
-      );
+      debugPrint('SCREENING: Document ID = ${document.id}');
 
       debugPrint(
         'SCREENING: Path = users/${user.uid}/screening_history/${document.id}',
       );
     } on FirebaseException catch (e) {
-      debugPrint(
-        'SCREENING FIREBASE ERROR:',
-      );
+      debugPrint('SCREENING FIREBASE ERROR:');
 
-      debugPrint(
-        'Code: ${e.code}',
-      );
+      debugPrint('Code: ${e.code}');
 
-      debugPrint(
-        'Message: ${e.message}',
-      );
+      debugPrint('Message: ${e.message}');
 
-      debugPrint(
-        'Details: ${e.toString()}',
-      );
+      debugPrint('Details: ${e.toString()}');
     } catch (e) {
-      debugPrint(
-        'SCREENING ERROR: $e',
-      );
+      debugPrint('SCREENING ERROR: $e');
     }
   }
 
@@ -420,10 +354,7 @@ class _ScreeningResultScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
 
       return;
@@ -432,10 +363,7 @@ class _ScreeningResultScreenState
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
 
       return;
@@ -444,10 +372,7 @@ class _ScreeningResultScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
 
       return;
@@ -456,10 +381,7 @@ class _ScreeningResultScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
 
       return;
@@ -468,10 +390,7 @@ class _ScreeningResultScreenState
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
 
       return;
@@ -489,20 +408,12 @@ class _ScreeningResultScreenState
 
       body: SafeArea(
         child: SingleChildScrollView(
-          physics:
-              const BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(),
 
-          padding:
-              const EdgeInsets.fromLTRB(
-            26,
-            8,
-            26,
-            20,
-          ),
+          padding: const EdgeInsets.fromLTRB(26, 8, 26, 20),
 
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
 
             children: [
               _buildHeader(),
@@ -535,12 +446,9 @@ class _ScreeningResultScreenState
         ),
       ),
 
-      bottomNavigationBar:
-          AppBottomNavigation(
-        selectedIndex:
-            _selectedIndex,
-        onItemSelected:
-            _onNavigationTap,
+      bottomNavigationBar: AppBottomNavigation(
+        selectedIndex: _selectedIndex,
+        onItemSelected: _onNavigationTap,
       ),
     );
   }
@@ -565,8 +473,7 @@ class _ScreeningResultScreenState
               height: 42,
 
               child: Align(
-                alignment:
-                    Alignment.centerLeft,
+                alignment: Alignment.centerLeft,
 
                 child: Icon(
                   Icons.arrow_back_rounded,
@@ -584,8 +491,7 @@ class _ScreeningResultScreenState
                 style: TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
-                  fontWeight:
-                      FontWeight.w800,
+                  fontWeight: FontWeight.w800,
                   color: Colors.black,
                 ),
               ),
@@ -606,18 +512,11 @@ class _ScreeningResultScreenState
     return Container(
       width: double.infinity,
 
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        24,
-        20,
-        22,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
 
-      decoration:
-          BoxDecoration(
+      decoration: BoxDecoration(
         color: cardColor,
-        borderRadius:
-            BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
       ),
 
       child: Column(
@@ -630,15 +529,9 @@ class _ScreeningResultScreenState
               resultImage,
               fit: BoxFit.contain,
 
-              errorBuilder:
-                  (
-                context,
-                error,
-                stackTrace,
-              ) {
+              errorBuilder: (context, error, stackTrace) {
                 return Icon(
-                  Icons
-                      .medical_services_rounded,
+                  Icons.medical_services_rounded,
                   size: 100,
                   color: resultTheme.accent,
                 );
@@ -654,14 +547,12 @@ class _ScreeningResultScreenState
 
           Text(
             'GERD',
-            textAlign:
-                TextAlign.center,
+            textAlign: TextAlign.center,
 
             style: TextStyle(
               fontFamily: 'Fredoka',
               fontSize: 26,
-              fontWeight:
-                  FontWeight.w700,
+              fontWeight: FontWeight.w700,
               color: resultTheme.accent,
             ),
           ),
@@ -670,8 +561,7 @@ class _ScreeningResultScreenState
 
           Text(
             resultDescription,
-            textAlign:
-                TextAlign.center,
+            textAlign: TextAlign.center,
 
             style: const TextStyle(
               fontFamily: 'Nunito',
@@ -694,16 +584,14 @@ class _ScreeningResultScreenState
     const baseStyle = TextStyle(
       fontFamily: 'Nunito',
       fontSize: 20,
-      fontWeight:
-          FontWeight.w600,
+      fontWeight: FontWeight.w600,
       color: primaryBrown,
     );
 
     if (isRiskResult) {
       return const Text(
         'Kamu berisiko mengalami',
-        textAlign:
-            TextAlign.center,
+        textAlign: TextAlign.center,
         style: baseStyle,
       );
     }
@@ -721,20 +609,16 @@ class _ScreeningResultScreenState
             style: TextStyle(
               fontFamily: 'Nunito',
               fontSize: 20,
-              fontWeight:
-                  FontWeight.w700,
+              fontWeight: FontWeight.w700,
               color: resultTheme.accent,
             ),
           ),
 
-          const TextSpan(
-            text: ' berisiko mengalami',
-          ),
+          const TextSpan(text: ' berisiko mengalami'),
         ],
       ),
 
-      textAlign:
-          TextAlign.center,
+      textAlign: TextAlign.center,
     );
   }
 
@@ -744,21 +628,18 @@ class _ScreeningResultScreenState
 
   Widget _buildAdviceSection() {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
 
       children: [
         Padding(
-          padding:
-              EdgeInsets.only(left: 8),
+          padding: EdgeInsets.only(left: 8),
 
           child: Text(
             adviceTitle,
             style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 15,
-              fontWeight:
-                  FontWeight.w700,
+              fontWeight: FontWeight.w700,
               color: primaryBrown,
             ),
           ),
@@ -766,8 +647,7 @@ class _ScreeningResultScreenState
 
         const SizedBox(height: 9),
 
-        for (final advice in adviceList)
-          _buildAdviceItem(advice),
+        for (final advice in adviceList) _buildAdviceItem(advice),
       ],
     );
   }
@@ -776,19 +656,12 @@ class _ScreeningResultScreenState
   // ADVICE ITEM
   // ===============================================================
 
-  Widget _buildAdviceItem(
-    String text,
-  ) {
+  Widget _buildAdviceItem(String text) {
     return Padding(
-      padding:
-          const EdgeInsets.only(
-        left: 17,
-        bottom: 7,
-      ),
+      padding: const EdgeInsets.only(left: 17, bottom: 7),
 
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
 
         children: [
           Container(
@@ -812,12 +685,10 @@ class _ScreeningResultScreenState
           Expanded(
             child: Text(
               text,
-              style:
-                  const TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 12,
-                fontWeight:
-                    FontWeight.w500,
+                fontWeight: FontWeight.w500,
                 color: bodyText,
               ),
             ),
@@ -835,23 +706,12 @@ class _ScreeningResultScreenState
     return Container(
       width: double.infinity,
 
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 13,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
 
-      decoration:
-          BoxDecoration(
-        color:
-            const Color(0xFFFFFCFA),
-        borderRadius:
-            BorderRadius.circular(20),
-        border: Border.all(
-          color:
-              const Color(0xFFF3DCC9),
-          width: 1,
-        ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCFA),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF3DCC9), width: 1),
       ),
 
       child: Row(
@@ -860,13 +720,9 @@ class _ScreeningResultScreenState
             width: 16,
             height: 16,
 
-            decoration:
-                BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: resultTheme.accent,
-                width: 1.2,
-              ),
+              border: Border.all(color: resultTheme.accent, width: 1.2),
             ),
 
             child: Center(
@@ -875,8 +731,7 @@ class _ScreeningResultScreenState
                 style: TextStyle(
                   fontSize: 10,
                   height: 1.0,
-                  fontWeight:
-                      FontWeight.w700,
+                  fontWeight: FontWeight.w700,
                   color: resultTheme.accent,
                 ),
               ),
@@ -915,31 +770,18 @@ class _ScreeningResultScreenState
             Navigator.push(
               context,
 
-              MaterialPageRoute(
-                builder: (context) =>
-                    const DoctorScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const DoctorScreen()),
             );
           },
 
-          style:
-              ElevatedButton.styleFrom(
-            backgroundColor:
-                const Color(0xFFB65339),
-            foregroundColor:
-                Colors.white,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFB65339),
+            foregroundColor: Colors.white,
             elevation: 4,
-            shadowColor:
-                Colors.black.withValues(
-              alpha: 0.25,
-            ),
+            shadowColor: Colors.black.withValues(alpha: 0.25),
 
-            shape:
-                RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(
-                25,
-              ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
             ),
           ),
 
@@ -948,8 +790,7 @@ class _ScreeningResultScreenState
             style: TextStyle(
               fontFamily: 'Nunito',
               fontSize: 13,
-              fontWeight:
-                  FontWeight.w700,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),

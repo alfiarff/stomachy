@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'dart:convert';
 
 import 'screening_screen.dart';
@@ -76,8 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (data != null) {
           final firestoreName = data['name'];
 
-          if (firestoreName is String &&
-              firestoreName.trim().isNotEmpty) {
+          if (firestoreName is String && firestoreName.trim().isNotEmpty) {
             name = firestoreName.trim();
           }
         }
@@ -109,9 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 1) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -119,9 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 2) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -129,9 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 3) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -139,9 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 4) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -162,12 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            15,
-            10,
-            15,
-            95,
-          ),
+          padding: const EdgeInsets.fromLTRB(15, 10, 15, 95),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -188,7 +175,6 @@ class _HomeScreenState extends State<HomeScreen> {
               // =====================================================
               // JUDUL SECTION
               // =====================================================
-
               const Text(
                 'Apa yang ingin kamu lakukan saat ini?',
                 style: TextStyle(
@@ -219,7 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
- 
   // ===============================================================
   // HEADER
   // ===============================================================
@@ -249,9 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ProfileScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
 
               if (mounted) {
@@ -262,9 +245,9 @@ class _HomeScreenState extends State<HomeScreen> {
               stream: FirebaseAuth.instance.currentUser == null
                   ? null
                   : FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(FirebaseAuth.instance.currentUser!.uid)
-                      .snapshots(),
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser!.uid)
+                        .snapshots(),
               builder: (context, snapshot) {
                 final user = FirebaseAuth.instance.currentUser;
                 final data = snapshot.data?.data();
@@ -274,8 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 Widget avatar;
 
-                if (photoBase64 is String &&
-                    photoBase64.isNotEmpty) {
+                if (photoBase64 is String && photoBase64.isNotEmpty) {
                   try {
                     avatar = Image.memory(
                       base64Decode(photoBase64),
@@ -297,8 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Color(0xFFB9543A),
                     );
                   }
-                } else if (photoURL != null &&
-                    photoURL.isNotEmpty) {
+                } else if (photoURL != null && photoURL.isNotEmpty) {
                   avatar = Image.network(
                     photoURL,
                     width: 38,
@@ -338,7 +319,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   // ===============================================================
   // GREETING CARD
   // ===============================================================
@@ -346,10 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildGreeting() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: const Color(0xFFFFEDE3),
         borderRadius: BorderRadius.circular(16),
@@ -413,23 +390,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildLatestScreeningCard() {
     final user = FirebaseAuth.instance.currentUser;
 
-    return StreamBuilder<
-        QuerySnapshot<Map<String, dynamic>>>(
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: user == null
           ? null
           : FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .collection('screening_history')
-              .orderBy(
-                'createdAt',
-                descending: true,
-              )
-              .limit(1)
-              .snapshots(),
+                .collection('users')
+                .doc(user.uid)
+                .collection('screening_history')
+                .orderBy('createdAt', descending: true)
+                .limit(1)
+                .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState ==
-            ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
             width: double.infinity,
             height: 120,
@@ -463,9 +435,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return _buildNoScreeningCard();
         }
 
-        return _buildScreeningDataContent(
-          documents.first.data(),
-        );
+        return _buildScreeningDataContent(documents.first.data());
       },
     );
   }
@@ -479,20 +449,13 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ScreeningScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const ScreeningScreen()),
         );
       },
       borderRadius: BorderRadius.circular(18),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(
-          16,
-          14,
-          8,
-          14,
-        ),
+        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
@@ -509,8 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Hasil Skrining Terakhir',
@@ -556,8 +518,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              const ScreeningScreen(),
+                          builder: (context) => const ScreeningScreen(),
                         ),
                       );
                     },
@@ -594,20 +555,16 @@ class _HomeScreenState extends State<HomeScreen> {
   // KARTU HASIL SKRINING TERBARU
   // ===============================================================
 
-  Widget _buildScreeningDataContent(
-    Map<String, dynamic> data,
-  ) {
+  Widget _buildScreeningDataContent(Map<String, dynamic> data) {
     final bool isRisk = data['isRisk'] == true;
 
-    final String status =
-        isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
+    final String status = isRisk ? 'Berisiko GERD' : 'Tidak Berisiko GERD';
 
     final Color statusColor = isRisk
         ? const Color(0xFFE93636)
         : const Color(0xFF18865A);
 
-    final String date =
-        _formatHistoryDate(data['createdAt']);
+    final String date = _formatHistoryDate(data['createdAt']);
 
     final String mascot = isRisk
         ? 'assets/images/stomachy_worried.png'
@@ -618,20 +575,14 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                const ScreeningHistoryScreen(),
+            builder: (context) => const ScreeningHistoryScreen(),
           ),
         );
       },
       borderRadius: BorderRadius.circular(18),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(
-          16,
-          14,
-          8,
-          14,
-        ),
+        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
@@ -648,8 +599,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Hasil Skrining Terakhir',
@@ -731,9 +681,7 @@ class _HomeScreenState extends State<HomeScreen> {
           foregroundColor: Colors.white,
           elevation: 2,
           shadowColor: Colors.black.withOpacity(0.2),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -805,8 +753,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      const ScreeningScreen(),
+                  builder: (context) => const ScreeningScreen(),
                 ),
               );
             },
@@ -824,10 +771,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const DoctorScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const DoctorScreen()),
               );
             },
           ),
@@ -844,10 +788,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const EdukasiScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const EdukasiScreen()),
               );
             },
           ),
@@ -871,10 +812,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 26,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 26),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -897,11 +835,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Color(0xFFFFE1C8),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 27,
-                color: iconColor,
-              ),
+              child: Icon(icon, size: 27, color: iconColor),
             ),
 
             const SizedBox(height: 14),
@@ -964,8 +898,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    const ArtikelTidurScreen(),
+                builder: (context) => const ArtikelTidurScreen(),
               ),
             );
           },
@@ -1003,10 +936,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 Expanded(
                   child: Column(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center,
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Tips Tidur Nyenyak untuk Penderita GERD',
@@ -1086,12 +1017,10 @@ class _NotificationBell extends StatefulWidget {
   const _NotificationBell();
 
   @override
-  State<_NotificationBell> createState() =>
-      _NotificationBellState();
+  State<_NotificationBell> createState() => _NotificationBellState();
 }
 
-class _NotificationBellState
-    extends State<_NotificationBell> {
+class _NotificationBellState extends State<_NotificationBell> {
   int _unreadCount = 0;
 
   @override
@@ -1099,9 +1028,7 @@ class _NotificationBellState
     super.initState();
     _refreshCount();
 
-    NotificationService.badgeSignal.addListener(
-      _onBadgeSignal,
-    );
+    NotificationService.badgeSignal.addListener(_onBadgeSignal);
   }
 
   void _onBadgeSignal() {
@@ -1110,9 +1037,7 @@ class _NotificationBellState
 
   @override
   void dispose() {
-    NotificationService.badgeSignal.removeListener(
-      _onBadgeSignal,
-    );
+    NotificationService.badgeSignal.removeListener(_onBadgeSignal);
     super.dispose();
   }
 
@@ -1128,10 +1053,7 @@ class _NotificationBellState
       return;
     }
 
-    final int count =
-        await AppNotification.getRecentUnreadCount(
-      user.uid,
-    );
+    final int count = await AppNotification.getRecentUnreadCount(user.uid);
 
     if (!mounted) return;
 
@@ -1148,10 +1070,7 @@ class _NotificationBellState
       onTap: () async {
         await Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) =>
-                const NotificationScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const NotificationScreen()),
         );
 
         _refreshCount();
@@ -1176,14 +1095,8 @@ class _NotificationBellState
               right: -3,
               top: -4,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 2,
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 19,
-                  minHeight: 19,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                constraints: const BoxConstraints(minWidth: 19, minHeight: 19),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: const Color(0xFFAA4E39),
@@ -1193,10 +1106,7 @@ class _NotificationBellState
                   borderRadius: _unreadCount > 9
                       ? BorderRadius.circular(10)
                       : null,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 1.2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 1.2),
                 ),
                 child: Text(
                   _unreadCount > 9 ? '9+' : '$_unreadCount',

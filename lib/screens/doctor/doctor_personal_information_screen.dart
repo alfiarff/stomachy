@@ -1,20 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../widgets/stomachy_card.dart';
 
-class DoctorPersonalInformationScreen
-    extends StatefulWidget {
-  const DoctorPersonalInformationScreen({
-    super.key,
-  });
+class DoctorPersonalInformationScreen extends StatefulWidget {
+  const DoctorPersonalInformationScreen({super.key});
   @override
-  State<DoctorPersonalInformationScreen>
-      createState() =>
-          _DoctorPersonalInformationScreenState();
+  State<DoctorPersonalInformationScreen> createState() =>
+      _DoctorPersonalInformationScreenState();
 }
 
 class _DoctorPersonalInformationScreenState
@@ -22,29 +20,18 @@ class _DoctorPersonalInformationScreenState
   // ===============================================================
   // WARNA
   // ===============================================================
-  final Color backgroundColor =
-      const Color(0xFFFFF5EF);
-  final Color primaryBrown =
-      const Color(0xFF5A392F);
+  final Color backgroundColor = const Color(0xFFFFF5EF);
+  final Color primaryBrown = const Color(0xFF5A392F);
   // ===============================================================
   // CONTROLLER
   // ===============================================================
-  final TextEditingController nameController =
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController specializationController =
       TextEditingController();
-  final TextEditingController emailController =
-      TextEditingController();
-  final TextEditingController
-      specializationController =
-      TextEditingController();
-  final TextEditingController
-      experienceController =
-      TextEditingController();
-  final TextEditingController
-      educationController =
-      TextEditingController();
-  final TextEditingController
-      locationController =
-      TextEditingController();
+  final TextEditingController experienceController = TextEditingController();
+  final TextEditingController educationController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
   // ===============================================================
   // ===============================================================
   // LOADING
@@ -65,13 +52,13 @@ class _DoctorPersonalInformationScreenState
     super.initState();
     _loadDoctorData();
   }
+
   // ===============================================================
   // LOAD DATA DOKTER
   // ===============================================================
   Future<void> _loadDoctorData() async {
     try {
-      final User? user =
-          FirebaseAuth.instance.currentUser;
+      final User? user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         if (mounted) {
           setState(() {
@@ -83,109 +70,84 @@ class _DoctorPersonalInformationScreenState
       // =============================================================
       // DATA DARI FIREBASE AUTH
       // =============================================================
-      nameController.text =
-          user.displayName ?? '';
-      emailController.text =
-          user.email ?? '';
+      nameController.text = user.displayName ?? '';
+      emailController.text = user.email ?? '';
       // =============================================================
       // FOTO GOOGLE
       // =============================================================
-      final String authPhoto =
-          user.photoURL ?? '';
-      if (authPhoto.isNotEmpty &&
-          !authPhoto.startsWith('data:')) {
+      final String authPhoto = user.photoURL ?? '';
+      if (authPhoto.isNotEmpty && !authPhoto.startsWith('data:')) {
         _googlePhotoUrl = authPhoto;
       }
       // =============================================================
       // DATA FIRESTORE
       // =============================================================
-      final DocumentSnapshot<
-          Map<String, dynamic>> doc =
-          await FirebaseFirestore.instance
-             .collection('users')
-             .doc(user.uid)
-             .get();
+      final DocumentSnapshot<Map<String, dynamic>> doc = await FirebaseFirestore
+          .instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (doc.exists) {
-        final Map<String, dynamic>? data =
-            doc.data();
+        final Map<String, dynamic>? data = doc.data();
         if (data != null) {
           // ---------------------------------------------------------
           // NAMA
           // ---------------------------------------------------------
-          final dynamic name =
-              data['name'];
-          if (name is String &&
-              name.trim().isNotEmpty) {
+          final dynamic name = data['name'];
+          if (name is String && name.trim().isNotEmpty) {
             nameController.text = name;
           }
           // ---------------------------------------------------------
           // EMAIL
           // ---------------------------------------------------------
-          final dynamic email =
-              data['email'];
-          if (email is String &&
-              email.trim().isNotEmpty) {
+          final dynamic email = data['email'];
+          if (email is String && email.trim().isNotEmpty) {
             emailController.text = email;
           }
           // ---------------------------------------------------------
           // SPESIALISASI
           // ---------------------------------------------------------
-          final dynamic specialization =
-              data['specialization'];
+          final dynamic specialization = data['specialization'];
           if (specialization is String) {
-            specializationController.text =
-                specialization;
+            specializationController.text = specialization;
           }
           // ---------------------------------------------------------
           // PENGALAMAN
           // ---------------------------------------------------------
-          final dynamic experience =
-              data['experience'];
+          final dynamic experience = data['experience'];
           if (experience is String) {
-            experienceController.text =
-                experience;
+            experienceController.text = experience;
           }
           // ---------------------------------------------------------
           // PENDIDIKAN
           // ---------------------------------------------------------
-          final dynamic education =
-              data['education'];
+          final dynamic education = data['education'];
           if (education is String) {
-            educationController.text =
-                education;
+            educationController.text = education;
           }
           // ---------------------------------------------------------
           // LOKASI
           // ---------------------------------------------------------
-          final dynamic location =
-              data['location'];
+          final dynamic location = data['location'];
           if (location is String) {
-            locationController.text =
-                location;
+            locationController.text = location;
           }
           // ---------------------------------------------------------
           // FOTO BASE64
           // ---------------------------------------------------------
-          final dynamic photoBase64 =
-              data['photoBase64'];
-          if (photoBase64 is String &&
-              photoBase64.trim().isNotEmpty) {
-            _photoBase64 =
-                photoBase64;
+          final dynamic photoBase64 = data['photoBase64'];
+          if (photoBase64 is String && photoBase64.trim().isNotEmpty) {
+            _photoBase64 = photoBase64;
           }
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-           .showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               'Gagal mengambil informasi dokter: $e',
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 11,
-              ),
+              style: const TextStyle(fontFamily: 'Nunito', fontSize: 11),
             ),
           ),
         );
@@ -198,6 +160,7 @@ class _DoctorPersonalInformationScreenState
       }
     }
   }
+
   // ===============================================================
   // PILIH SUMBER FOTO
   // ===============================================================
@@ -205,38 +168,26 @@ class _DoctorPersonalInformationScreenState
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape:
-          const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(
-              vertical: 16,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
-              mainAxisSize:
-                  MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
                   'Ubah Foto Profil',
                   style: TextStyle(
                     fontFamily: 'Fredoka',
                     fontSize: 12,
-                    fontWeight:
-                        FontWeight.w700,
-                    color:
-                        Color(0xFF5A392F),
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF5A392F),
                   ),
                 ),
-                const SizedBox(
-                  height: 14,
-                ),
+                const SizedBox(height: 14),
                 // =================================================
                 // KAMERA
                 // =================================================
@@ -244,23 +195,14 @@ class _DoctorPersonalInformationScreenState
                   leading: Container(
                     width: 40,
                     height: 40,
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          const Color(
-                        0xFFFFE3D1,
-                      ),
-                      borderRadius:
-                          BorderRadius.circular(
-                        10,
-                      ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE3D1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
-                      Icons
-                         .photo_camera_outlined,
+                      Icons.photo_camera_outlined,
                       size: 22,
-                      color:
-                          Color(0xFFB65339),
+                      color: Color(0xFFB65339),
                     ),
                   ),
                   title: const Text(
@@ -268,17 +210,13 @@ class _DoctorPersonalInformationScreenState
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
-                      fontWeight:
-                          FontWeight.w600,
-                      color:
-                          Color(0xFF30221E),
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF30221E),
                     ),
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    _pickAndSavePhoto(
-                      ImageSource.camera,
-                    );
+                    _pickAndSavePhoto(ImageSource.camera);
                   },
                 ),
                 // =================================================
@@ -288,23 +226,14 @@ class _DoctorPersonalInformationScreenState
                   leading: Container(
                     width: 40,
                     height: 40,
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          const Color(
-                        0xFFFFE3D1,
-                      ),
-                      borderRadius:
-                          BorderRadius.circular(
-                        10,
-                      ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE3D1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
-                      Icons
-                         .photo_library_outlined,
+                      Icons.photo_library_outlined,
                       size: 22,
-                      color:
-                          Color(0xFFB65339),
+                      color: Color(0xFFB65339),
                     ),
                   ),
                   title: const Text(
@@ -312,17 +241,13 @@ class _DoctorPersonalInformationScreenState
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
-                      fontWeight:
-                          FontWeight.w600,
-                      color:
-                          Color(0xFF30221E),
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF30221E),
                     ),
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    _pickAndSavePhoto(
-                      ImageSource.gallery,
-                    );
+                    _pickAndSavePhoto(ImageSource.gallery);
                   },
                 ),
               ],
@@ -332,24 +257,18 @@ class _DoctorPersonalInformationScreenState
       },
     );
   }
+
   // ===============================================================
   // PILIH DAN SIMPAN FOTO
   // ===============================================================
-  Future<void> _pickAndSavePhoto(
-    ImageSource source,
-  ) async {
-    final User? user =
-        FirebaseAuth.instance.currentUser;
+  Future<void> _pickAndSavePhoto(ImageSource source) async {
+    final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context)
-         .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Silakan login terlebih dahulu.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
         ),
       );
@@ -359,8 +278,7 @@ class _DoctorPersonalInformationScreenState
       return;
     }
     try {
-      final XFile? picked =
-          await ImagePicker().pickImage(
+      final XFile? picked = await ImagePicker().pickImage(
         source: source,
         maxWidth: 512,
         maxHeight: 512,
@@ -378,35 +296,26 @@ class _DoctorPersonalInformationScreenState
       // ===========================================================
       // KONVERSI FOTO KE BASE64
       // ===========================================================
-      final File file =
-          File(picked.path);
-      final List<int> bytes =
-          await file.readAsBytes();
-      final String base64String =
-          base64Encode(bytes);
+      final File file = File(picked.path);
+      final List<int> bytes = await file.readAsBytes();
+      final String base64String = base64Encode(bytes);
       // ===========================================================
       // CEK UKURAN
       // ===========================================================
-      if (base64String.length >
-          900000) {
+      if (base64String.length > 900000) {
         if (!mounted) {
           return;
         }
         setState(() {
           _isUploadingPhoto = false;
         });
-        ScaffoldMessenger.of(context)
-           .showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
               'Ukuran foto terlalu besar. Coba pilih foto lain.',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 11,
-              ),
+              style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
             ),
-            behavior:
-                SnackBarBehavior.floating,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         return;
@@ -414,59 +323,37 @@ class _DoctorPersonalInformationScreenState
       // ===========================================================
       // SIMPAN KE FIRESTORE
       // ===========================================================
-      await FirebaseFirestore.instance
-         .collection('users')
-         .doc(user.uid)
-         .set(
-        {
-          'photoBase64':
-              base64String,
-          'updatedAt':
-              FieldValue.serverTimestamp(),
-        },
-        SetOptions(
-          merge: true,
-        ),
-      );
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'photoBase64': base64String,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       if (!mounted) {
         return;
       }
       setState(() {
-        _photoBase64 =
-            base64String;
+        _photoBase64 = base64String;
       });
-      ScaffoldMessenger.of(context)
-         .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Foto profil berhasil diperbarui.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
-          behavior:
-              SnackBarBehavior.floating,
-          duration:
-              Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
         ),
       );
     } catch (e) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context)
-         .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Gagal menyimpan foto: $e',
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: const TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
-          behavior:
-              SnackBarBehavior.floating,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {
@@ -477,22 +364,18 @@ class _DoctorPersonalInformationScreenState
       }
     }
   }
+
   // ===============================================================
   // SIMPAN DATA DOKTER
   // ===============================================================
   Future<void> _saveDoctorData() async {
-    final User? user =
-        FirebaseAuth.instance.currentUser;
+    final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context)
-         .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Silakan login terlebih dahulu.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
         ),
       );
@@ -505,14 +388,9 @@ class _DoctorPersonalInformationScreenState
       // ===========================================================
       // UPDATE NAMA FIREBASE AUTH
       // ===========================================================
-      if (nameController.text
-             .trim()
-             .isNotEmpty &&
-          nameController.text.trim() !=
-              user.displayName) {
-        await user.updateDisplayName(
-          nameController.text.trim(),
-        );
+      if (nameController.text.trim().isNotEmpty &&
+          nameController.text.trim() != user.displayName) {
+        await user.updateDisplayName(nameController.text.trim());
       }
       // ===========================================================
       // SIMPAN INFORMASI DOKTER
@@ -520,73 +398,39 @@ class _DoctorPersonalInformationScreenState
       // STATUS TIDAK DIUBAH DARI HALAMAN INI.
       // STATUS HANYA DIUBAH DARI BERANDA.
       // ===========================================================
-      await FirebaseFirestore.instance
-         .collection('users')
-         .doc(user.uid)
-         .set(
-        {
-          'name':
-              nameController.text.trim(),
-          'email':
-              emailController.text.trim(),
-          'specialization':
-              specializationController
-                 .text
-                 .trim(),
-          'experience':
-              experienceController
-                 .text
-                 .trim(),
-          'education':
-              educationController
-                 .text
-                 .trim(),
-          'location':
-              locationController
-                 .text
-                 .trim(),
-          'updatedAt':
-              FieldValue.serverTimestamp(),
-        },
-        SetOptions(
-          merge: true,
-        ),
-      );
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'name': nameController.text.trim(),
+        'email': emailController.text.trim(),
+        'specialization': specializationController.text.trim(),
+        'experience': experienceController.text.trim(),
+        'education': educationController.text.trim(),
+        'location': locationController.text.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context)
-         .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Informasi pribadi berhasil diperbarui.',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
-          behavior:
-              SnackBarBehavior.floating,
-          duration:
-              Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
         ),
       );
     } catch (e) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context)
-         .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Gagal menyimpan informasi: $e',
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-            ),
+            style: const TextStyle(fontFamily: 'Nunito', fontSize: 11),
           ),
-          behavior:
-              SnackBarBehavior.floating,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {
@@ -597,6 +441,7 @@ class _DoctorPersonalInformationScreenState
       }
     }
   }
+
   // ===============================================================
   // DISPOSE
   // ===============================================================
@@ -610,119 +455,74 @@ class _DoctorPersonalInformationScreenState
     locationController.dispose();
     super.dispose();
   }
+
   // ===============================================================
   // BUILD
   // ===============================================================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          backgroundColor,
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: _isLoading
             ? const Center(
-                child:
-                    CircularProgressIndicator(
-                  color:
-                      Color(0xFFB9543A),
-                ),
+                child: CircularProgressIndicator(color: Color(0xFFB9543A)),
               )
             : SingleChildScrollView(
-                physics:
-                    const BouncingScrollPhysics(),
-                padding:
-                    const EdgeInsets.fromLTRB(
-                  22,
-                  12,
-                  22,
-                  30,
-                ),
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(22, 12, 22, 30),
                 child: Column(
                   children: [
                     _buildHeader(),
-                    const SizedBox(
-                      height: 28,
-                    ),
+                    const SizedBox(height: 28),
                     _buildProfilePhoto(),
-                    const SizedBox(
-                      height: 42,
-                    ),
+                    const SizedBox(height: 42),
                     _buildInformationField(
-                      label:
-                          'Nama Lengkap',
-                      controller:
-                          nameController,
+                      label: 'Nama Lengkap',
+                      controller: nameController,
                       readOnly: false,
-                      hintText:
-                          'Masukkan nama lengkap anda',
+                      hintText: 'Masukkan nama lengkap anda',
                     ),
-                    const SizedBox(
-                      height: 13,
-                    ),
+                    const SizedBox(height: 13),
                     _buildInformationField(
-                      label:
-                          'Email',
-                      controller:
-                          emailController,
+                      label: 'Email',
+                      controller: emailController,
                       readOnly: true,
                     ),
-                    const SizedBox(
-                      height: 13,
-                    ),
+                    const SizedBox(height: 13),
                     _buildInformationField(
-                      label:
-                          'Spesialisasi',
-                      controller:
-                          specializationController,
-                      hintText:
-                          'Masukkan spesialisasi anda',
+                      label: 'Spesialisasi',
+                      controller: specializationController,
+                      hintText: 'Masukkan spesialisasi anda',
                     ),
-                    const SizedBox(
-                      height: 13,
-                    ),
+                    const SizedBox(height: 13),
                     _buildInformationField(
-                      label:
-                          'Pengalaman',
-                      controller:
-                          experienceController,
-                      hintText:
-                          'Masukkan pengalaman anda',
+                      label: 'Pengalaman',
+                      controller: experienceController,
+                      hintText: 'Masukkan pengalaman anda',
                     ),
-                    const SizedBox(
-                      height: 13,
-                    ),
+                    const SizedBox(height: 13),
                     _buildInformationField(
-                      label:
-                          'Pendidikan',
-                      controller:
-                          educationController,
-                      hintText:
-                          'Masukkan pendidikan anda',
+                      label: 'Pendidikan',
+                      controller: educationController,
+                      hintText: 'Masukkan pendidikan anda',
                     ),
-                    const SizedBox(
-                      height: 13,
-                    ),
+                    const SizedBox(height: 13),
                     _buildInformationField(
-                      label:
-                          'Lokasi',
-                      controller:
-                          locationController,
-                      hintText:
-                          'Masukkan lokasi praktik anda',
+                      label: 'Lokasi',
+                      controller: locationController,
+                      hintText: 'Masukkan lokasi praktik anda',
                     ),
-                    const SizedBox(
-                      height: 34,
-                    ),
+                    const SizedBox(height: 34),
                     _buildEditButton(),
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
       ),
     );
   }
+
   // ===============================================================
   // HEADER
   // ===============================================================
@@ -739,13 +539,11 @@ class _DoctorPersonalInformationScreenState
               width: 45,
               height: 42,
               child: Align(
-                alignment:
-                    Alignment.centerLeft,
+                alignment: Alignment.centerLeft,
                 child: Icon(
                   Icons.arrow_back_rounded,
                   size: 29,
-                  color:
-                      Color(0xFF171310),
+                  color: Color(0xFF171310),
                 ),
               ),
             ),
@@ -754,24 +552,21 @@ class _DoctorPersonalInformationScreenState
             child: Center(
               child: Text(
                 'Informasi Pribadi',
-                style:
-                    const TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
-                  fontWeight:
-                      FontWeight.w700,
+                  fontWeight: FontWeight.w700,
                   color: Colors.black,
                 ),
               ),
             ),
           ),
-          const SizedBox(
-            width: 45,
-          ),
+          const SizedBox(width: 45),
         ],
       ),
     );
   }
+
   // ===============================================================
   // FOTO PROFIL
   // ===============================================================
@@ -782,37 +577,26 @@ class _DoctorPersonalInformationScreenState
         Container(
           width: 100,
           height: 100,
-          decoration:
-              const BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color:
-                Color(0xFFE8E8E8),
+            color: Color(0xFFE8E8E8),
           ),
-          child: ClipOval(
-            child:
-                _buildPhotoImage(),
-          ),
+          child: ClipOval(child: _buildPhotoImage()),
         ),
         if (_isUploadingPhoto)
           Positioned.fill(
             child: Container(
-              decoration:
-                  const BoxDecoration(
-                shape:
-                    BoxShape.circle,
-                color:
-                    Color(0x66000000),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0x66000000),
               ),
-              child:
-                  const Center(
+              child: const Center(
                 child: SizedBox(
                   width: 28,
                   height: 28,
-                  child:
-                      CircularProgressIndicator(
+                  child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color:
-                        Colors.white,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -822,49 +606,26 @@ class _DoctorPersonalInformationScreenState
           right: -2,
           bottom: -2,
           child: GestureDetector(
-            onTap:
-                _isUploadingPhoto
-                    ? null
-                    : _showPhotoSourcePicker,
+            onTap: _isUploadingPhoto ? null : _showPhotoSourcePicker,
             child: Container(
               width: 30,
               height: 30,
-              decoration:
-                  BoxDecoration(
-                color:
-                    Colors.white,
-                shape:
-                    BoxShape.circle,
-                border:
-                    Border.all(
-                  color:
-                      const Color(
-                    0xFFE2E2E2,
-                  ),
-                  width: 0.8,
-                ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE2E2E2), width: 0.8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black
-                       .withOpacity(
-                      0.12,
-                    ),
+                    color: Colors.black.withOpacity(0.12),
                     blurRadius: 3,
-                    offset:
-                        const Offset(
-                      0,
-                      1,
-                    ),
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
-              child:
-                  const Icon(
-                Icons
-                   .camera_alt_outlined,
+              child: const Icon(
+                Icons.camera_alt_outlined,
                 size: 17,
-                color:
-                    Color(0xFF3E3936),
+                color: Color(0xFF3E3936),
               ),
             ),
           ),
@@ -872,26 +633,20 @@ class _DoctorPersonalInformationScreenState
       ],
     );
   }
+
   // ===============================================================
   // GAMBAR FOTO
   // ===============================================================
   Widget _buildPhotoImage() {
-    final String? base64 =
-        _photoBase64;
-    if (base64 != null &&
-        base64.trim().isNotEmpty) {
+    final String? base64 = _photoBase64;
+    if (base64 != null && base64.trim().isNotEmpty) {
       try {
         return Image.memory(
           base64Decode(base64),
           width: 100,
           height: 100,
           fit: BoxFit.cover,
-          errorBuilder:
-              (
-            context,
-            error,
-            stackTrace,
-          ) {
+          errorBuilder: (context, error, stackTrace) {
             return _buildDefaultPhotoIcon();
           },
         );
@@ -899,27 +654,21 @@ class _DoctorPersonalInformationScreenState
         return _buildDefaultPhotoIcon();
       }
     }
-    final String? googleUrl =
-        _googlePhotoUrl;
-    if (googleUrl != null &&
-        googleUrl.trim().isNotEmpty) {
+    final String? googleUrl = _googlePhotoUrl;
+    if (googleUrl != null && googleUrl.trim().isNotEmpty) {
       return Image.network(
         googleUrl,
         width: 100,
         height: 100,
         fit: BoxFit.cover,
-        errorBuilder:
-            (
-          context,
-          error,
-          stackTrace,
-        ) {
+        errorBuilder: (context, error, stackTrace) {
           return _buildDefaultPhotoIcon();
         },
       );
     }
     return _buildDefaultPhotoIcon();
   }
+
   // ===============================================================
   // DEFAULT FOTO
   // ===============================================================
@@ -927,14 +676,10 @@ class _DoctorPersonalInformationScreenState
     return const SizedBox(
       width: 100,
       height: 100,
-      child: Icon(
-        Icons.person,
-        size: 65,
-        color:
-            Color(0xFF777777),
-      ),
+      child: Icon(Icons.person, size: 65, color: Color(0xFF777777)),
     );
   }
+
   // ===============================================================
   // INFORMATION FIELD
   // ===============================================================
@@ -947,78 +692,51 @@ class _DoctorPersonalInformationScreenState
     TextInputType? keyboardType,
   }) {
     return StomachyCard(
-      color:
-          const Color(0xFFFFFCF9),
+      color: const Color(0xFFFFFCF9),
       radius: 15,
-      padding:
-          const EdgeInsets.fromLTRB(
-        18,
-        8,
-        15,
-        7,
-      ),
+      padding: const EdgeInsets.fromLTRB(18, 8, 15, 7),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style:
-                const TextStyle(
+            style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 12,
-              fontWeight:
-                  FontWeight.w600,
-              color:
-                  Color(0xFF30221E),
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF30221E),
             ),
           ),
-          const SizedBox(
-            height: 2,
-          ),
+          const SizedBox(height: 2),
           TextField(
-            controller:
-                controller,
-            readOnly:
-                readOnly,
-            maxLines:
-                maxLines,
-            keyboardType:
-                keyboardType,
-            style:
-                const TextStyle(
+            controller: controller,
+            readOnly: readOnly,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 11,
-              fontWeight:
-                  FontWeight.w400,
-              color:
-                  Color(0xFF493C37),
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF493C37),
             ),
-            decoration:
-                InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
-              hintText:
-                  hintText,
-              hintStyle:
-                  const TextStyle(
-                fontFamily:
-                    'Nunito',
+              hintText: hintText,
+              hintStyle: const TextStyle(
+                fontFamily: 'Nunito',
                 fontSize: 11,
-                fontWeight:
-                    FontWeight.w400,
-                color:
-                    Color(0xFF999999),
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF999999),
               ),
-              border:
-                  InputBorder.none,
-              contentPadding:
-                  EdgeInsets.zero,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
             ),
           ),
         ],
       ),
     );
   }
+
   // ===============================================================
   // BUTTON UBAH INFORMASI
   // ===============================================================
@@ -1027,57 +745,33 @@ class _DoctorPersonalInformationScreenState
       width: 228,
       height: 48,
       child: ElevatedButton(
-        onPressed:
-            _isSaving
-                ? null
-                : _saveDoctorData,
-        style:
-            ElevatedButton.styleFrom(
-          backgroundColor:
-              const Color(
-            0xFFB9543A,
-          ),
-          foregroundColor:
-              Colors.white,
-          disabledBackgroundColor:
-              const Color(
-            0xFFB9543A,
-          ),
-          disabledForegroundColor:
-              Colors.white,
+        onPressed: _isSaving ? null : _saveDoctorData,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFB9543A),
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: const Color(0xFFB9543A),
+          disabledForegroundColor: Colors.white,
           elevation: 3,
-          shadowColor:
-              Colors.black.withOpacity(
-            0.20,
-          ),
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(
-              25,
-            ),
+          shadowColor: Colors.black.withOpacity(0.20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
           ),
         ),
         child: _isSaving
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child:
-                    CircularProgressIndicator(
+                child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color:
-                      Colors.white,
+                  color: Colors.white,
                 ),
               )
             : const Text(
                 'Ubah Informasi',
-                style:
-                    TextStyle(
-                  fontFamily:
-                      'Nunito',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
                   fontSize: 12,
-                  fontWeight:
-                      FontWeight.w700,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
       ),

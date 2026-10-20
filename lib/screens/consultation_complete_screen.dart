@@ -51,9 +51,7 @@ class _ConsultationCompleteScreenState
       case 0:
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
           (route) => false,
         );
         break;
@@ -61,36 +59,28 @@ class _ConsultationCompleteScreenState
       case 1:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ScreeningScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const ScreeningScreen()),
         );
         break;
 
       case 2:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const DoctorScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const DoctorScreen()),
         );
         break;
 
       case 3:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const EdukasiScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const EdukasiScreen()),
         );
         break;
 
       case 4:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ProfileScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const ProfileScreen()),
         );
         break;
     }
@@ -109,12 +99,7 @@ class _ConsultationCompleteScreenState
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
 
-          padding: const EdgeInsets.fromLTRB(
-            20,
-            8,
-            20,
-            24,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
 
           child: Column(
             children: [
@@ -129,7 +114,6 @@ class _ConsultationCompleteScreenState
               // =====================================================
               // LOGO SELESAI
               // =====================================================
-
               _buildSuccessLogo(),
 
               const SizedBox(height: 17),
@@ -137,7 +121,6 @@ class _ConsultationCompleteScreenState
               // =====================================================
               // JUDUL
               // =====================================================
-
               const Text(
                 'Konsultasi Telah Selesai',
                 textAlign: TextAlign.center,
@@ -154,7 +137,6 @@ class _ConsultationCompleteScreenState
               // =====================================================
               // DESKRIPSI
               // =====================================================
-
               const Text(
                 'Terima kasih, konsultasi anda dengan dokter\n'
                 'sudah selesai. Semoga keluhan anda segera membaik.',
@@ -173,7 +155,6 @@ class _ConsultationCompleteScreenState
               // =====================================================
               // DETAIL
               // =====================================================
-
               _buildConsultationDetail(),
 
               const SizedBox(height: 32),
@@ -181,7 +162,6 @@ class _ConsultationCompleteScreenState
               // =====================================================
               // BUTTON
               // =====================================================
-
               _buildBackHomeButton(),
             ],
           ),
@@ -191,7 +171,6 @@ class _ConsultationCompleteScreenState
       // =============================================================
       // BOTTOM NAVIGATION
       // =============================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -234,11 +213,7 @@ class _ConsultationCompleteScreenState
 
         fit: BoxFit.contain,
 
-        errorBuilder: (
-          context,
-          error,
-          stackTrace,
-        ) {
+        errorBuilder: (context, error, stackTrace) {
           return const Center(
             child: Icon(
               Icons.check_circle_rounded,
@@ -263,10 +238,7 @@ class _ConsultationCompleteScreenState
         color: cardColor,
         borderRadius: BorderRadius.circular(16),
 
-        border: Border.all(
-          color: const Color(0xFFE87551),
-          width: 0.8,
-        ),
+        border: Border.all(color: const Color(0xFFE87551), width: 0.8),
 
         boxShadow: const [
           BoxShadow(
@@ -286,10 +258,7 @@ class _ConsultationCompleteScreenState
           Container(
             width: double.infinity,
 
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 10,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
 
             decoration: const BoxDecoration(
               color: headerCardColor,
@@ -314,11 +283,8 @@ class _ConsultationCompleteScreenState
           // =========================================================
           // CONTENT
           // =========================================================
-
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 18,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 18),
 
             child: Column(
               children: [
@@ -373,12 +339,7 @@ class _ConsultationCompleteScreenState
 
       decoration: BoxDecoration(
         border: showDivider
-            ? const Border(
-                bottom: BorderSide(
-                  color: dividerColor,
-                  width: 0.8,
-                ),
-              )
+            ? const Border(bottom: BorderSide(color: dividerColor, width: 0.8))
             : null,
       ),
 
@@ -398,11 +359,7 @@ class _ConsultationCompleteScreenState
               shape: BoxShape.circle,
             ),
 
-            child: Icon(
-              icon,
-              size: 19,
-              color: primaryColor,
-            ),
+            child: Icon(icon, size: 19, color: primaryColor),
           ),
 
           const SizedBox(width: 14),
@@ -410,7 +367,6 @@ class _ConsultationCompleteScreenState
           // =========================================================
           // LABEL
           // =========================================================
-
           Expanded(
             child: Text(
               title,
@@ -428,7 +384,6 @@ class _ConsultationCompleteScreenState
           // =========================================================
           // VALUE KANAN
           // =========================================================
-
           SizedBox(
             width: 155,
 
@@ -516,7 +471,6 @@ class _ConsultationCompleteScreenState
           // =========================================================
           // LABEL
           // =========================================================
-
           const Expanded(
             child: Text(
               'Status',
@@ -535,7 +489,6 @@ class _ConsultationCompleteScreenState
           // =========================================================
           // STATUS KANAN
           // =========================================================
-
           SizedBox(
             width: 155,
 
@@ -586,9 +539,7 @@ class _ConsultationCompleteScreenState
         onPressed: () {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(
-              builder: (context) => const HomeScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
             (route) => false,
           );
         },

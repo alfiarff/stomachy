@@ -18,9 +18,7 @@ import 'screens/doctor/doctorr_home_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await NotificationService.init();
 
@@ -52,9 +50,7 @@ class StomachyApp extends StatelessWidget {
 // ===============================================================
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({
-    super.key,
-  });
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -65,18 +61,15 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    Timer(
-      const Duration(seconds: 3),
-      () async {
-        if (!mounted) return;
+    Timer(const Duration(seconds: 3), () async {
+      if (!mounted) return;
 
-        await NotificationService.syncWeeklyScreeningFromSettings();
+      await NotificationService.syncWeeklyScreeningFromSettings();
 
-        if (!mounted) return;
+      if (!mounted) return;
 
-        await _navigateBasedOnAppState();
-      },
-    );
+      await _navigateBasedOnAppState();
+    });
   }
 
   // =============================================================
@@ -90,99 +83,96 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigateBasedOnAppState() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final bool hasSeenLanding =
-        prefs.getBool('has_seen_landing') ?? false;
+    final bool hasSeenLanding = prefs.getBool('has_seen_landing') ?? false;
 
     final user = FirebaseAuth.instance.currentUser;
 
-    // ===========================================================
-    // 1. USER BELUM PERNAH MELEWATI LANDING
-    // ===========================================================
-
+    // 1. Belum pernah melewati Landing
     if (!hasSeenLanding) {
       if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const LandingScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const LandingScreen()),
       );
-
       return;
     }
 
-    // ===========================================================
-    // 2. SUDAH PERNAH MELEWATI LANDING,
-    //    TAPI BELUM LOGIN
-    // ===========================================================
-
+    // 2. Belum login
     if (user == null) {
       if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
-
       return;
     }
 
-    // ===========================================================
-    // 3. USER MASIH LOGIN
-    //
-    // Aktifkan Global Chat Watcher agar notifikasi chat muncul
-    // di SEMUA halaman, bukan hanya di dalam layar chat.
-    // Aman dipanggil walau watcher sudah berjalan.
-    // ===========================================================
-
-    await NotificationService.startChatWatcher();
-
-    Widget target = const HomeScreen();
-
+    // 3. Periksa profil dan status akun
     try {
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .get();
 
-      final role = doc.data()?['role']
-              ?.toString()
-              .trim()
-              .toLowerCase() ??
-          '';
+      final data = doc.data();
+
+      if (!doc.exists || data == null || data['isActive'] == false) {
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+        return;
+      }
+
+      final role = data['role']?.toString().trim().toLowerCase() ?? '';
 
       debugPrint('SPLASH: role = $role');
 
-      // Mulai watcher notifikasi chat (aman walau dipanggil berulang)
-      await NotificationService.startChatWatcher();
+      late final Widget target;
 
       if (role == 'admin') {
         target = const AdminHomeScreen();
       } else if (role == 'doctor' || role == 'dokter') {
         target = const DoctorHomeScreen();
-      } else {
-        // user / pengguna / kosong
+      } else if (role == 'user' || role == 'pengguna' || role.isEmpty) {
         target = const HomeScreen();
+      } else {
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+        return;
       }
+
+      await NotificationService.startChatWatcher();
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => target),
+      );
     } catch (e) {
-      debugPrint('SPLASH: gagal ambil role = $e');
+      debugPrint('SPLASH: gagal memeriksa akun = $e');
 
-      // Kalau gagal membaca role,
-      // tetap arahkan ke Home sebagai default.
-      target = const HomeScreen();
+      if (!mounted) return;
+
+      // Jangan memberikan akses ke Home jika profil gagal diperiksa.
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
     }
-
-    if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => target,
-      ),
-    );
   }
 
   // =============================================================

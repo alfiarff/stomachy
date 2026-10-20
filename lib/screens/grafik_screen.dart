@@ -57,9 +57,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -67,9 +65,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -77,9 +73,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -87,9 +81,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -97,9 +89,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -119,12 +109,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            22,
-            12,
-            22,
-            105,
-          ),
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
           child: Column(
             children: [
               _buildHeader(),
@@ -132,9 +117,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
               const SizedBox(height: 18),
 
               if (user == null)
-                _buildEmptyState(
-                  'Silakan login terlebih dahulu.',
-                )
+                _buildEmptyState('Silakan login terlebih dahulu.')
               else
                 _buildHistoryStream(user.uid),
             ],
@@ -159,18 +142,13 @@ class _GrafikScreenState extends State<GrafikScreen> {
           .collection('users')
           .doc(uid)
           .collection('screening_history')
-          .orderBy(
-            'createdAt',
-            descending: false,
-          )
+          .orderBy('createdAt', descending: false)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
             padding: EdgeInsets.only(top: 60),
-            child: CircularProgressIndicator(
-              color: Color(0xFFB05039),
-            ),
+            child: CircularProgressIndicator(color: Color(0xFFB05039)),
           );
         }
 
@@ -225,23 +203,14 @@ class _GrafikScreenState extends State<GrafikScreen> {
     for (final doc in docs) {
       final data = doc.data();
 
-      final DateTime date = _parseDate(
-        data['createdAt'],
-        data['date'],
-      );
+      final DateTime date = _parseDate(data['createdAt'], data['date']);
 
       final bool atRisk = data['isRisk'] == true;
 
-      final List<String> complaints = _parseComplaints(
-        data['complaint'],
-      );
+      final List<String> complaints = _parseComplaints(data['complaint']);
 
       result.add(
-        ScreeningHistory(
-          date: date,
-          atRisk: atRisk,
-          complaints: complaints,
-        ),
+        ScreeningHistory(date: date, atRisk: atRisk, complaints: complaints),
       );
     }
 
@@ -252,10 +221,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // PARSE TANGGAL
   // ===================================================================
 
-  DateTime _parseDate(
-    dynamic createdAt,
-    dynamic oldDate,
-  ) {
+  DateTime _parseDate(dynamic createdAt, dynamic oldDate) {
     if (createdAt is Timestamp) {
       return createdAt.toDate();
     }
@@ -305,17 +271,10 @@ class _GrafikScreenState extends State<GrafikScreen> {
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 16,
-      padding: const EdgeInsets.symmetric(
-        vertical: 35,
-        horizontal: 20,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 35, horizontal: 20),
       child: Column(
         children: [
-          Icon(
-            Icons.bar_chart_rounded,
-            size: 45,
-            color: brown,
-          ),
+          Icon(Icons.bar_chart_rounded, size: 45, color: brown),
 
           const SizedBox(height: 12),
 
@@ -376,9 +335,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
             ),
           ),
 
-          const SizedBox(
-            width: 45,
-          ),
+          const SizedBox(width: 45),
         ],
       ),
     );
@@ -388,18 +345,11 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // CARD GRAFIK
   // ===================================================================
 
-  Widget _buildDevelopmentCard(
-    List<ScreeningHistory> history,
-  ) {
+  Widget _buildDevelopmentCard(List<ScreeningHistory> history) {
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 16,
-      padding: const EdgeInsets.fromLTRB(
-        10,
-        10,
-        10,
-        12,
-      ),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -412,11 +362,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                   color: const Color(0xFFFFE5D8),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: Icon(
-                  Icons.bar_chart_rounded,
-                  size: 18,
-                  color: brown,
-                ),
+                child: Icon(Icons.bar_chart_rounded, size: 18, color: brown),
               ),
 
               const SizedBox(width: 10),
@@ -457,20 +403,13 @@ class _GrafikScreenState extends State<GrafikScreen> {
           Container(
             width: double.infinity,
             height: 145,
-            padding: const EdgeInsets.fromLTRB(
-              2,
-              4,
-              2,
-              0,
-            ),
+            padding: const EdgeInsets.fromLTRB(2, 4, 2, 0),
             decoration: BoxDecoration(
               color: const Color(0xFFFFEBDD),
               borderRadius: BorderRadius.circular(18),
             ),
             child: CustomPaint(
-              painter: GERDChartPainter(
-                history: history,
-              ),
+              painter: GERDChartPainter(history: history),
               child: const SizedBox.expand(),
             ),
           ),
@@ -502,20 +441,14 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // LEGEND
   // ===================================================================
 
-  Widget _buildLegendItem({
-    required Color color,
-    required String text,
-  }) {
+  Widget _buildLegendItem({required Color color, required String text}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
 
         const SizedBox(width: 5),
@@ -537,28 +470,17 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // SUMMARY CARD
   // ===================================================================
 
-  Widget _buildSummaryCard(
-    List<ScreeningHistory> history,
-  ) {
+  Widget _buildSummaryCard(List<ScreeningHistory> history) {
     final int total = history.length;
 
-    final int riskCount = history
-        .where((item) => item.atRisk)
-        .length;
+    final int riskCount = history.where((item) => item.atRisk).length;
 
-    final int safeCount = history
-        .where((item) => !item.atRisk)
-        .length;
+    final int safeCount = history.where((item) => !item.atRisk).length;
 
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 16,
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        11,
-        12,
-        15,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 11, 12, 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -571,11 +493,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                   color: const Color(0xFFFFE5D8),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: Icon(
-                  Icons.article_outlined,
-                  size: 18,
-                  color: brown,
-                ),
+                child: Icon(Icons.article_outlined, size: 18, color: brown),
               ),
 
               const SizedBox(width: 10),
@@ -714,26 +632,19 @@ class _GrafikScreenState extends State<GrafikScreen> {
   // ===================================================================
 
   Widget _buildVerticalDivider() {
-    return Container(
-      width: 1,
-      height: 66,
-      color: const Color(0xFFD6B5A2),
-    );
+    return Container(width: 1, height: 66, color: const Color(0xFFD6B5A2));
   }
 
   // ===================================================================
   // COMPLAINT CARD
   // ===================================================================
 
-  Widget _buildComplaintCard(
-    List<ScreeningHistory> history,
-  ) {
+  Widget _buildComplaintCard(List<ScreeningHistory> history) {
     final Map<String, int> complaintCount = {};
 
     for (final historyItem in history) {
       for (final complaint in historyItem.complaints) {
-        complaintCount[complaint] =
-            (complaintCount[complaint] ?? 0) + 1;
+        complaintCount[complaint] = (complaintCount[complaint] ?? 0) + 1;
       }
     }
 
@@ -741,19 +652,12 @@ class _GrafikScreenState extends State<GrafikScreen> {
 
     final List<MapEntry<String, int>> sortedComplaints =
         complaintCount.entries.toList()
-          ..sort(
-            (a, b) => b.value.compareTo(a.value),
-          );
+          ..sort((a, b) => b.value.compareTo(a.value));
 
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 16,
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        11,
-        12,
-        15,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 11, 12, 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -766,11 +670,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
                   color: const Color(0xFFFFE5D8),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: Icon(
-                  Icons.assignment_outlined,
-                  size: 18,
-                  color: brown,
-                ),
+                child: Icon(Icons.assignment_outlined, size: 18, color: brown),
               ),
 
               const SizedBox(width: 10),
@@ -822,28 +722,22 @@ class _GrafikScreenState extends State<GrafikScreen> {
               ),
             )
           else
-            ...sortedComplaints.take(5).map(
-              (entry) {
-                final double percentage =
-                    totalHistory == 0
-                        ? 0
-                        : entry.value / totalHistory;
+            ...sortedComplaints.take(5).map((entry) {
+              final double percentage = totalHistory == 0
+                  ? 0
+                  : entry.value / totalHistory;
 
-                final int percentageValue =
-                    (percentage * 100).round();
+              final int percentageValue = (percentage * 100).round();
 
-                return Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: 10,
-                  ),
-                  child: _buildComplaintRow(
-                    label: entry.key,
-                    percentage: percentage,
-                    percentageText: '$percentageValue%',
-                  ),
-                );
-              },
-            ),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _buildComplaintRow(
+                  label: entry.key,
+                  percentage: percentage,
+                  percentageText: '$percentageValue%',
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -885,8 +779,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
               value: percentage,
               minHeight: 9,
               backgroundColor: const Color(0xFFF1E4DE),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(
+              valueColor: const AlwaysStoppedAnimation<Color>(
                 Color(0xFFB05039),
               ),
             ),
@@ -920,10 +813,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 16,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -934,11 +824,7 @@ class _GrafikScreenState extends State<GrafikScreen> {
               color: Color(0xFFFFEEE5),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.priority_high_rounded,
-              size: 17,
-              color: brown,
-            ),
+            child: Icon(Icons.priority_high_rounded, size: 17, color: brown),
           ),
 
           const SizedBox(width: 9),
@@ -968,15 +854,10 @@ class _GrafikScreenState extends State<GrafikScreen> {
 class GERDChartPainter extends CustomPainter {
   final List<ScreeningHistory> history;
 
-  GERDChartPainter({
-    required this.history,
-  });
+  GERDChartPainter({required this.history});
 
   @override
-  void paint(
-    Canvas canvas,
-    Size size,
-  ) {
+  void paint(Canvas canvas, Size size) {
     if (history.isEmpty) {
       _drawEmptyState(canvas, size);
       return;
@@ -991,19 +872,15 @@ class GERDChartPainter extends CustomPainter {
     const double topPadding = 17;
     const double bottomPadding = 32;
 
-    final double chartWidth =
-        size.width - leftPadding - rightPadding;
+    final double chartWidth = size.width - leftPadding - rightPadding;
 
-    final double chartHeight =
-        size.height - topPadding - bottomPadding;
+    final double chartHeight = size.height - topPadding - bottomPadding;
 
     final double chartLeft = leftPadding;
-    final double chartRight =
-        size.width - rightPadding;
+    final double chartRight = size.width - rightPadding;
 
     final double chartTop = topPadding;
-    final double chartBottom =
-        topPadding + chartHeight;
+    final double chartBottom = topPadding + chartHeight;
 
     // ================================================================
     // PAINT
@@ -1039,8 +916,7 @@ class GERDChartPainter extends CustomPainter {
       gridPaint,
     );
 
-    final double middleY =
-        chartTop + chartHeight / 2;
+    final double middleY = chartTop + chartHeight / 2;
 
     canvas.drawLine(
       Offset(chartLeft, middleY),
@@ -1052,15 +928,9 @@ class GERDChartPainter extends CustomPainter {
 
     if (count > 1) {
       for (int i = 0; i < count; i++) {
-        final double x =
-            chartLeft +
-            (chartWidth * i / (count - 1));
+        final double x = chartLeft + (chartWidth * i / (count - 1));
 
-        canvas.drawLine(
-          Offset(x, chartTop),
-          Offset(x, chartBottom),
-          gridPaint,
-        );
+        canvas.drawLine(Offset(x, chartTop), Offset(x, chartBottom), gridPaint);
       }
     } else {
       canvas.drawLine(
@@ -1084,17 +954,14 @@ class GERDChartPainter extends CustomPainter {
       if (history.length == 1) {
         x = chartLeft + chartWidth / 2;
       } else {
-        x = chartLeft +
-            (chartWidth * i / (history.length - 1));
+        x = chartLeft + (chartWidth * i / (history.length - 1));
       }
 
       final double y = item.atRisk
           ? chartTop + chartHeight * 0.18
           : chartBottom - chartHeight * 0.18;
 
-      points.add(
-        Offset(x, y),
-      );
+      points.add(Offset(x, y));
     }
 
     // ================================================================
@@ -1106,11 +973,9 @@ class GERDChartPainter extends CustomPainter {
         final Offset first = points[i];
         final Offset second = points[i + 1];
 
-        final bool firstRisk =
-            history[i].atRisk;
+        final bool firstRisk = history[i].atRisk;
 
-        final bool secondRisk =
-            history[i + 1].atRisk;
+        final bool secondRisk = history[i + 1].atRisk;
 
         final Paint linePaint;
 
@@ -1119,15 +984,10 @@ class GERDChartPainter extends CustomPainter {
         } else if (!firstRisk && !secondRisk) {
           linePaint = safeLinePaint;
         } else {
-          linePaint =
-              secondRisk ? riskLinePaint : safeLinePaint;
+          linePaint = secondRisk ? riskLinePaint : safeLinePaint;
         }
 
-        canvas.drawLine(
-          first,
-          second,
-          linePaint,
-        );
+        canvas.drawLine(first, second, linePaint);
       }
     }
 
@@ -1136,28 +996,16 @@ class GERDChartPainter extends CustomPainter {
     // ================================================================
 
     for (int i = 0; i < points.length; i++) {
-      final bool atRisk =
-          history[i].atRisk;
+      final bool atRisk = history[i].atRisk;
 
       final Paint pointPaint = Paint()
-        ..color = atRisk
-            ? const Color(0xFFE96B68)
-            : const Color(0xFF61C58A);
+        ..color = atRisk ? const Color(0xFFE96B68) : const Color(0xFF61C58A);
 
-      canvas.drawCircle(
-        points[i],
-        4,
-        pointPaint,
-      );
+      canvas.drawCircle(points[i], 4, pointPaint);
 
-      final Paint innerPaint = Paint()
-        ..color = Colors.white;
+      final Paint innerPaint = Paint()..color = Colors.white;
 
-      canvas.drawCircle(
-        points[i],
-        1.5,
-        innerPaint,
-      );
+      canvas.drawCircle(points[i], 1.5, innerPaint);
     }
 
     // ================================================================
@@ -1167,10 +1015,7 @@ class GERDChartPainter extends CustomPainter {
     _drawText(
       canvas,
       'Berisiko',
-      Offset(
-        5,
-        chartTop + chartHeight * 0.10,
-      ),
+      Offset(5, chartTop + chartHeight * 0.10),
       const TextStyle(
         fontFamily: 'Nunito',
         fontSize: 10,
@@ -1182,10 +1027,7 @@ class GERDChartPainter extends CustomPainter {
     _drawText(
       canvas,
       'GERD',
-      Offset(
-        18,
-        chartTop + chartHeight * 0.10 + 10,
-      ),
+      Offset(18, chartTop + chartHeight * 0.10 + 10),
       const TextStyle(
         fontFamily: 'Nunito',
         fontSize: 10,
@@ -1197,10 +1039,7 @@ class GERDChartPainter extends CustomPainter {
     _drawText(
       canvas,
       'Tidak',
-      Offset(
-        5,
-        chartBottom - chartHeight * 0.19,
-      ),
+      Offset(5, chartBottom - chartHeight * 0.19),
       const TextStyle(
         fontFamily: 'Nunito',
         fontSize: 10,
@@ -1212,10 +1051,7 @@ class GERDChartPainter extends CustomPainter {
     _drawText(
       canvas,
       'berisiko',
-      Offset(
-        2,
-        chartBottom - chartHeight * 0.19 + 10,
-      ),
+      Offset(2, chartBottom - chartHeight * 0.19 + 10),
       const TextStyle(
         fontFamily: 'Nunito',
         fontSize: 10,
@@ -1227,10 +1063,7 @@ class GERDChartPainter extends CustomPainter {
     _drawText(
       canvas,
       'GERD',
-      Offset(
-        18,
-        chartBottom - chartHeight * 0.19 + 20,
-      ),
+      Offset(18, chartBottom - chartHeight * 0.19 + 20),
       const TextStyle(
         fontFamily: 'Nunito',
         fontSize: 10,
@@ -1249,8 +1082,7 @@ class GERDChartPainter extends CustomPainter {
       if (history.length == 1) {
         x = chartLeft + chartWidth / 2;
       } else {
-        x = chartLeft +
-            (chartWidth * i / (history.length - 1));
+        x = chartLeft + (chartWidth * i / (history.length - 1));
       }
 
       final String dateText =
@@ -1263,10 +1095,7 @@ class GERDChartPainter extends CustomPainter {
       _drawCenteredText(
         canvas,
         dateText,
-        Offset(
-          x,
-          chartBottom + 5,
-        ),
+        Offset(x, chartBottom + 5),
         const TextStyle(
           fontFamily: 'Nunito',
           fontSize: 6.5,
@@ -1278,10 +1107,7 @@ class GERDChartPainter extends CustomPainter {
       _drawCenteredText(
         canvas,
         timeText,
-        Offset(
-          x,
-          chartBottom + 14,
-        ),
+        Offset(x, chartBottom + 14),
         const TextStyle(
           fontFamily: 'Nunito',
           fontSize: 6,
@@ -1292,15 +1118,8 @@ class GERDChartPainter extends CustomPainter {
 
       _drawCenteredText(
         canvas,
-        history[i].atRisk
-            ? 'Berisiko'
-            : 'Tidak',
-        Offset(
-          x,
-          history[i].atRisk
-              ? chartTop + 2
-              : chartBottom - 30,
-        ),
+        history[i].atRisk ? 'Berisiko' : 'Tidak',
+        Offset(x, history[i].atRisk ? chartTop + 2 : chartBottom - 30),
         TextStyle(
           fontFamily: 'Nunito',
           fontSize: 6,
@@ -1317,17 +1136,11 @@ class GERDChartPainter extends CustomPainter {
   // EMPTY STATE
   // ===================================================================
 
-  void _drawEmptyState(
-    Canvas canvas,
-    Size size,
-  ) {
+  void _drawEmptyState(Canvas canvas, Size size) {
     _drawCenteredText(
       canvas,
       'Belum ada riwayat skrining',
-      Offset(
-        size.width / 2,
-        size.height / 2 - 6,
-      ),
+      Offset(size.width / 2, size.height / 2 - 6),
       const TextStyle(
         fontFamily: 'Nunito',
         fontSize: 11,
@@ -1339,10 +1152,7 @@ class GERDChartPainter extends CustomPainter {
     _drawCenteredText(
       canvas,
       'Lakukan skrining untuk melihat grafik',
-      Offset(
-        size.width / 2,
-        size.height / 2 + 12,
-      ),
+      Offset(size.width / 2, size.height / 2 + 12),
       const TextStyle(
         fontFamily: 'Nunito',
         fontSize: 8,
@@ -1356,26 +1166,15 @@ class GERDChartPainter extends CustomPainter {
   // DRAW TEXT
   // ===================================================================
 
-  void _drawText(
-    Canvas canvas,
-    String text,
-    Offset offset,
-    TextStyle style,
-  ) {
+  void _drawText(Canvas canvas, String text, Offset offset, TextStyle style) {
     final TextPainter painter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: style,
-      ),
+      text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
     );
 
     painter.layout();
 
-    painter.paint(
-      canvas,
-      offset,
-    );
+    painter.paint(canvas, offset);
   }
 
   // ===================================================================
@@ -1389,23 +1188,14 @@ class GERDChartPainter extends CustomPainter {
     TextStyle style,
   ) {
     final TextPainter painter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: style,
-      ),
+      text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
     );
 
     painter.layout();
 
-    painter.paint(
-      canvas,
-      Offset(
-        center.dx - painter.width / 2,
-        center.dy,
-      ),
-    );
+    painter.paint(canvas, Offset(center.dx - painter.width / 2, center.dy));
   }
 
   // ===================================================================
@@ -1433,9 +1223,7 @@ class GERDChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(
-    covariant GERDChartPainter oldDelegate,
-  ) {
+  bool shouldRepaint(covariant GERDChartPainter oldDelegate) {
     return oldDelegate.history != history;
   }
 }

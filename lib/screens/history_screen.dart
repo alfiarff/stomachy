@@ -37,9 +37,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -47,9 +45,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -57,9 +53,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -67,9 +61,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -77,9 +69,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -97,12 +87,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            22,
-            12,
-            22,
-            105,
-          ),
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
           child: Column(
             children: [
               _buildHeader(),
@@ -117,8 +102,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          const ScreeningHistoryScreen(),
+                      builder: (context) => const ScreeningHistoryScreen(),
                     ),
                   );
                 },
@@ -134,8 +118,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          const ConsultationHistoryScreen(),
+                      builder: (context) => const ConsultationHistoryScreen(),
                     ),
                   );
                 },
@@ -212,10 +195,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return StomachyCard(
       color: const Color(0xFFFFFCF9),
       radius: 18,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       onTap: onTap,
       child: SizedBox(
         height: 76,
@@ -232,11 +212,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 color: const Color(0xFFFFE3D1),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Icon(
-                icon,
-                size: 29,
-                color: brown,
-              ),
+              child: Icon(icon, size: 29, color: brown),
             ),
 
             const SizedBox(width: 14),
@@ -244,7 +220,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
             // =====================================================
             // TITLE + SUBTITLE
             // =====================================================
-
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -281,12 +256,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             // =====================================================
             // ARROW
             // =====================================================
-
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 28,
-              color: brown,
-            ),
+            Icon(Icons.chevron_right_rounded, size: 28, color: brown),
           ],
         ),
       ),

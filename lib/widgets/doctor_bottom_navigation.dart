@@ -21,12 +21,7 @@ class DoctorBottomNavigation extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Container(
-          margin: const EdgeInsets.fromLTRB(
-            14,
-            0,
-            14,
-            14,
-          ),
+          margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
@@ -39,13 +34,9 @@ class DoctorBottomNavigation extends StatelessWidget {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(
                   index: 0,
@@ -94,29 +85,19 @@ class DoctorBottomNavigation extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
-          margin: const EdgeInsets.symmetric(
-            horizontal: 2,
-          ),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
           height: 48,
           decoration: BoxDecoration(
-            color: active
-                ? activeBackground
-                : Colors.transparent,
+            color: active ? activeBackground : Colors.transparent,
             borderRadius: BorderRadius.circular(18),
           ),
           child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedSwitcher(
-                duration:
-                    const Duration(milliseconds: 200),
-                transitionBuilder:
-                    (child, animation) {
-                  return ScaleTransition(
-                    scale: animation,
-                    child: child,
-                  );
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(scale: animation, child: child);
                 },
                 child: Icon(
                   active ? activeIcon : icon,
@@ -132,9 +113,7 @@ class DoctorBottomNavigation extends StatelessWidget {
                   fontFamily: 'Nunito',
                   fontSize: 9,
                   color: primaryBrown,
-                  fontWeight: active
-                      ? FontWeight.w800
-                      : FontWeight.w700,
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w700,
                 ),
               ),
             ],

@@ -8,8 +8,7 @@ class GoogleAuthService {
 
   static Future<void> _initialize() {
     return _initialization ??= _googleSignIn.initialize(
-      serverClientId:
-          '132280576015-t2l30v89jor9cg0ft66f0gu6g0alngi3.apps.googleusercontent.com',
+      serverClientId: '132280576015-t2l30v89jor9cg0ft66f0gu6g0alngi3.apps.googleusercontent.com',
     );
   }
 
@@ -24,8 +23,6 @@ class GoogleAuthService {
       idToken: googleAuth.idToken,
     );
 
-    return FirebaseAuth.instance.signInWithCredential(
-      credential,
-    );
+    return FirebaseAuth.instance.signInWithCredential(credential);
   }
 }

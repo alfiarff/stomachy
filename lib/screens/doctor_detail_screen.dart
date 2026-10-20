@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../widgets/stomachy_card.dart';
 import '../widgets/bottom_navigation.dart';
 import 'home_screen.dart';
@@ -13,12 +15,14 @@ import 'profile_screen.dart';
 import 'consultation_chat_screen.dart';
 import 'notification_screen.dart';
 import 'user_consultations_screen.dart';
+
 class DoctorDetailScreen extends StatefulWidget {
   final DoctorData doctor;
   const DoctorDetailScreen({super.key, required this.doctor});
   @override
   State<DoctorDetailScreen> createState() => _DoctorDetailScreenState();
 }
+
 class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   int _selectedIndex = 2;
   final Color backgroundColor = const Color(0xFFFFF5ED);
@@ -29,7 +33,13 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   bool _isLoadingDoctor = true;
   bool _isCreatingConsultation = false;
   final List<String> _days = [
-    'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu',
+    'Senin',
+    'Selasa',
+    'Rabu',
+    'Kamis',
+    'Jumat',
+    'Sabtu',
+    'Minggu',
   ];
   String? _selectedDay;
   String? _selectedTime;
@@ -39,6 +49,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
     super.initState();
     _loadDoctorData();
   }
+
   // ===============================================================
   // LOAD DATA DOKTER
   // ===============================================================
@@ -87,6 +98,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       _showMessage('Data dokter tidak dapat dimuat.');
     }
   }
+
   // ===============================================================
   // LOAD JADWAL DOKTER
   // ===============================================================
@@ -113,10 +125,14 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
     if (!mounted) return;
     setState(() => _scheduleSlots = slots);
   }
+
   List<String> _generateTimeSlots(String start, String end) {
     final int? startMinutes = _timeToMinutes(start);
     final int? endMinutes = _timeToMinutes(end);
-    if (startMinutes == null || endMinutes == null || startMinutes >= endMinutes) return [];
+    if (startMinutes == null ||
+        endMinutes == null ||
+        startMinutes >= endMinutes)
+      return [];
     final List<String> slots = [];
     int current = startMinutes;
     while (current < endMinutes) {
@@ -125,45 +141,70 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
     }
     return slots;
   }
+
   int? _timeToMinutes(String value) {
     final normalized = value.replaceAll('.', ':');
     final parts = normalized.split(':');
     if (parts.length != 2) return null;
     final int? hour = int.tryParse(parts[0]);
     final int? minute = int.tryParse(parts[1]);
-    if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+    if (hour == null ||
+        minute == null ||
+        hour < 0 ||
+        hour > 23 ||
+        minute < 0 ||
+        minute > 59)
+      return null;
     return (hour * 60) + minute;
   }
+
   String _minutesToTime(int minutes) {
     final int hour = minutes ~/ 60;
     final int minute = minutes % 60;
     return '${hour.toString().padLeft(2, '0')}.${minute.toString().padLeft(2, '0')}';
   }
+
   // ===============================================================
   // NAVIGATION
   // ===============================================================
   void _onNavigationTap(int index) {
     if (index == _selectedIndex) return;
     if (index == 0) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
       return;
     }
     if (index == 1) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ScreeningScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
+      );
       return;
     }
     if (index == 2) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const DoctorScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
+      );
       return;
     }
     if (index == 3) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const EdukasiScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
+      );
       return;
     }
     if (index == 4) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+      );
     }
   }
+
   // ===============================================================
   // BUILD
   // ===============================================================
@@ -173,7 +214,9 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       backgroundColor: backgroundColor,
       body: SafeArea(
         child: _isLoadingDoctor
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFFB65339)))
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFFB65339)),
+              )
             : Column(
                 children: [
                   Expanded(
@@ -201,7 +244,11 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                           const SizedBox(height: 4),
                           const Text(
                             'Pilih hari dan waktu yang tersedia untuk konsultasi.',
-                            style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Colors.black),
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 11,
+                              color: Colors.black,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           _buildSchedule(),
@@ -220,6 +267,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       ),
     );
   }
+
   // ===============================================================
   // HEADER
   // ===============================================================
@@ -231,10 +279,15 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: const SizedBox(
-              width: 42, height: 42,
+              width: 42,
+              height: 42,
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Icon(Icons.arrow_back_rounded, size: 28, color: Colors.black),
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  size: 28,
+                  color: Colors.black,
+                ),
               ),
             ),
           ),
@@ -242,7 +295,12 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
             child: Center(
               child: Text(
                 'Detail Dokter',
-                style: TextStyle(fontFamily: 'Fredoka', fontSize: 22, fontWeight: FontWeight.w800, color: darkBrown),
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: darkBrown,
+                ),
               ),
             ),
           ),
@@ -251,12 +309,16 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       ),
     );
   }
+
   // ===============================================================
   // PROFIL DOKTER - TANPA STATUS ONLINE/OFFLINE
   // ===============================================================
   Widget _buildDoctorProfile() {
     final String name = 'dr. ${_getDoctorValue('name', widget.doctor.name)}';
-    final String specialty = _getDoctorValue('specialization', widget.doctor.specialty);
+    final String specialty = _getDoctorValue(
+      'specialization',
+      widget.doctor.specialty,
+    );
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -271,7 +333,10 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black,
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
                 ),
               ),
               const SizedBox(height: 4),
@@ -279,7 +344,11 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                 specialty,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Colors.black),
+                style: const TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
+                  color: Colors.black,
+                ),
               ),
             ],
           ),
@@ -287,42 +356,71 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       ],
     );
   }
+
   // ===============================================================
   // FOTO DOKTER
   // ===============================================================
   Widget _buildDoctorImage() {
-    final String base64Image = _getDoctorValue('photoBase64', widget.doctor.photoBase64 ?? '');
+    final String base64Image = _getDoctorValue(
+      'photoBase64',
+      widget.doctor.photoBase64 ?? '',
+    );
     if (base64Image.isNotEmpty) {
       try {
         final Uint8List bytes = base64Decode(base64Image);
         if (bytes.isNotEmpty) {
           return Container(
-            width: 78, height: 78,
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFEDE5DF)),
+            width: 78,
+            height: 78,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFEDE5DF),
+            ),
             clipBehavior: Clip.antiAlias,
-            child: Image.memory(bytes, fit: BoxFit.cover, errorBuilder: (c, e, s) => _fallbackDoctorIcon()),
+            child: Image.memory(
+              bytes,
+              fit: BoxFit.cover,
+              errorBuilder: (c, e, s) => _fallbackDoctorIcon(),
+            ),
           );
         }
       } catch (_) {}
     }
-    final String photoUrl = _getDoctorValue('photoUrl', widget.doctor.photoUrl ?? '');
+    final String photoUrl = _getDoctorValue(
+      'photoUrl',
+      widget.doctor.photoUrl ?? '',
+    );
     if (photoUrl.isNotEmpty) {
       return Container(
-        width: 78, height: 78,
-        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFEDE5DF)),
+        width: 78,
+        height: 78,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFFEDE5DF),
+        ),
         clipBehavior: Clip.antiAlias,
-        child: Image.network(photoUrl, fit: BoxFit.cover, errorBuilder: (c, e, s) => _fallbackDoctorIcon()),
+        child: Image.network(
+          photoUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (c, e, s) => _fallbackDoctorIcon(),
+        ),
       );
     }
     return Container(
-      width: 78, height: 78,
-      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFEDE5DF)),
+      width: 78,
+      height: 78,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Color(0xFFEDE5DF),
+      ),
       child: _fallbackDoctorIcon(),
     );
   }
+
   Widget _fallbackDoctorIcon() {
     return const Icon(Icons.person_rounded, size: 50, color: Color(0xFFB65339));
   }
+
   // ===============================================================
   // INFORMASI DOKTER
   // ===============================================================
@@ -337,33 +435,91 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
       child: Row(
         children: [
-          Expanded(child: _buildInformationItem(icon: Icons.medical_services_outlined, title: 'Pengalaman', value: experience)),
-          Expanded(child: _buildInformationItem(icon: Icons.school_outlined, title: 'Pendidikan', value: education)),
-          Expanded(child: _buildInformationItem(icon: Icons.location_on_outlined, title: 'Lokasi', value: location)),
+          Expanded(
+            child: _buildInformationItem(
+              icon: Icons.medical_services_outlined,
+              title: 'Pengalaman',
+              value: experience,
+            ),
+          ),
+          Expanded(
+            child: _buildInformationItem(
+              icon: Icons.school_outlined,
+              title: 'Pendidikan',
+              value: education,
+            ),
+          ),
+          Expanded(
+            child: _buildInformationItem(
+              icon: Icons.location_on_outlined,
+              title: 'Lokasi',
+              value: location,
+            ),
+          ),
         ],
       ),
     );
   }
-  Widget _buildInformationItem({required IconData icon, required String title, required String value}) {
+
+  Widget _buildInformationItem({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
     return Column(
       children: [
         Icon(icon, size: 23, color: primaryBrown),
         const SizedBox(height: 5),
-        Text(title, textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w600, color: primaryBrown)),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: primaryBrown,
+          ),
+        ),
         const SizedBox(height: 3),
-        Text(value, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Colors.black)),
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 11,
+            color: Colors.black,
+          ),
+        ),
       ],
     );
   }
+
   Widget _buildSectionTitle(String title) {
-    return Text(title, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black));
+    return Text(
+      title,
+      style: const TextStyle(
+        fontFamily: 'Nunito',
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: Colors.black,
+      ),
+    );
   }
+
   Widget _buildAboutDoctor() {
     return const Text(
       'Dokter umum yang berpengalaman dalam menangani berbagai keluhan kesehatan sehari-hari dengan pendekatan yang ramah dan komunikatif.',
-      style: TextStyle(fontFamily: 'Nunito', fontSize: 11, height: 1.45, color: Colors.black),
+      style: TextStyle(
+        fontFamily: 'Nunito',
+        fontSize: 11,
+        height: 1.45,
+        color: Colors.black,
+      ),
     );
   }
+
   Widget _buildServiceCard() {
     return StomachyCard(
       color: const Color(0xFFFFFCFA),
@@ -373,20 +529,41 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       child: Row(
         children: [
           Container(
-            width: 42, height: 42,
-            decoration: const BoxDecoration(color: Color(0xFFFFE3D0), shape: BoxShape.circle),
-            child: const Icon(Icons.chat_rounded, size: 20, color: Color(0xFFB65339)),
+            width: 42,
+            height: 42,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFE3D0),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.chat_rounded,
+              size: 20,
+              color: Color(0xFFB65339),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
-                Text('Chat Konsultasi', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w800, color: Colors.black)),
+                Text(
+                  'Chat Konsultasi',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
+                ),
                 SizedBox(height: 4),
                 Text(
                   'Konsultasi melalui chat dengan dokter secara aman dan nyaman.',
-                  style: TextStyle(fontFamily: 'Nunito', fontSize: 11, height: 1.35, color: Colors.black),
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
+                    height: 1.35,
+                    color: Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -395,6 +572,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       ),
     );
   }
+
   // ===============================================================
   // PILIH JADWAL
   // ===============================================================
@@ -412,14 +590,21 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
             Expanded(
               child: Text(
                 'Dokter belum mengatur jadwal konsultasi.',
-                style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Color(0xFF777777)),
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
+                  color: Color(0xFF777777),
+                ),
               ),
             ),
           ],
         ),
       );
     }
-    final List<String> availableDays = _scheduleSlots.map((slot) => slot.day).toSet().toList();
+    final List<String> availableDays = _scheduleSlots
+        .map((slot) => slot.day)
+        .toSet()
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -433,7 +618,10 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
               final String day = availableDays[index];
               final bool selected = _selectedDay == day;
               return GestureDetector(
-                onTap: () => setState(() { _selectedDay = day; _selectedTime = null; }),
+                onTap: () => setState(() {
+                  _selectedDay = day;
+                  _selectedTime = null;
+                }),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   padding: const EdgeInsets.symmetric(horizontal: 17),
@@ -446,7 +634,9 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                     child: Text(
                       day,
                       style: TextStyle(
-                        fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w600,
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                         color: selected ? Colors.white : Colors.black,
                       ),
                     ),
@@ -458,23 +648,43 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
         ),
         const SizedBox(height: 12),
         if (_selectedDay == null)
-          const Text('Pilih hari terlebih dahulu.', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Color(0xFF777777)))
+          const Text(
+            'Pilih hari terlebih dahulu.',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+              color: Color(0xFF777777),
+            ),
+          )
         else
           _buildTimeGrid(),
       ],
     );
   }
+
   Widget _buildTimeGrid() {
-    final daySlots = _scheduleSlots.where((slot) => slot.day == _selectedDay).toList();
+    final daySlots = _scheduleSlots
+        .where((slot) => slot.day == _selectedDay)
+        .toList();
     if (daySlots.isEmpty) {
-      return const Text('Tidak ada jadwal pada hari ini.', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Color(0xFF777777)));
+      return const Text(
+        'Tidak ada jadwal pada hari ini.',
+        style: TextStyle(
+          fontFamily: 'Nunito',
+          fontSize: 11,
+          color: Color(0xFF777777),
+        ),
+      );
     }
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: daySlots.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 10, childAspectRatio: 2.7,
+        crossAxisCount: 3,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 10,
+        childAspectRatio: 2.7,
       ),
       itemBuilder: (context, index) {
         final String time = daySlots[index].time;
@@ -487,13 +697,21 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
               color: isSelected ? primaryBrown : const Color(0xFFFFFCFA),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: borderBrown, width: 1),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2))],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Center(
               child: Text(
                 time,
                 style: TextStyle(
-                  fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w600,
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
                   color: isSelected ? Colors.white : Colors.black,
                 ),
               ),
@@ -503,11 +721,15 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       },
     );
   }
+
   // ===============================================================
   // BUTTON BOOKING
   // ===============================================================
   Widget _buildContinueButton() {
-    final bool isEnabled = _selectedDay != null && _selectedTime != null && !_isCreatingConsultation;
+    final bool isEnabled =
+        _selectedDay != null &&
+        _selectedTime != null &&
+        !_isCreatingConsultation;
     return Center(
       child: SizedBox(
         width: 228,
@@ -521,14 +743,30 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
             disabledForegroundColor: Colors.white70,
             elevation: isEnabled ? 3 : 0,
             shadowColor: Colors.black.withOpacity(0.25),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
           ),
           child: _isCreatingConsultation
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Booking', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700)),
+                    Text(
+                      'Booking',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     SizedBox(width: 8),
                     Icon(Icons.calendar_today_rounded, size: 18),
                   ],
@@ -541,122 +779,124 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   // BUAT BOOKING - STATUS: PENDING
   // ===============================================================
   // BUAT BOOKING DENGAN STATUS BOOKED DAN CEK SLOT TANPA COMPOSITE INDEX
-  
-Future<void> _createBooking() async {
-  if (_selectedDay == null || _selectedTime == null) return;
 
-  final User? user = FirebaseAuth.instance.currentUser;
+  Future<void> _createBooking() async {
+    if (_selectedDay == null || _selectedTime == null) return;
 
-  if (user == null) {
-    _showMessage('Silakan login terlebih dahulu.');
-    return;
-  }
+    final User? user = FirebaseAuth.instance.currentUser;
 
-  if (_isCreatingConsultation) return;
-
-  setState(() => _isCreatingConsultation = true);
-
-  try {
-    final DateTime consultationDate =
-        _getNextOccurrence(_selectedDay!, _selectedTime!);
-    final Timestamp selectedTimestamp =
-        Timestamp.fromDate(consultationDate);
-
-    final firestore = FirebaseFirestore.instance;
-
-    // Cek booking milik pengguna yang sedang login.
-    final userBookings = await firestore
-        .collection('consultations')
-        .where('userId', isEqualTo: user.uid)
-        .get();
-
-    final bool duplicate = userBookings.docs.any((doc) {
-      final data = doc.data();
-      final status = (data['status'] ?? '').toString().toLowerCase();
-      final ts = data['consultationTimestamp'];
-
-      return data['doctorId']?.toString() == widget.doctor.id &&
-          (status == 'booked' || status == 'active') &&
-          ts is Timestamp &&
-          ts.toDate().isAtSameMomentAs(consultationDate);
-    });
-
-    if (duplicate) {
-      if (!mounted) return;
-      setState(() => _isCreatingConsultation = false);
-      _showMessage('Kamu sudah memiliki booking pada jadwal ini.');
+    if (user == null) {
+      _showMessage('Silakan login terlebih dahulu.');
       return;
     }
 
-    // Ambil data pengguna.
-    final userDocument =
-        await firestore.collection('users').doc(user.uid).get();
-    final userData = userDocument.data() ?? {};
+    if (_isCreatingConsultation) return;
 
-    final String userName =
-        (userData['name'] ?? user.displayName ?? 'Pasien')
-            .toString()
-            .trim();
+    setState(() => _isCreatingConsultation = true);
 
-    final String doctorName =
-        _getDoctorValue('name', widget.doctor.name);
-    final String specialty =
-        _getDoctorValue('specialization', widget.doctor.specialty);
-    final String doctorImage =
-        widget.doctor.photoBase64 ?? widget.doctor.photoUrl ?? '';
-
-    // Simpan booking.
-    final consultationReference =
-        firestore.collection('consultations').doc();
-
-    await consultationReference.set({
-      'userId': user.uid,
-      'doctorId': widget.doctor.id,
-      'userName': userName.isEmpty ? 'Pasien' : userName,
-      'doctorName': doctorName,
-      'specialty': specialty,
-      'doctorImage': doctorImage,
-      'consultationDay': _selectedDay,
-      'consultationTime': _selectedTime,
-      'consultationDate':
-          '${consultationDate.year.toString().padLeft(4, '0')}-'
-          '${consultationDate.month.toString().padLeft(2, '0')}-'
-          '${consultationDate.day.toString().padLeft(2, '0')}',
-      'consultationTimestamp': selectedTimestamp,
-      'status': 'booked',
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-      'lastMessage': '',
-      'lastSenderId': '',
-      'unreadForDoctor': 0,
-      'unreadForUser': 0,
-    });
-
-    // Buat notifikasi.
     try {
-      await AppNotification.create(
-        uid: user.uid,
-        type: 'consultation',
-        title: 'Booking Berhasil',
-        body:
-            'Konsultasi dengan $doctorName pada $_selectedDay, $_selectedTime WIB berhasil dibuat.',
+      final DateTime consultationDate = _getNextOccurrence(
+        _selectedDay!,
+        _selectedTime!,
       );
-    } catch (e) {
-      debugPrint('Notifikasi booking gagal: $e');
+      final Timestamp selectedTimestamp = Timestamp.fromDate(consultationDate);
+
+      final firestore = FirebaseFirestore.instance;
+
+      // Cek booking milik pengguna yang sedang login.
+      final userBookings = await firestore
+          .collection('consultations')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      final bool duplicate = userBookings.docs.any((doc) {
+        final data = doc.data();
+        final status = (data['status'] ?? '').toString().toLowerCase();
+        final ts = data['consultationTimestamp'];
+
+        return data['doctorId']?.toString() == widget.doctor.id &&
+            (status == 'booked' || status == 'active') &&
+            ts is Timestamp &&
+            ts.toDate().isAtSameMomentAs(consultationDate);
+      });
+
+      if (duplicate) {
+        if (!mounted) return;
+        setState(() => _isCreatingConsultation = false);
+        _showMessage('Kamu sudah memiliki booking pada jadwal ini.');
+        return;
+      }
+
+      // Ambil data pengguna.
+      final userDocument = await firestore
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      final userData = userDocument.data() ?? {};
+
+      final String userName = (userData['name'] ?? user.displayName ?? 'Pasien')
+          .toString()
+          .trim();
+
+      final String doctorName = _getDoctorValue('name', widget.doctor.name);
+      final String specialty = _getDoctorValue(
+        'specialization',
+        widget.doctor.specialty,
+      );
+      final String doctorImage =
+          widget.doctor.photoBase64 ?? widget.doctor.photoUrl ?? '';
+
+      // Simpan booking.
+      final consultationReference = firestore.collection('consultations').doc();
+
+      await consultationReference.set({
+        'userId': user.uid,
+        'doctorId': widget.doctor.id,
+        'userName': userName.isEmpty ? 'Pasien' : userName,
+        'doctorName': doctorName,
+        'specialty': specialty,
+        'doctorImage': doctorImage,
+        'consultationDay': _selectedDay,
+        'consultationTime': _selectedTime,
+        'consultationDate':
+            '${consultationDate.year.toString().padLeft(4, '0')}-'
+            '${consultationDate.month.toString().padLeft(2, '0')}-'
+            '${consultationDate.day.toString().padLeft(2, '0')}',
+        'consultationTimestamp': selectedTimestamp,
+        'status': 'booked',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'lastMessage': '',
+        'lastSenderId': '',
+        'unreadForDoctor': 0,
+        'unreadForUser': 0,
+      });
+
+      // Buat notifikasi.
+      try {
+        await AppNotification.create(
+          uid: user.uid,
+          type: 'consultation',
+          title: 'Booking Berhasil',
+          body:
+              'Konsultasi dengan $doctorName pada $_selectedDay, $_selectedTime WIB berhasil dibuat.',
+        );
+      } catch (e) {
+        debugPrint('Notifikasi booking gagal: $e');
+      }
+
+      if (!mounted) return;
+      setState(() => _isCreatingConsultation = false);
+      _showBookingSuccessDialog();
+    } catch (e, stackTrace) {
+      debugPrint('ERROR BOOKING: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) return;
+      setState(() => _isCreatingConsultation = false);
+      _showMessage('Booking gagal: $e');
     }
-
-    if (!mounted) return;
-    setState(() => _isCreatingConsultation = false);
-    _showBookingSuccessDialog();
-  } catch (e, stackTrace) {
-    debugPrint('ERROR BOOKING: $e');
-    debugPrintStack(stackTrace: stackTrace);
-
-    if (!mounted) return;
-    setState(() => _isCreatingConsultation = false);
-    _showMessage('Booking gagal: $e');
   }
-}
 
   DateTime _getNextOccurrence(String dayName, String timeStr) {
     final now = DateTime.now();
@@ -676,10 +916,12 @@ Future<void> _createBooking() async {
     final int minute = int.tryParse(parts.length > 1 ? parts[1] : '0') ?? 0;
     DateTime result = DateTime(now.year, now.month, now.day, hour, minute);
     int daysUntil = targetWeekday - now.weekday;
-    if (daysUntil < 0 || (daysUntil == 0 && !result.isAfter(now))) daysUntil += 7;
+    if (daysUntil < 0 || (daysUntil == 0 && !result.isAfter(now)))
+      daysUntil += 7;
     result = result.add(Duration(days: daysUntil));
     return result;
   }
+
   // ===============================================================
   // DIALOG BOOKING BERHASIL
   // ===============================================================
@@ -690,7 +932,9 @@ Future<void> _createBooking() async {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFFFFFCFA),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Text(
             'Booking Berhasil!',
             style: TextStyle(
@@ -718,9 +962,7 @@ Future<void> _createBooking() async {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const DoctorScreen(
-                      initialTab: 1,
-                    ),
+                    builder: (context) => const DoctorScreen(initialTab: 1),
                   ),
                   (route) => route.isFirst,
                 );
@@ -729,11 +971,17 @@ Future<void> _createBooking() async {
                 backgroundColor: const Color(0xFFB65339),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
               child: const Text(
                 'Lihat Booking Saya',
-                style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
@@ -741,6 +989,7 @@ Future<void> _createBooking() async {
       },
     );
   }
+
   String _getDoctorValue(String key, String fallback) {
     final dynamic value = _doctorData?[key];
     if (value == null) return fallback;
@@ -748,16 +997,21 @@ Future<void> _createBooking() async {
     if (result.isEmpty) return fallback;
     return result;
   }
+
   void _showMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(fontFamily: 'Nunito', fontSize: 11)),
+        content: Text(
+          message,
+          style: const TextStyle(fontFamily: 'Nunito', fontSize: 11),
+        ),
         behavior: SnackBarBehavior.floating,
       ),
     );
   }
 }
+
 class DoctorScheduleSlot {
   final String day;
   final String time;

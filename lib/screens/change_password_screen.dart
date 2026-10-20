@@ -13,12 +13,10 @@ class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 
   @override
-  State<ChangePasswordScreen> createState() =>
-      _ChangePasswordScreenState();
+  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
 
-class _ChangePasswordScreenState
-    extends State<ChangePasswordScreen> {
+class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   // ===============================================================
   // NAVIGATION
   // ===============================================================
@@ -32,8 +30,7 @@ class _ChangePasswordScreenState
   final TextEditingController _currentPasswordController =
       TextEditingController();
 
-  final TextEditingController _newPasswordController =
-      TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
 
   final TextEditingController _confirmPasswordController =
       TextEditingController();
@@ -86,9 +83,7 @@ class _ChangePasswordScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -97,9 +92,7 @@ class _ChangePasswordScreenState
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ScreeningScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
       );
       return;
     }
@@ -108,9 +101,7 @@ class _ChangePasswordScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -119,9 +110,7 @@ class _ChangePasswordScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -130,9 +119,7 @@ class _ChangePasswordScreenState
     if (index == 4) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -150,12 +137,7 @@ class _ChangePasswordScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            22,
-            12,
-            22,
-            105,
-          ),
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 105),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -170,7 +152,6 @@ class _ChangePasswordScreenState
               // =====================================================
               // SECURITY CARD
               // =====================================================
-
               _buildSecurityCard(),
 
               const SizedBox(height: 45),
@@ -178,7 +159,6 @@ class _ChangePasswordScreenState
               // =====================================================
               // SUCCESS MESSAGE
               // =====================================================
-
               if (_passwordChanged) ...[
                 _buildSuccessMessage(),
 
@@ -188,7 +168,6 @@ class _ChangePasswordScreenState
               // =====================================================
               // CURRENT PASSWORD
               // =====================================================
-
               _buildPasswordField(
                 label: 'Kata Sandi Saat ini',
                 hint: 'Masukkan kata sandi anda saat ini',
@@ -196,8 +175,7 @@ class _ChangePasswordScreenState
                 obscureText: _obscureCurrentPassword,
                 onVisibilityTap: () {
                   setState(() {
-                    _obscureCurrentPassword =
-                        !_obscureCurrentPassword;
+                    _obscureCurrentPassword = !_obscureCurrentPassword;
                   });
                 },
               ),
@@ -207,7 +185,6 @@ class _ChangePasswordScreenState
               // =====================================================
               // NEW PASSWORD
               // =====================================================
-
               _buildPasswordField(
                 label: 'Kata Sandi Baru',
                 hint: 'Masukkan kata sandi baru',
@@ -215,8 +192,7 @@ class _ChangePasswordScreenState
                 obscureText: _obscureNewPassword,
                 onVisibilityTap: () {
                   setState(() {
-                    _obscureNewPassword =
-                        !_obscureNewPassword;
+                    _obscureNewPassword = !_obscureNewPassword;
                   });
                 },
               ),
@@ -226,7 +202,6 @@ class _ChangePasswordScreenState
               // =====================================================
               // CONFIRM PASSWORD
               // =====================================================
-
               _buildPasswordField(
                 label: 'Konfirmasi Kata Sandi Baru',
                 hint: 'Masukkan ulang kata sandi baru',
@@ -234,8 +209,7 @@ class _ChangePasswordScreenState
                 obscureText: _obscureConfirmPassword,
                 onVisibilityTap: () {
                   setState(() {
-                    _obscureConfirmPassword =
-                        !_obscureConfirmPassword;
+                    _obscureConfirmPassword = !_obscureConfirmPassword;
                   });
                 },
               ),
@@ -245,7 +219,6 @@ class _ChangePasswordScreenState
               // =====================================================
               // SAVE BUTTON
               // =====================================================
-
               _buildSaveButton(),
 
               const SizedBox(height: 10),
@@ -253,7 +226,6 @@ class _ChangePasswordScreenState
               // =====================================================
               // CANCEL BUTTON
               // =====================================================
-
               _buildCancelButton(),
             ],
           ),
@@ -263,7 +235,6 @@ class _ChangePasswordScreenState
       // =============================================================
       // BOTTOM NAVIGATION
       // =============================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -305,7 +276,6 @@ class _ChangePasswordScreenState
           // =========================================================
           // TITLE
           // =========================================================
-
           const Expanded(
             child: Center(
               child: Text(
@@ -323,10 +293,7 @@ class _ChangePasswordScreenState
           // =========================================================
           // BALANCER
           // =========================================================
-
-          const SizedBox(
-            width: 45,
-          ),
+          const SizedBox(width: 45),
         ],
       ),
     );
@@ -340,10 +307,7 @@ class _ChangePasswordScreenState
     return StomachyCard(
       color: cardColor,
       radius: 20,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: SizedBox(
         height: 132,
         child: Row(
@@ -358,11 +322,7 @@ class _ChangePasswordScreenState
               child: Image.asset(
                 'assets/images/password_lock.png',
                 fit: BoxFit.contain,
-                errorBuilder: (
-                  context,
-                  error,
-                  stackTrace,
-                ) {
+                errorBuilder: (context, error, stackTrace) {
                   return Icon(
                     Icons.lock_outline_rounded,
                     size: 70,
@@ -377,7 +337,6 @@ class _ChangePasswordScreenState
             // =======================================================
             // TEXT
             // =======================================================
-
             const Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -423,10 +382,7 @@ class _ChangePasswordScreenState
   Widget _buildSuccessMessage() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 13,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFBFE3B6),
         borderRadius: BorderRadius.circular(10),
@@ -476,7 +432,6 @@ class _ChangePasswordScreenState
         // ===========================================================
         // INPUT
         // ===========================================================
-
         Container(
           height: 56,
           decoration: BoxDecoration(
@@ -502,18 +457,13 @@ class _ChangePasswordScreenState
 
               const SizedBox(width: 18),
 
-              Icon(
-                Icons.lock_outline_rounded,
-                size: 18,
-                color: brown,
-              ),
+              Icon(Icons.lock_outline_rounded, size: 18, color: brown),
 
               const SizedBox(width: 20),
 
               // =====================================================
               // TEXT FIELD
               // =====================================================
-
               Expanded(
                 child: TextField(
                   controller: controller,
@@ -547,13 +497,10 @@ class _ChangePasswordScreenState
               // =====================================================
               // VISIBILITY BUTTON
               // =====================================================
-
               GestureDetector(
                 onTap: onVisibilityTap,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 17,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 17),
                   child: Icon(
                     obscureText
                         ? Icons.visibility_off_outlined
@@ -658,14 +605,11 @@ class _ChangePasswordScreenState
   // ===============================================================
 
   Future<void> _changePassword() async {
-    final currentPassword =
-        _currentPasswordController.text.trim();
+    final currentPassword = _currentPasswordController.text.trim();
 
-    final newPassword =
-        _newPasswordController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
 
-    final confirmPassword =
-        _confirmPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
 
     // =============================================================
     // VALIDASI KOSONG
@@ -674,9 +618,7 @@ class _ChangePasswordScreenState
     if (currentPassword.isEmpty ||
         newPassword.isEmpty ||
         confirmPassword.isEmpty) {
-      _showMessage(
-        'Semua kolom kata sandi wajib diisi.',
-      );
+      _showMessage('Semua kolom kata sandi wajib diisi.');
       return;
     }
 
@@ -685,9 +627,7 @@ class _ChangePasswordScreenState
     // =============================================================
 
     if (newPassword.length < 8) {
-      _showMessage(
-        'Kata sandi baru minimal 8 karakter.',
-      );
+      _showMessage('Kata sandi baru minimal 8 karakter.');
       return;
     }
 
@@ -696,9 +636,7 @@ class _ChangePasswordScreenState
     // =============================================================
 
     if (newPassword != confirmPassword) {
-      _showMessage(
-        'Konfirmasi kata sandi tidak sama.',
-      );
+      _showMessage('Konfirmasi kata sandi tidak sama.');
       return;
     }
 
@@ -709,18 +647,14 @@ class _ChangePasswordScreenState
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      _showMessage(
-        'Sesi login tidak ditemukan. Silakan login kembali.',
-      );
+      _showMessage('Sesi login tidak ditemukan. Silakan login kembali.');
       return;
     }
 
     final email = user.email;
 
     if (email == null || email.isEmpty) {
-      _showMessage(
-        'Email akun tidak ditemukan.',
-      );
+      _showMessage('Email akun tidak ditemukan.');
       return;
     }
 
@@ -735,23 +669,18 @@ class _ChangePasswordScreenState
       // Memastikan kata sandi lama benar
       // ===========================================================
 
-      final credential =
-          EmailAuthProvider.credential(
+      final credential = EmailAuthProvider.credential(
         email: email,
         password: currentPassword,
       );
 
-      await user.reauthenticateWithCredential(
-        credential,
-      );
+      await user.reauthenticateWithCredential(credential);
 
       // ===========================================================
       // UPDATE PASSWORD FIREBASE
       // ===========================================================
 
-      await user.updatePassword(
-        newPassword,
-      );
+      await user.updatePassword(newPassword);
 
       // ===========================================================
       // BERHASIL
@@ -769,9 +698,7 @@ class _ChangePasswordScreenState
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Kata sandi berhasil diperbarui di Firebase.',
-          ),
+          content: Text('Kata sandi berhasil diperbarui di Firebase.'),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 2),
         ),
@@ -788,8 +715,7 @@ class _ChangePasswordScreenState
           break;
 
         case 'requires-recent-login':
-          message =
-              'Sesi login sudah terlalu lama. Silakan login kembali.';
+          message = 'Sesi login sudah terlalu lama. Silakan login kembali.';
           break;
 
         case 'weak-password':
@@ -805,17 +731,14 @@ class _ChangePasswordScreenState
           break;
 
         default:
-          message =
-              'Gagal mengubah kata sandi. Silakan coba lagi.';
+          message = 'Gagal mengubah kata sandi. Silakan coba lagi.';
       }
 
       _showMessage(message);
     } catch (e) {
       if (!mounted) return;
 
-      _showMessage(
-        'Terjadi kesalahan. Silakan coba lagi.',
-      );
+      _showMessage('Terjadi kesalahan. Silakan coba lagi.');
     } finally {
       if (mounted) {
         setState(() {
@@ -836,12 +759,7 @@ class _ChangePasswordScreenState
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            fontFamily: 'Nunito',
-          ),
-        ),
+        content: Text(message, style: const TextStyle(fontFamily: 'Nunito')),
         behavior: SnackBarBehavior.floating,
       ),
     );

@@ -3,23 +3,18 @@ import 'package:flutter/material.dart';
 import 'password_success_screen.dart';
 
 class NewPasswordScreen extends StatefulWidget {
-  const NewPasswordScreen({
-    super.key,
-  });
+  const NewPasswordScreen({super.key});
 
   @override
-  State<NewPasswordScreen> createState() =>
-      _NewPasswordScreenState();
+  State<NewPasswordScreen> createState() => _NewPasswordScreenState();
 }
 
-class _NewPasswordScreenState
-    extends State<NewPasswordScreen> {
+class _NewPasswordScreenState extends State<NewPasswordScreen> {
   // ===============================================================
   // CONTROLLER
   // ===============================================================
 
-  final TextEditingController newPasswordController =
-      TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
 
   final TextEditingController confirmPasswordController =
       TextEditingController();
@@ -35,17 +30,13 @@ class _NewPasswordScreenState
   // WARNA
   // ===============================================================
 
-  final Color backgroundColor =
-      const Color(0xFFFFF4EC);
+  final Color backgroundColor = const Color(0xFFFFF4EC);
 
-  final Color brown =
-      const Color(0xFFB05039);
+  final Color brown = const Color(0xFFB05039);
 
-  final Color borderColor =
-      const Color(0xFFD99A86);
+  final Color borderColor = const Color(0xFFD99A86);
 
-  final Color darkText =
-      const Color(0xFF493C37);
+  final Color darkText = const Color(0xFF493C37);
 
   // ===============================================================
   // VALIDASI PASSWORD
@@ -56,41 +47,25 @@ class _NewPasswordScreenState
   }
 
   bool get hasUppercase {
-    return RegExp(
-      r'[A-Z]',
-    ).hasMatch(
-      newPasswordController.text,
-    );
+    return RegExp(r'[A-Z]').hasMatch(newPasswordController.text);
   }
 
   bool get hasLowercase {
-    return RegExp(
-      r'[a-z]',
-    ).hasMatch(
-      newPasswordController.text,
-    );
+    return RegExp(r'[a-z]').hasMatch(newPasswordController.text);
   }
 
   bool get hasNumber {
-    return RegExp(
-      r'[0-9]',
-    ).hasMatch(
-      newPasswordController.text,
-    );
+    return RegExp(r'[0-9]').hasMatch(newPasswordController.text);
   }
 
   bool get passwordIsValid {
-    return hasMinLength &&
-        hasUppercase &&
-        hasLowercase &&
-        hasNumber;
+    return hasMinLength && hasUppercase && hasLowercase && hasNumber;
   }
 
   bool get passwordMatches {
     return newPasswordController.text.isNotEmpty &&
         confirmPasswordController.text.isNotEmpty &&
-        newPasswordController.text ==
-            confirmPasswordController.text;
+        newPasswordController.text == confirmPasswordController.text;
   }
 
   // ===============================================================
@@ -98,8 +73,7 @@ class _NewPasswordScreenState
   // ===============================================================
 
   bool get canSave {
-    return passwordIsValid &&
-        passwordMatches;
+    return passwordIsValid && passwordMatches;
   }
 
   // ===============================================================
@@ -108,16 +82,12 @@ class _NewPasswordScreenState
 
   void _savePassword() {
     if (!passwordIsValid) {
-      _showMessage(
-        'Password belum memenuhi semua ketentuan.',
-      );
+      _showMessage('Password belum memenuhi semua ketentuan.');
       return;
     }
 
     if (!passwordMatches) {
-      _showMessage(
-        'Konfirmasi kata sandi tidak sama.',
-      );
+      _showMessage('Konfirmasi kata sandi tidak sama.');
       return;
     }
 
@@ -127,10 +97,7 @@ class _NewPasswordScreenState
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) =>
-            const PasswordSuccessScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const PasswordSuccessScreen()),
     );
   }
 
@@ -139,8 +106,7 @@ class _NewPasswordScreenState
   // ===============================================================
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -154,10 +120,7 @@ class _NewPasswordScreenState
         backgroundColor: brown,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(15),
-        shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -178,12 +141,8 @@ class _NewPasswordScreenState
       height: 58,
       decoration: BoxDecoration(
         color: const Color(0xFFFFFCF9),
-        borderRadius:
-            BorderRadius.circular(15),
-        border: Border.all(
-          color: borderColor,
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: borderColor, width: 1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x33000000),
@@ -227,13 +186,11 @@ class _NewPasswordScreenState
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
               size: size.width * 0.055,
-              color:
-                  const Color(0xFF9A7167),
+              color: const Color(0xFF9A7167),
             ),
           ),
 
-          contentPadding:
-              const EdgeInsets.symmetric(
+          contentPadding: const EdgeInsets.symmetric(
             horizontal: 8,
             vertical: 16,
           ),
@@ -246,13 +203,9 @@ class _NewPasswordScreenState
   // VALIDATION ITEM
   // ===============================================================
 
-  Widget _buildValidationItem({
-    required String text,
-    required bool valid,
-  }) {
+  Widget _buildValidationItem({required String text, required bool valid}) {
     return Padding(
-      padding:
-          const EdgeInsets.only(bottom: 7),
+      padding: const EdgeInsets.only(bottom: 7),
       child: Row(
         children: [
           Container(
@@ -263,9 +216,7 @@ class _NewPasswordScreenState
               color: Color(0xFF25D366),
             ),
             child: Icon(
-              valid
-                  ? Icons.check_rounded
-                  : Icons.close_rounded,
+              valid ? Icons.check_rounded : Icons.close_rounded,
               size: 17,
               color: Colors.white,
             ),
@@ -280,8 +231,7 @@ class _NewPasswordScreenState
                 fontFamily: 'Nunito',
                 fontSize: 14,
                 color: darkText,
-                fontWeight:
-                    FontWeight.w500,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -296,31 +246,22 @@ class _NewPasswordScreenState
 
   @override
   Widget build(BuildContext context) {
-    final size =
-        MediaQuery.of(context).size;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor:
-          backgroundColor,
+      backgroundColor: backgroundColor,
 
       body: SafeArea(
         child: SingleChildScrollView(
-          physics:
-              const BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(),
 
           child: Padding(
-            padding:
-                EdgeInsets.symmetric(
-              horizontal:
-                  size.width * 0.085,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.085),
 
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
-
                 // ===================================================
                 // BACK BUTTON
                 // ===================================================
@@ -329,19 +270,15 @@ class _NewPasswordScreenState
                   height: 75,
 
                   child: Align(
-                    alignment:
-                        Alignment.centerLeft,
+                    alignment: Alignment.centerLeft,
 
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.pop(
-                          context,
-                        );
+                        Navigator.pop(context);
                       },
 
                       child: const Icon(
-                        Icons
-                            .arrow_back_ios_new_rounded,
+                        Icons.arrow_back_ios_new_rounded,
                         size: 27,
                         color: Colors.black,
                       ),
@@ -352,222 +289,146 @@ class _NewPasswordScreenState
                 // ===================================================
                 // JUDUL
                 // ===================================================
-
                 Text(
                   'Buat Kata Sandi Baru',
 
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize:
-                        size.width * 0.060,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontSize: size.width * 0.060,
+                    fontWeight: FontWeight.bold,
                     color: brown,
                   ),
                 ),
 
-                const SizedBox(
-                  height: 4,
-                ),
+                const SizedBox(height: 4),
 
                 // ===================================================
                 // SUBJUDUL
                 // ===================================================
-
                 Text(
                   'Masukkan kata sandi baru yang kuat dan\n'
                   'mudah anda ingat.',
 
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize:
-                        size.width * 0.035,
+                    fontSize: size.width * 0.035,
                     height: 1.35,
-                    color:
-                        const Color(
-                      0xFF5E5753,
-                    ),
+                    color: const Color(0xFF5E5753),
                   ),
                 ),
 
-                SizedBox(
-                  height:
-                      size.height * 0.035,
-                ),
+                SizedBox(height: size.height * 0.035),
 
                 // ===================================================
                 // PASSWORD BARU
                 // ===================================================
-
                 _buildPasswordField(
                   size: size,
-                  controller:
-                      newPasswordController,
-                  hintText:
-                      'Kata sandi baru',
-                  obscureText:
-                      obscureNewPassword,
-                  onVisibilityPressed:
-                      () {
+                  controller: newPasswordController,
+                  hintText: 'Kata sandi baru',
+                  obscureText: obscureNewPassword,
+                  onVisibilityPressed: () {
                     setState(() {
-                      obscureNewPassword =
-                          !obscureNewPassword;
+                      obscureNewPassword = !obscureNewPassword;
                     });
                   },
                 ),
 
-                const SizedBox(
-                  height: 25,
-                ),
+                const SizedBox(height: 25),
 
                 // ===================================================
                 // VALIDASI PASSWORD
                 // ===================================================
-
                 Container(
                   width: double.infinity,
 
-                  padding:
-                      const EdgeInsets.fromLTRB(
-                    17,
-                    14,
-                    17,
-                    10,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(17, 14, 17, 10),
 
-                  decoration:
-                      BoxDecoration(
-                    color:
-                        const Color(
-                      0xFFFFEBDD,
-                    ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFEBDD),
 
-                    borderRadius:
-                        BorderRadius.circular(
-                      17,
-                    ),
+                    borderRadius: BorderRadius.circular(17),
 
                     boxShadow: const [
                       BoxShadow(
-                        color:
-                            Color(0x22000000),
+                        color: Color(0x22000000),
                         blurRadius: 4,
-                        offset:
-                            Offset(0, 3),
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
 
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
 
                     children: [
-
                       _buildValidationItem(
-                        text:
-                            'Minimal 8 karakter',
-                        valid:
-                            hasMinLength,
+                        text: 'Minimal 8 karakter',
+                        valid: hasMinLength,
                       ),
 
                       _buildValidationItem(
-                        text:
-                            'Mengandung huruf besar',
-                        valid:
-                            hasUppercase,
+                        text: 'Mengandung huruf besar',
+                        valid: hasUppercase,
                       ),
 
                       _buildValidationItem(
-                        text:
-                            'Mengandung huruf kecil',
-                        valid:
-                            hasLowercase,
+                        text: 'Mengandung huruf kecil',
+                        valid: hasLowercase,
                       ),
 
                       _buildValidationItem(
-                        text:
-                            'Mengandung angka',
-                        valid:
-                            hasNumber,
+                        text: 'Mengandung angka',
+                        valid: hasNumber,
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(
-                  height: 28,
-                ),
+                const SizedBox(height: 28),
 
                 // ===================================================
                 // KONFIRMASI PASSWORD
                 // ===================================================
-
                 _buildPasswordField(
                   size: size,
-                  controller:
-                      confirmPasswordController,
-                  hintText:
-                      'Kata sandi baru',
-                  obscureText:
-                      obscureConfirmPassword,
-                  onVisibilityPressed:
-                      () {
+                  controller: confirmPasswordController,
+                  hintText: 'Kata sandi baru',
+                  obscureText: obscureConfirmPassword,
+                  onVisibilityPressed: () {
                     setState(() {
-                      obscureConfirmPassword =
-                          !obscureConfirmPassword;
+                      obscureConfirmPassword = !obscureConfirmPassword;
                     });
                   },
                 ),
 
-                const SizedBox(
-                  height: 50,
-                ),
+                const SizedBox(height: 50),
 
                 // ===================================================
                 // BUTTON SIMPAN
                 // ===================================================
-
                 SizedBox(
                   width: double.infinity,
                   height: 55,
 
                   child: ElevatedButton(
-                    onPressed:
-                        canSave
-                            ? _savePassword
-                            : null,
+                    onPressed: canSave ? _savePassword : null,
 
-                    style:
-                        ElevatedButton.styleFrom(
-                      backgroundColor:
-                          brown,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: brown,
 
-                      disabledBackgroundColor:
-                          const Color(
-                        0xFFD9B5A8,
-                      ),
+                      disabledBackgroundColor: const Color(0xFFD9B5A8),
 
-                      foregroundColor:
-                          Colors.white,
+                      foregroundColor: Colors.white,
 
-                      disabledForegroundColor:
-                          Colors.white,
+                      disabledForegroundColor: Colors.white,
 
                       elevation: 3,
 
-                      shadowColor:
-                          Colors.black
-                              .withOpacity(
-                        0.25,
-                      ),
+                      shadowColor: Colors.black.withOpacity(0.25),
 
-                      shape:
-                          RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(
-                          15,
-                        ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
                       ),
                     ),
 
@@ -575,22 +436,15 @@ class _NewPasswordScreenState
                       'Simpan',
 
                       style: TextStyle(
-                        fontFamily:
-                            'Nunito',
-                        fontSize:
-                            size.width *
-                                0.040,
-                        fontWeight:
-                            FontWeight.w800,
+                        fontFamily: 'Nunito',
+                        fontSize: size.width * 0.040,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
                 ),
 
-                SizedBox(
-                  height:
-                      size.height * 0.05,
-                ),
+                SizedBox(height: size.height * 0.05),
               ],
             ),
           ),

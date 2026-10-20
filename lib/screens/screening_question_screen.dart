@@ -21,9 +21,7 @@ class ScreeningQuestionScreen extends StatefulWidget {
       _ScreeningQuestionScreenState();
 }
 
-class _ScreeningQuestionScreenState
-    extends State<ScreeningQuestionScreen> {
-
+class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
   // ============================================================
   // WARNA
   // ============================================================
@@ -97,9 +95,7 @@ class _ScreeningQuestionScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
       return;
     }
@@ -116,9 +112,7 @@ class _ScreeningQuestionScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
       return;
     }
@@ -127,9 +121,7 @@ class _ScreeningQuestionScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
       return;
     }
@@ -138,9 +130,7 @@ class _ScreeningQuestionScreenState
     if (index == 4) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
       return;
     }
@@ -155,15 +145,11 @@ class _ScreeningQuestionScreenState
   }
 
   bool get step2Complete {
-    return step2Answers.values.every(
-      (answer) => answer != null,
-    );
+    return step2Answers.values.every((answer) => answer != null);
   }
 
   bool get step3Complete {
-    return step3Answers.values.every(
-      (answer) => answer != null,
-    );
+    return step3Answers.values.every((answer) => answer != null);
   }
 
   // ============================================================
@@ -190,9 +176,7 @@ class _ScreeningQuestionScreenState
     // LANGKAH 2 → LANGKAH 3
     if (currentStep == 2) {
       if (!step2Complete) {
-        _showMessage(
-          'Silakan jawab semua pertanyaan terlebih dahulu.',
-        );
+        _showMessage('Silakan jawab semua pertanyaan terlebih dahulu.');
         return;
       }
 
@@ -206,9 +190,7 @@ class _ScreeningQuestionScreenState
     // LANGKAH 3 → LANGKAH 4
     if (currentStep == 3) {
       if (!step3Complete) {
-        _showMessage(
-          'Silakan pilih frekuensi untuk semua keluhan.',
-        );
+        _showMessage('Silakan pilih frekuensi untuk semua keluhan.');
         return;
       }
 
@@ -245,12 +227,8 @@ class _ScreeningQuestionScreenState
         builder: (context) => ScreeningLoadingScreen(
           age: age,
           gender: gender!,
-          step2Answers: Map<String, bool?>.from(
-            step2Answers,
-          ),
-          step3Answers: Map<String, String?>.from(
-            step3Answers,
-          ),
+          step2Answers: Map<String, bool?>.from(step2Answers),
+          step3Answers: Map<String, String?>.from(step3Answers),
         ),
       ),
     );
@@ -263,12 +241,7 @@ class _ScreeningQuestionScreenState
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            fontFamily: 'Nunito',
-          ),
-        ),
+        content: Text(message, style: const TextStyle(fontFamily: 'Nunito')),
         backgroundColor: brown,
         behavior: SnackBarBehavior.floating,
       ),
@@ -290,12 +263,7 @@ class _ScreeningQuestionScreenState
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  15,
-                  8,
-                  15,
-                  30,
-                ),
+                padding: const EdgeInsets.fromLTRB(15, 8, 15, 30),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -310,7 +278,6 @@ class _ScreeningQuestionScreenState
                     // ==================================================
                     // STEP 1
                     // ==================================================
-
                     if (currentStep == 1)
                       ScreeningDataDiri(
                         age: age,
@@ -332,7 +299,6 @@ class _ScreeningQuestionScreenState
                     // ==================================================
                     // STEP 2
                     // ==================================================
-
                     if (currentStep == 2)
                       ScreeningKondisi(
                         answers: step2Answers,
@@ -349,7 +315,6 @@ class _ScreeningQuestionScreenState
                     // ==================================================
                     // STEP 3
                     // ==================================================
-
                     if (currentStep == 3)
                       ScreeningGejala(
                         answers: step3Answers,
@@ -366,9 +331,7 @@ class _ScreeningQuestionScreenState
                     // ==================================================
                     // STEP 4
                     // ==================================================
-
-                    if (currentStep == 4)
-                      _buildStep4(),
+                    if (currentStep == 4) _buildStep4(),
 
                     const SizedBox(height: 30),
 
@@ -384,7 +347,6 @@ class _ScreeningQuestionScreenState
       // ============================================================
       // BOTTOM NAVIGATION
       // ============================================================
-
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -457,9 +419,7 @@ class _ScreeningQuestionScreenState
                 Expanded(
                   child: Container(
                     height: 2,
-                    color: i <= currentStep
-                        ? brown
-                        : orangeLine,
+                    color: i <= currentStep ? brown : orangeLine,
                   ),
                 ),
             ],
@@ -509,16 +469,13 @@ class _ScreeningQuestionScreenState
       subtitle = 'Masukkan informasi dasar berikut.';
     } else if (currentStep == 2) {
       title = 'Ceritakan Kondisi dan Kebiasaanmu';
-      subtitle =
-          'Pilihlah jawaban yang sesuai dengan kondisimu';
+      subtitle = 'Pilihlah jawaban yang sesuai dengan kondisimu';
     } else if (currentStep == 3) {
       title = 'Seberapa sering kamu mengalami keluhan';
-      subtitle =
-          'Pilihlah jawaban yang sesuai dengan kondisimu';
+      subtitle = 'Pilihlah jawaban yang sesuai dengan kondisimu';
     } else {
       title = 'Periksa kembali jawabanmu';
-      subtitle =
-          'Pastikan semua informasi sudah sesuai';
+      subtitle = 'Pastikan semua informasi sudah sesuai';
     }
 
     return Column(
@@ -577,14 +534,8 @@ class _ScreeningQuestionScreenState
     return _buildSummaryCard(
       title: 'Data Diri',
       children: [
-        _buildSummaryRow(
-          'Usia',
-          '$age Tahun',
-        ),
-        _buildSummaryRow(
-          'Jenis kelamin',
-          gender,
-        ),
+        _buildSummaryRow('Usia', '$age Tahun'),
+        _buildSummaryRow('Jenis kelamin', gender),
       ],
     );
   }
@@ -599,21 +550,15 @@ class _ScreeningQuestionScreenState
       children: [
         _buildSummaryRow(
           'Perut terasa penuh',
-          _yesNoText(
-            step2Answers['Perut terasa penuh'],
-          ),
+          _yesNoText(step2Answers['Perut terasa penuh']),
         ),
         _buildSummaryRow(
           'Tidur cukup',
-          _yesNoText(
-            step2Answers['Waktu tidur'],
-          ),
+          _yesNoText(step2Answers['Waktu tidur']),
         ),
         _buildSummaryRow(
           'Menggunakan obat',
-          _yesNoText(
-            step2Answers['Penggunaan obat'],
-          ),
+          _yesNoText(step2Answers['Penggunaan obat']),
         ),
       ],
     );
@@ -627,10 +572,7 @@ class _ScreeningQuestionScreenState
     return _buildSummaryCard(
       title: 'Gejala dan Frekuensi',
       children: [
-        _buildSummaryRow(
-          'Panas di dada',
-          step3Answers['Panas di dada'] ?? '-',
-        ),
+        _buildSummaryRow('Panas di dada', step3Answers['Panas di dada'] ?? '-'),
         _buildSummaryRow(
           'Asam lambung naik',
           step3Answers['Asam lambung naik'] ?? '-',
@@ -654,12 +596,7 @@ class _ScreeningQuestionScreenState
     return StomachyCard(
       color: cardColor,
       radius: 12,
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        9,
-        12,
-        10,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -685,14 +622,9 @@ class _ScreeningQuestionScreenState
   // SUMMARY ROW
   // ============================================================
 
-  Widget _buildSummaryRow(
-    String label,
-    String? value,
-  ) {
+  Widget _buildSummaryRow(String label, String? value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
           Expanded(
@@ -748,23 +680,18 @@ class _ScreeningQuestionScreenState
         width: 230,
         height: 40,
         child: ElevatedButton(
-          onPressed: currentStep == 4
-              ? _startAnalysis
-              : _nextStep,
+          onPressed: currentStep == 4 ? _startAnalysis : _nextStep,
           style: ElevatedButton.styleFrom(
             backgroundColor: brown,
             foregroundColor: Colors.white,
             elevation: 3,
-            shadowColor:
-                Colors.black.withOpacity(0.25),
+            shadowColor: Colors.black.withOpacity(0.25),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(25),
             ),
           ),
           child: Text(
-            currentStep == 4
-                ? 'Analisis Data Saya'
-                : 'Lanjutkan',
+            currentStep == 4 ? 'Analisis Data Saya' : 'Lanjutkan',
             style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 12,

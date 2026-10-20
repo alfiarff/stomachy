@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminArticle {
   final String id;
@@ -91,10 +91,9 @@ class AdminContentService {
   static CollectionReference get _contentsRef => _db.collection('contents');
 
   static Stream<List<AdminArticle>> get articlesStream {
-    return _articlesRef
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
+    return _articlesRef.orderBy('createdAt', descending: true).snapshots().map((
+      snapshot,
+    ) {
       return snapshot.docs
           .map((doc) => AdminArticle.fromFirestore(doc))
           .toList();
@@ -102,10 +101,9 @@ class AdminContentService {
   }
 
   static Stream<List<AdminArticle>> get publishedArticlesStream {
-    return _articlesRef
-        .where('isPublished', isEqualTo: true)
-        .snapshots()
-        .map((snapshot) {
+    return _articlesRef.where('isPublished', isEqualTo: true).snapshots().map((
+      snapshot,
+    ) {
       return snapshot.docs
           .map((doc) => AdminArticle.fromFirestore(doc))
           .toList();
@@ -161,10 +159,9 @@ class AdminContentService {
   }
 
   static Stream<List<AdminContentItem>> getContentsStream(String type) {
-    return _contentsRef
-        .where('type', isEqualTo: type)
-        .snapshots()
-        .map((snapshot) {
+    return _contentsRef.where('type', isEqualTo: type).snapshots().map((
+      snapshot,
+    ) {
       return snapshot.docs
           .map((doc) => AdminContentItem.fromFirestore(doc))
           .toList();

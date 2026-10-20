@@ -27,12 +27,10 @@ class ScreeningLoadingScreen extends StatefulWidget {
   });
 
   @override
-  State<ScreeningLoadingScreen> createState() =>
-      _ScreeningLoadingScreenState();
+  State<ScreeningLoadingScreen> createState() => _ScreeningLoadingScreenState();
 }
 
-class _ScreeningLoadingScreenState
-    extends State<ScreeningLoadingScreen> {
+class _ScreeningLoadingScreenState extends State<ScreeningLoadingScreen> {
   // ===============================================================
   // VARIABLE
   // ===============================================================
@@ -49,8 +47,7 @@ class _ScreeningLoadingScreenState
 
   String? analysisError;
 
-  final StomachyModelService model =
-      StomachyModelService();
+  final StomachyModelService model = StomachyModelService();
 
   int _selectedIndex = 1;
 
@@ -58,11 +55,9 @@ class _ScreeningLoadingScreenState
   // COLOR
   // ===============================================================
 
-  final Color backgroundColor =
-      const Color(0xFFFFF5ED);
+  final Color backgroundColor = const Color(0xFFFFF5ED);
 
-  final Color brown =
-      const Color(0xFFB05039);
+  final Color brown = const Color(0xFFB05039);
 
   // ===============================================================
   // INIT
@@ -83,8 +78,7 @@ class _ScreeningLoadingScreenState
     _startProgress();
 
     try {
-      final double ageValue =
-          double.parse(widget.age.trim());
+      final double ageValue = double.parse(widget.age.trim());
 
       // -----------------------------------------------------------
       // LOAD MODEL
@@ -96,174 +90,109 @@ class _ScreeningLoadingScreenState
       // MAPPING GENDER
       // -----------------------------------------------------------
 
-      final String modelGender =
-          _mapGender(widget.gender);
+      final String modelGender = _mapGender(widget.gender);
 
       // -----------------------------------------------------------
       // MAPPING HEARTBURN
       // -----------------------------------------------------------
 
-      final String heartBurn =
-          _mapSymptom(
-        step2Value:
-            widget.step2Answers['Panas di dada'],
-        frequency:
-            widget.step3Answers['Panas di dada'],
+      final String heartBurn = _mapSymptom(
+        step2Value: widget.step2Answers['Panas di dada'],
+        frequency: widget.step3Answers['Panas di dada'],
       );
 
-      final String hbFrequency =
-          _mapFrequency(
-        step2Value:
-            widget.step2Answers['Panas di dada'],
-        frequency:
-            widget.step3Answers['Panas di dada'],
+      final String hbFrequency = _mapFrequency(
+        step2Value: widget.step2Answers['Panas di dada'],
+        frequency: widget.step3Answers['Panas di dada'],
       );
 
       // -----------------------------------------------------------
       // MAPPING REFLUX
       // -----------------------------------------------------------
 
-      final String reflux =
-          _mapSymptom(
-        step2Value:
-            widget.step2Answers['Asam lambung naik'],
-        frequency:
-            widget.step3Answers['Asam lambung naik'],
+      final String reflux = _mapSymptom(
+        step2Value: widget.step2Answers['Asam lambung naik'],
+        frequency: widget.step3Answers['Asam lambung naik'],
       );
 
-      final String refluxFrequency =
-          _mapFrequency(
-        step2Value:
-            widget.step2Answers['Asam lambung naik'],
-        frequency:
-            widget.step3Answers['Asam lambung naik'],
+      final String refluxFrequency = _mapFrequency(
+        step2Value: widget.step2Answers['Asam lambung naik'],
+        frequency: widget.step3Answers['Asam lambung naik'],
       );
 
       // -----------------------------------------------------------
       // MAPPING CHEST PAIN
       // -----------------------------------------------------------
 
-      final String chestPain =
-          _mapSymptom(
-        step2Value:
-            widget.step2Answers[
-                'Nyeri dada atau ulu hati'],
-        frequency:
-            widget.step3Answers[
-                'Nyeri dada atau ulu hati'],
+      final String chestPain = _mapSymptom(
+        step2Value: widget.step2Answers['Nyeri dada atau ulu hati'],
+        frequency: widget.step3Answers['Nyeri dada atau ulu hati'],
       );
 
-      final String cpFrequency =
-          _mapFrequency(
-        step2Value:
-            widget.step2Answers[
-                'Nyeri dada atau ulu hati'],
-        frequency:
-            widget.step3Answers[
-                'Nyeri dada atau ulu hati'],
+      final String cpFrequency = _mapFrequency(
+        step2Value: widget.step2Answers['Nyeri dada atau ulu hati'],
+        frequency: widget.step3Answers['Nyeri dada atau ulu hati'],
       );
 
       // -----------------------------------------------------------
       // ABDOMINAL FULLNESS
       // -----------------------------------------------------------
 
-      final bool? fullnessAnswer =
-          widget.step2Answers[
-              'Perut terasa penuh'];
+      final bool? fullnessAnswer = widget.step2Answers['Perut terasa penuh'];
 
-      final String abdFullness =
-          fullnessAnswer == true
-              ? 'All the time'
-              : 'No';
+      final String abdFullness = fullnessAnswer == true ? 'All the time' : 'No';
 
       // -----------------------------------------------------------
       // MEDICATION
       // -----------------------------------------------------------
 
-      final bool? medicationAnswer =
-          widget.step2Answers[
-              'Penggunaan obat'];
+      final bool? medicationAnswer = widget.step2Answers['Penggunaan obat'];
 
-      final String medication =
-          medicationAnswer == true
-              ? 'yes'
-              : 'No';
+      final String medication = medicationAnswer == true ? 'yes' : 'No';
 
       // -----------------------------------------------------------
       // ENOUGH SLEEP
       // -----------------------------------------------------------
 
-      final bool? sleepAnswer =
-          widget.step2Answers[
-              'Waktu tidur'];
+      final bool? sleepAnswer = widget.step2Answers['Waktu tidur'];
 
-      final String enoughSleep =
-          sleepAnswer == true
-              ? 'yes'
-              : 'no';
+      final String enoughSleep = sleepAnswer == true ? 'yes' : 'no';
 
       // -----------------------------------------------------------
       // DEBUG INPUT
       // -----------------------------------------------------------
 
-      debugPrint(
-        '==============================',
-      );
+      debugPrint('==============================');
 
-      debugPrint(
-        'STOMACHY MODEL INPUT',
-      );
+      debugPrint('STOMACHY MODEL INPUT');
 
-      debugPrint(
-        'Age: $ageValue',
-      );
+      debugPrint('Age: $ageValue');
 
-      debugPrint(
-        'Gender: $modelGender',
-      );
+      debugPrint('Gender: $modelGender');
 
-      debugPrint(
-        'HeartBurn: $heartBurn',
-      );
+      debugPrint('HeartBurn: $heartBurn');
 
-      debugPrint(
-        'HB Frequency: $hbFrequency',
-      );
+      debugPrint('HB Frequency: $hbFrequency');
 
-      debugPrint(
-        'Reflux: $reflux',
-      );
+      debugPrint('Reflux: $reflux');
 
-      debugPrint(
-        'Reflux Frequency: $refluxFrequency',
-      );
+      debugPrint('Reflux Frequency: $refluxFrequency');
 
-      debugPrint(
-        'Chest Pain: $chestPain',
-      );
+      debugPrint('Chest Pain: $chestPain');
 
-      debugPrint(
-        'CP Frequency: $cpFrequency',
-      );
+      debugPrint('CP Frequency: $cpFrequency');
 
-      debugPrint(
-        'Abd Fullness: $abdFullness',
-      );
+      debugPrint('Abd Fullness: $abdFullness');
 
-      debugPrint(
-        'Medication: $medication',
-      );
+      debugPrint('Medication: $medication');
 
-      debugPrint(
-        'Enough Sleep: $enoughSleep',
-      );
+      debugPrint('Enough Sleep: $enoughSleep');
 
       // -----------------------------------------------------------
       // RUN MODEL
       // -----------------------------------------------------------
 
-      final double result =
-          model.predict(
+      final double result = model.predict(
         age: ageValue,
         gender: modelGender,
         heartBurn: heartBurn,
@@ -277,39 +206,26 @@ class _ScreeningLoadingScreenState
         enoughSleep: enoughSleep,
       );
 
-      final String resultClass =
-          model.classify(result);
+      final String resultClass = model.classify(result);
 
       probability = result;
       prediction = resultClass;
 
       modelFinished = true;
 
-      debugPrint(
-        '==============================',
-      );
+      debugPrint('==============================');
 
-      debugPrint(
-        'STOMACHY MODEL RESULT',
-      );
+      debugPrint('STOMACHY MODEL RESULT');
 
-      debugPrint(
-        'Probability GORD+: $result',
-      );
+      debugPrint('Probability GORD+: $result');
 
-      debugPrint(
-        'Prediction: $resultClass',
-      );
+      debugPrint('Prediction: $resultClass');
 
-      debugPrint(
-        '==============================',
-      );
+      debugPrint('==============================');
 
       _tryFinish();
     } catch (e) {
-      debugPrint(
-        'STOMACHY MODEL ERROR: $e',
-      );
+      debugPrint('STOMACHY MODEL ERROR: $e');
 
       // Hentikan progress bar saat error
       timer?.cancel();
@@ -317,8 +233,7 @@ class _ScreeningLoadingScreenState
       if (!mounted) return;
 
       setState(() {
-        analysisError =
-            'Terjadi kesalahan saat menganalisis data.';
+        analysisError = 'Terjadi kesalahan saat menganalisis data.';
       });
     }
   }
@@ -333,34 +248,30 @@ class _ScreeningLoadingScreenState
 
     int elapsed = 0;
 
-    timer = Timer.periodic(
-      const Duration(
-        milliseconds: intervalMilliseconds,
-      ),
-      (timer) {
-        if (!mounted) {
-          timer.cancel();
-          return;
+    timer = Timer.periodic(const Duration(milliseconds: intervalMilliseconds), (
+      timer,
+    ) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      elapsed += intervalMilliseconds;
+
+      setState(() {
+        progress = elapsed / totalMilliseconds;
+
+        if (progress > 1.0) {
+          progress = 1.0;
         }
+      });
 
-        elapsed += intervalMilliseconds;
+      if (progress >= 1.0) {
+        timer.cancel();
 
-        setState(() {
-          progress =
-              elapsed / totalMilliseconds;
-
-          if (progress > 1.0) {
-            progress = 1.0;
-          }
-        });
-
-        if (progress >= 1.0) {
-          timer.cancel();
-
-          _tryFinish();
-        }
-      },
-    );
+        _tryFinish();
+      }
+    });
   }
 
   // ===============================================================
@@ -395,47 +306,35 @@ class _ScreeningLoadingScreenState
 
     if (progress < 1.0) return;
 
-    if (probability == null ||
-        prediction == null) {
+    if (probability == null || prediction == null) {
       return;
     }
 
     navigationStarted = true;
 
-    Future.delayed(
-      const Duration(
-        milliseconds: 300,
-      ),
-      () {
-        if (!mounted) return;
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                ScreeningResultScreen(
-              age: widget.age,
-              gender: widget.gender,
-              step2Answers:
-                  widget.step2Answers,
-              step3Answers:
-                  widget.step3Answers,
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScreeningResultScreen(
+            age: widget.age,
+            gender: widget.gender,
+            step2Answers: widget.step2Answers,
+            step3Answers: widget.step3Answers,
 
-              probability:
-                  probability,
+            probability: probability,
 
-              prediction:
-                  prediction,
+            prediction: prediction,
 
-              isRisk:
-                  prediction == 'GORD+',
+            isRisk: prediction == 'GORD+',
 
-              saveToHistory: true,
-            ),
+            saveToHistory: true,
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
   }
 
   // ===============================================================
@@ -479,10 +378,7 @@ class _ScreeningLoadingScreenState
   // MAPPING SYMPTOM
   // ===============================================================
 
-  String _mapSymptom({
-    required bool? step2Value,
-    required String? frequency,
-  }) {
+  String _mapSymptom({required bool? step2Value, required String? frequency}) {
     if (step2Value == false) {
       return 'No';
     }
@@ -508,10 +404,7 @@ class _ScreeningLoadingScreenState
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
 
       return;
@@ -524,10 +417,7 @@ class _ScreeningLoadingScreenState
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const DoctorScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DoctorScreen()),
       );
 
       return;
@@ -536,10 +426,7 @@ class _ScreeningLoadingScreenState
     if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const EdukasiScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const EdukasiScreen()),
       );
 
       return;
@@ -548,10 +435,7 @@ class _ScreeningLoadingScreenState
     if (index == 4) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const ProfileScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
 
       return;
@@ -604,10 +488,7 @@ class _ScreeningLoadingScreenState
           const Text(
             'Periksa koneksi internetmu lalu coba lagi.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 12, height: 1.4),
           ),
 
           const SizedBox(height: 22),
@@ -618,10 +499,7 @@ class _ScreeningLoadingScreenState
               backgroundColor: brown,
               foregroundColor: Colors.white,
               elevation: 0,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 30,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
@@ -646,8 +524,7 @@ class _ScreeningLoadingScreenState
 
   @override
   Widget build(BuildContext context) {
-    final int percentage =
-        (progress * 100).round();
+    final int percentage = (progress * 100).round();
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -674,37 +551,23 @@ class _ScreeningLoadingScreenState
             Expanded(
               child: Center(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 19,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 19),
                   child: Container(
                     width: double.infinity,
                     height: 550,
-                    padding:
-                        const EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 18,
                       vertical: 28,
                     ),
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          const Color(0xFFFFFCF9),
-                      borderRadius:
-                          BorderRadius.circular(
-                        20,
-                      ),
-                      border: Border.all(
-                        color:
-                            const Color(0xFFFF775C),
-                      ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFCF9),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFFF775C)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black
-                              .withOpacity(0.12),
+                          color: Colors.black.withOpacity(0.12),
                           blurRadius: 4,
-                          offset:
-                              const Offset(0, 3),
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
@@ -717,151 +580,93 @@ class _ScreeningLoadingScreenState
                         ? _buildErrorContent()
                         : Column(
                             children: [
-                              const SizedBox(
-                                height: 5,
-                              ),
+                              const SizedBox(height: 5),
 
                               Expanded(
                                 flex: 4,
                                 child: Image.asset(
                                   'assets/images/maskot_loading.png',
                                   fit: BoxFit.contain,
-                                  errorBuilder:
-                                      (
-                                    context,
-                                    error,
-                                    stackTrace,
-                                  ) {
+                                  errorBuilder: (context, error, stackTrace) {
                                     return const Icon(
-                                      Icons
-                                          .psychology_rounded,
+                                      Icons.psychology_rounded,
                                       size: 130,
-                                      color:
-                                          Color(0xFFB05039),
+                                      color: Color(0xFFB05039),
                                     );
                                   },
                                 ),
                               ),
 
-                              const SizedBox(
-                                height: 8,
-                              ),
+                              const SizedBox(height: 8),
 
                               const Text(
                                 'AI sedang menganalisis\n'
                                 'jawabanmu...',
-                                textAlign:
-                                    TextAlign.center,
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontFamily:
-                                      'Fredoka',
+                                  fontFamily: 'Fredoka',
                                   fontSize: 22,
                                   height: 1.25,
-                                  fontWeight:
-                                      FontWeight.bold,
+                                  fontWeight: FontWeight.bold,
                                   color: Colors.black,
                                 ),
                               ),
 
-                              const SizedBox(
-                                height: 16,
-                              ),
+                              const SizedBox(height: 16),
 
                               const Text(
                                 'Mohon tunggu beberapa saat.\n'
                                 'Hasil akan segera ditampilkan.',
-                                textAlign:
-                                    TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  height: 1.4,
-                                ),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 12, height: 1.4),
                               ),
 
-                              const SizedBox(
-                                height: 18,
-                              ),
+                              const SizedBox(height: 18),
 
                               Row(
                                 children: [
                                   Expanded(
                                     child: ClipRRect(
-                                      borderRadius:
-                                          BorderRadius
-                                              .circular(
-                                        20,
-                                      ),
-                                      child:
-                                          LinearProgressIndicator(
-                                        value:
-                                            progress,
-                                        minHeight:
-                                            15,
-                                        backgroundColor:
-                                            const Color(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: LinearProgressIndicator(
+                                        value: progress,
+                                        minHeight: 15,
+                                        backgroundColor: const Color(
                                           0xFFF1E1D8,
                                         ),
                                         valueColor:
-                                            AlwaysStoppedAnimation<
-                                                Color>(
-                                          brown,
-                                        ),
+                                            AlwaysStoppedAnimation<Color>(
+                                              brown,
+                                            ),
                                       ),
                                     ),
                                   ),
 
-                                  const SizedBox(
-                                    width: 7,
-                                  ),
+                                  const SizedBox(width: 7),
 
                                   Text(
                                     '$percentage%',
-                                    style:
-                                        const TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 12,
-                                      fontWeight:
-                                          FontWeight
-                                              .w600,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
                               ),
 
-                              const SizedBox(
-                                height: 35,
-                              ),
+                              const SizedBox(height: 35),
 
                               Container(
-                                width:
-                                    double.infinity,
-                                padding:
-                                    const EdgeInsets.all(
-                                  12,
-                                ),
-                                decoration:
-                                    BoxDecoration(
-                                  color:
-                                      const Color(
-                                    0xFFFFEBDD,
-                                  ),
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                    17,
-                                  ),
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFEBDD),
+                                  borderRadius: BorderRadius.circular(17),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors
-                                          .black
-                                          .withOpacity(
-                                        0.12,
-                                      ),
+                                      color: Colors.black.withOpacity(0.12),
                                       blurRadius: 3,
-                                      offset:
-                                          const Offset(
-                                        0,
-                                        3,
-                                      ),
+                                      offset: const Offset(0, 3),
                                     ),
                                   ],
                                 ),
@@ -871,62 +676,41 @@ class _ScreeningLoadingScreenState
                                       'assets/images/ikon_tips.png',
                                       width: 50,
                                       height: 50,
-                                      fit: BoxFit
-                                          .contain,
+                                      fit: BoxFit.contain,
                                       errorBuilder:
-                                          (
-                                        context,
-                                        error,
-                                        stackTrace,
-                                      ) {
-                                        return const Icon(
-                                          Icons
-                                              .lightbulb,
-                                          size: 45,
-                                          color:
-                                              Colors
-                                                  .orange,
-                                        );
-                                      },
+                                          (context, error, stackTrace) {
+                                            return const Icon(
+                                              Icons.lightbulb,
+                                              size: 45,
+                                              color: Colors.orange,
+                                            );
+                                          },
                                     ),
 
-                                    const SizedBox(
-                                      width: 8,
-                                    ),
+                                    const SizedBox(width: 8),
 
                                     const Expanded(
                                       child: Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment
-                                                .start,
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Tahukah kamu?',
-                                            style:
-                                                TextStyle(
-                                              fontFamily:
-                                                  'Nunito',
-                                              fontSize:
-                                                  12,
-                                              fontWeight:
-                                                  FontWeight
-                                                      .bold,
+                                            style: TextStyle(
+                                              fontFamily: 'Nunito',
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
 
-                                          SizedBox(
-                                            height: 4,
-                                          ),
+                                          SizedBox(height: 4),
 
                                           Text(
                                             'Menjaga pola hidup sehat dapat membantu\n'
                                             'mengurangi risiko GERD.',
-                                            style:
-                                                TextStyle(
-                                              fontSize:
-                                                  10,
-                                              height:
-                                                  1.3,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              height: 1.3,
                                             ),
                                           ),
                                         ],
@@ -945,11 +729,9 @@ class _ScreeningLoadingScreenState
         ),
       ),
 
-      bottomNavigationBar:
-          AppBottomNavigation(
+      bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
-        onItemSelected:
-            _onNavigationTap,
+        onItemSelected: _onNavigationTap,
       ),
     );
   }
