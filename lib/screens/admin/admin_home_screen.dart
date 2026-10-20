@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,6 +9,10 @@ import '../../services/admin_content_service.dart';
 import 'admin_article_screen.dart';
 import 'admin_content_screen.dart';
 import 'admin_profile_screen.dart';
+
+// ===============================================================
+// BERANDA ADMIN
+// ===============================================================
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -81,7 +85,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       );
       return;
     }
-    if (index == 2) {
+    if (index == 3) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AdminContentScreen()),
@@ -222,7 +226,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ),
           ),
           Text(
-            '$_adminName! 👋',
+            '$_adminName! ðŸ‘‹',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -270,7 +274,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     return '$dayName, ${now.day} $monthName ${now.year}';
   }
 
-    // ===============================================================
+  // ===============================================================
   // ARTIKEL CARD (BACA SEKALI PAKAI get())
   // ===============================================================
 
@@ -470,10 +474,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  // ===============================================================
-  // AMBIL 1 ARTIKEL TAYANG (PAKE get, BUKAN STREAM)
-  // ===============================================================
-
   Future<AdminArticle?> _getPublishedArticle() async {
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -659,3 +659,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 }
+
+
+

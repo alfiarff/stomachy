@@ -1,9 +1,5 @@
 ﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
-// ===============================================================
-// MODEL: ARTIKEL
-// ===============================================================
-
 class AdminArticle {
   final String id;
   final String title;
@@ -48,32 +44,51 @@ class AdminArticle {
   }
 }
 
-// ===============================================================
-// MODEL: ITEM KONTEN
-// ===============================================================
-
 class AdminContentItem {
+  final String id;
   final String title;
   final String category;
+  final String type;
+  final String imageAsset;
+  final String content;
 
   const AdminContentItem({
+    required this.id,
     required this.title,
     required this.category,
+    required this.type,
+    required this.imageAsset,
+    required this.content,
   });
-}
 
-// ===============================================================
-// SERVICE
-// ===============================================================
+  factory AdminContentItem.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return AdminContentItem(
+      id: doc.id,
+      title: data['title'] ?? '',
+      category: data['category'] ?? '',
+      type: data['type'] ?? 'edukasi',
+      imageAsset: data['imageAsset'] ?? 'assets/images/edukasi_gerd.png',
+      content: data['content'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'title': title,
+      'category': category,
+      'type': type,
+      'imageAsset': imageAsset,
+      'content': content,
+    };
+  }
+}
 
 class AdminContentService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static CollectionReference get _articlesRef => _db.collection('articles');
-
-  // -----------------------------------------------------------
-  // STREAM ARTIKEL (SEMUA)
-  // -----------------------------------------------------------
+  static CollectionReference get _contentsRef => _db.collection('contents');
 
   static Stream<List<AdminArticle>> get articlesStream {
     return _articlesRef
@@ -86,10 +101,6 @@ class AdminContentService {
     });
   }
 
-  // -----------------------------------------------------------
-  // STREAM ARTIKEL TAYANG
-  // -----------------------------------------------------------
-
   static Stream<List<AdminArticle>> get publishedArticlesStream {
     return _articlesRef
         .where('isPublished', isEqualTo: true)
@@ -101,19 +112,11 @@ class AdminContentService {
     });
   }
 
-  // -----------------------------------------------------------
-  // STREAM ARTIKEL TAYANG PERTAMA
-  // -----------------------------------------------------------
-
   static Stream<AdminArticle?> get publishedArticleStream {
     return publishedArticlesStream.map((list) {
       return list.isNotEmpty ? list.first : null;
     });
   }
-
-  // -----------------------------------------------------------
-  // TAMBAH ARTIKEL
-  // -----------------------------------------------------------
 
   static Future<void> addArticle({
     required String title,
@@ -134,10 +137,6 @@ class AdminContentService {
     });
   }
 
-  // -----------------------------------------------------------
-  // UPDATE ARTIKEL
-  // -----------------------------------------------------------
-
   static Future<void> updateArticle({
     required String id,
     required String title,
@@ -157,44 +156,56 @@ class AdminContentService {
     });
   }
 
-  // -----------------------------------------------------------
-  // HAPUS ARTIKEL
-  // -----------------------------------------------------------
-
   static Future<void> deleteArticle(String id) async {
     await _articlesRef.doc(id).delete();
   }
 
-  // -----------------------------------------------------------
-  // EDUKASI GERD (statik)
-  // -----------------------------------------------------------
+  static Stream<List<AdminContentItem>> getContentsStream(String type) {
+    return _contentsRef
+        .where('type', isEqualTo: type)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => AdminContentItem.fromFirestore(doc))
+          .toList();
+    });
+  }
 
-  static List<AdminContentItem> edukasiItems = [
-    AdminContentItem(title: 'Apa Itu GERD?', category: 'Materi Dasar'),
-    AdminContentItem(title: 'Gejala & Tanda Bahaya', category: 'Materi Dasar'),
-    AdminContentItem(title: 'Pertolongan Pertama saat Kambuh', category: 'Materi Dasar'),
-    AdminContentItem(title: 'Mitos vs Fakta GERD', category: 'Materi Dasar'),
-    AdminContentItem(title: 'Waktu Makan yang Tepat', category: 'Materi Dasar'),
-  ];
+  static Future<void> addContent({
+    required String title,
+    required String category,
+    required String type,
+    required String imageAsset,
+    required String content,
+  }) async {
+    await _contentsRef.add({
+      'title': title,
+      'category': category,
+      'type': type,
+      'imageAsset': imageAsset,
+      'content': content,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
 
-  // -----------------------------------------------------------
-  // REKOMENDASI MAKANAN
-  // -----------------------------------------------------------
+  static Future<void> updateContent({
+    required String id,
+    required String title,
+    required String category,
+    required String type,
+    required String imageAsset,
+    required String content,
+  }) async {
+    await _contentsRef.doc(id).update({
+      'title': title,
+      'category': category,
+      'type': type,
+      'imageAsset': imageAsset,
+      'content': content,
+    });
+  }
 
-  static List<AdminContentItem> foodItems = [
-    AdminContentItem(title: 'Oatmeal, Ubi Jalar, Roti Gandum', category: 'Karbohidrat'),
-    AdminContentItem(title: 'Pisang, Melon, Apel, Pir, Pepaya', category: 'Buah-Buahan'),
-    AdminContentItem(title: 'Putih Telur, Ayam, Ikan', category: 'Protein'),
-  ];
-
-  // -----------------------------------------------------------
-  // REKOMENDASI OLAHRAGA
-  // -----------------------------------------------------------
-
-  static List<AdminContentItem> sportItems = [
-    AdminContentItem(title: 'Yoga', category: 'Relaksasi'),
-    AdminContentItem(title: 'Jalan Santai', category: 'Rendah Intensitas'),
-    AdminContentItem(title: 'Berenang', category: 'Rendah Intensitas'),
-    AdminContentItem(title: 'Stretching', category: 'Fleksibilitas'),
-  ];
+  static Future<void> deleteContent(String id) async {
+    await _contentsRef.doc(id).delete();
+  }
 }

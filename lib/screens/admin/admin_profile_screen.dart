@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,79 +9,50 @@ import '../personal_information_screen.dart';
 import '../change_password_screen.dart';
 
 import '../../widgets/admin_bottom_navigation.dart';
-import '../../services/notification_service.dart';
 
 import 'admin_home_screen.dart';
 import 'admin_article_screen.dart';
 import 'admin_content_screen.dart';
 
-// ===============================================================
-// PROFIL ADMIN
-// ===============================================================
-
 class AdminProfileScreen extends StatefulWidget {
   const AdminProfileScreen({super.key});
 
   @override
-  State<AdminProfileScreen> createState() =>
-      _AdminProfileScreenState();
+  State<AdminProfileScreen> createState() => _AdminProfileScreenState();
 }
 
-class _AdminProfileScreenState
-    extends State<AdminProfileScreen> {
+class _AdminProfileScreenState extends State<AdminProfileScreen> {
   int _selectedIndex = 3;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color softOrange = const Color(0xFFFFE3D1);
   final Color brown = const Color(0xFFB05039);
 
-  // ===============================================================
-  // NAVIGATION
-  // ===============================================================
-
   void _onNavigationTap(int index) {
-    if (index == _selectedIndex) {
-      return;
-    }
+    if (index == 3) return;
 
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const AdminHomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const AdminHomeScreen()),
       );
       return;
     }
-
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const AdminArticleScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const AdminArticleScreen()),
       );
       return;
     }
-
     if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const AdminContentScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const AdminContentScreen()),
       );
       return;
     }
-
-    if (index == 3) {
-      return;
-    }
   }
-
-  // ===============================================================
-  // BUILD
-  // ===============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -92,12 +63,7 @@ class _AdminProfileScreenState
           builder: (context, constraints) {
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(
-                22,
-                16,
-                22,
-                110,
-              ),
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 110),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   minHeight: constraints.maxHeight,
@@ -106,15 +72,10 @@ class _AdminProfileScreenState
                   child: Column(
                     children: [
                       _buildProfileHeader(),
-
                       const SizedBox(height: 18),
-
                       _buildProfileMenuList(),
-
                       const Spacer(),
-
                       _buildLogoutButton(),
-
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -124,17 +85,12 @@ class _AdminProfileScreenState
           },
         ),
       ),
-
       bottomNavigationBar: AdminBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
       ),
     );
   }
-
-  // ===============================================================
-  // PROFILE HEADER
-  // ===============================================================
 
   Widget _buildProfileHeader() {
     final user = FirebaseAuth.instance.currentUser;
@@ -156,7 +112,6 @@ class _AdminProfileScreenState
       builder: (context, snapshot) {
         String name = user.displayName ?? '';
         String email = user.email ?? '';
-
         String googlePhotoUrl = user.photoURL ?? '';
 
         if (googlePhotoUrl.startsWith('data:')) {
@@ -166,31 +121,20 @@ class _AdminProfileScreenState
         String? photoBase64;
 
         if (snapshot.hasData && snapshot.data!.exists) {
-          final data =
-              snapshot.data!.data() as Map<String, dynamic>?;
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
 
           if (data != null) {
-            final firestoreName =
-                data['name']?.toString().trim();
+            final firestoreName = data['name']?.toString().trim();
+            final firestoreEmail = data['email']?.toString().trim();
+            final firestorePhoto = data['photoBase64']?.toString().trim();
 
-            final firestoreEmail =
-                data['email']?.toString().trim();
-
-            final firestorePhoto =
-                data['photoBase64']?.toString().trim();
-
-            if (firestoreName != null &&
-                firestoreName.isNotEmpty) {
+            if (firestoreName != null && firestoreName.isNotEmpty) {
               name = firestoreName;
             }
-
-            if (firestoreEmail != null &&
-                firestoreEmail.isNotEmpty) {
+            if (firestoreEmail != null && firestoreEmail.isNotEmpty) {
               email = firestoreEmail;
             }
-
-            if (firestorePhoto != null &&
-                firestorePhoto.isNotEmpty) {
+            if (firestorePhoto != null && firestorePhoto.isNotEmpty) {
               photoBase64 = firestorePhoto;
             }
           }
@@ -210,10 +154,6 @@ class _AdminProfileScreenState
     );
   }
 
-  // ===============================================================
-  // PROFILE HEADER CONTENT
-  // ===============================================================
-
   Widget _buildProfileHeaderContent({
     required String name,
     required String email,
@@ -222,10 +162,7 @@ class _AdminProfileScreenState
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 15,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -253,9 +190,7 @@ class _AdminProfileScreenState
               ),
             ),
           ),
-
           const SizedBox(width: 14),
-
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -272,9 +207,7 @@ class _AdminProfileScreenState
                     color: Colors.black,
                   ),
                 ),
-
                 const SizedBox(height: 5),
-
                 Text(
                   email,
                   maxLines: 1,
@@ -293,10 +226,6 @@ class _AdminProfileScreenState
     );
   }
 
-  // ===============================================================
-  // GAMBAR FOTO HEADER
-  // ===============================================================
-
   Widget _buildHeaderPhoto({
     required String? photoBase64,
     required String googlePhotoUrl,
@@ -307,19 +236,11 @@ class _AdminProfileScreenState
           base64Decode(photoBase64),
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return Icon(
-              Icons.person,
-              size: 38,
-              color: brown,
-            );
+            return Icon(Icons.person, size: 38, color: brown);
           },
         );
       } catch (e) {
-        return Icon(
-          Icons.person,
-          size: 38,
-          color: brown,
-        );
+        return Icon(Icons.person, size: 38, color: brown);
       }
     }
 
@@ -328,25 +249,13 @@ class _AdminProfileScreenState
         googlePhotoUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return Icon(
-            Icons.person,
-            size: 38,
-            color: brown,
-          );
+          return Icon(Icons.person, size: 38, color: brown);
         },
       );
     }
 
-    return Icon(
-      Icons.person,
-      size: 38,
-      color: brown,
-    );
+    return Icon(Icons.person, size: 38, color: brown);
   }
-
-  // ===============================================================
-  // MENU PROFILE
-  // ===============================================================
 
   Widget _buildProfileMenuList() {
     return Column(
@@ -359,15 +268,12 @@ class _AdminProfileScreenState
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    const PersonalInformationScreen(),
+                builder: (context) => const PersonalInformationScreen(),
               ),
             );
           },
         ),
-
         const SizedBox(height: 14),
-
         _buildProfileMenuCard(
           icon: Icons.lock_outline_rounded,
           title: 'Ubah Kata Sandi',
@@ -376,8 +282,7 @@ class _AdminProfileScreenState
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    const ChangePasswordScreen(),
+                builder: (context) => const ChangePasswordScreen(),
               ),
             );
           },
@@ -385,10 +290,6 @@ class _AdminProfileScreenState
       ],
     );
   }
-
-  // ===============================================================
-  // PROFILE MENU CARD
-  // ===============================================================
 
   Widget _buildProfileMenuCard({
     required IconData icon,
@@ -400,10 +301,7 @@ class _AdminProfileScreenState
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -424,15 +322,9 @@ class _AdminProfileScreenState
                 color: softOrange,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                size: 22,
-                color: brown,
-              ),
+              child: Icon(icon, size: 22, color: brown),
             ),
-
             const SizedBox(width: 13),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,9 +340,7 @@ class _AdminProfileScreenState
                       color: Colors.black,
                     ),
                   ),
-
                   const SizedBox(height: 3),
-
                   Text(
                     subtitle,
                     maxLines: 1,
@@ -464,9 +354,7 @@ class _AdminProfileScreenState
                 ],
               ),
             ),
-
             const SizedBox(width: 5),
-
             const Icon(
               Icons.chevron_right_rounded,
               size: 25,
@@ -478,18 +366,12 @@ class _AdminProfileScreenState
     );
   }
 
-  // ===============================================================
-  // LOGOUT BUTTON
-  // ===============================================================
-
   Widget _buildLogoutButton() {
     return SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: () {
-          _showLogoutDialog();
-        },
+        onPressed: () => _showLogoutDialog(),
         style: ElevatedButton.styleFrom(
           backgroundColor: brown,
           foregroundColor: Colors.white,
@@ -502,11 +384,7 @@ class _AdminProfileScreenState
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.logout_rounded,
-              size: 19,
-              color: Colors.white,
-            ),
+            Icon(Icons.logout_rounded, size: 19, color: Colors.white),
             SizedBox(width: 8),
             Text(
               'Keluar',
@@ -523,10 +401,6 @@ class _AdminProfileScreenState
     );
   }
 
-  // ===============================================================
-  // LOGOUT DIALOG
-  // ===============================================================
-
   void _showLogoutDialog() {
     showDialog(
       context: context,
@@ -536,17 +410,10 @@ class _AdminProfileScreenState
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 45,
-          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 45),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              28,
-              20,
-              25,
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 25),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
@@ -564,9 +431,7 @@ class _AdminProfileScreenState
                     color: Color(0xFFB9543A),
                   ),
                 ),
-
                 const SizedBox(height: 7),
-
                 const Text(
                   'Apakah anda yakin ingin keluar dari sistem?',
                   textAlign: TextAlign.center,
@@ -576,27 +441,19 @@ class _AdminProfileScreenState
                     color: Color(0xFF493C37),
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 Row(
                   children: [
                     Expanded(
                       child: SizedBox(
                         height: 36,
                         child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.pop(dialogContext);
-                          },
+                          onPressed: () => Navigator.pop(dialogContext),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.zero,
-                            side: BorderSide(
-                              color: brown,
-                              width: 0.9,
-                            ),
+                            side: BorderSide(color: brown, width: 0.9),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           child: Text(
@@ -611,26 +468,19 @@ class _AdminProfileScreenState
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 10),
-
                     Expanded(
                       child: SizedBox(
                         height: 36,
                         child: ElevatedButton(
                           onPressed: () async {
-                            await NotificationService.stopChatWatcher();
                             await FirebaseAuth.instance.signOut();
-
                             if (!dialogContext.mounted) return;
-
                             Navigator.pop(dialogContext);
-
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const LandingScreen(),
+                                builder: (context) => const LandingScreen(),
                               ),
                               (route) => false,
                             );
@@ -641,8 +491,7 @@ class _AdminProfileScreenState
                             elevation: 0,
                             padding: EdgeInsets.zero,
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           child: const Text(
@@ -666,3 +515,5 @@ class _AdminProfileScreenState
     );
   }
 }
+
+

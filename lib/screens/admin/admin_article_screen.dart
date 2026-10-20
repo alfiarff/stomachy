@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../services/admin_content_service.dart';
 import '../../widgets/admin_bottom_navigation.dart';
@@ -52,7 +52,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       );
       return;
     }
-    if (index == 2) {
+    if (index == 3) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AdminContentScreen()),
@@ -920,3 +920,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 }
+
+
+
