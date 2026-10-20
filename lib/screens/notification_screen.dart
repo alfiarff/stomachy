@@ -19,57 +19,63 @@ class AppNotification {
       'stomachy_notifications_';
 
   static String _key(String uid) => '$_keyPrefix$uid';
+  static Future<void> _createQueue = Future<void>.value();
 
   // -------------------------------------------------------------
   // BUAT NOTIFIKASI BARU
   // -------------------------------------------------------------
+
 
   static Future<void> create({
     required String uid,
     required String type,
     required String title,
     required String body,
-
-    // Opsional — dipakai untuk tes notifikasi lama
     DateTime? createdAt,
-  }) async {
-    try {
-      final prefs =
-          await SharedPreferences.getInstance();
+    String? notificationId,
+  }) {
+    final operation = _createQueue.then((_) async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final items = await getAll(uid);
 
-      final List<LocalNotification> items =
-          await getAll(uid);
+        // Cegah notifikasi dengan ID yang sama tersimpan dua kali.
+        if (notificationId != null &&
+            items.any((item) => item.id == notificationId)) {
+          return;
+        }
 
-      items.insert(
-        0,
-        LocalNotification(
-          id: DateTime.now()
-              .microsecondsSinceEpoch
-              .toString(),
-          type: type,
-          title: title,
-          body: body,
-          createdAt:
-              createdAt ?? DateTime.now(),
-          isRead: false,
-        ),
-      );
+        items.insert(
+          0,
+          LocalNotification(
+            id: notificationId ??
+                DateTime.now().microsecondsSinceEpoch.toString(),
+            type: type,
+            title: title,
+            body: body,
+            createdAt: createdAt ?? DateTime.now(),
+            isRead: false,
+          ),
+        );
 
-      // Simpan maksimal 50 notifikasi terbaru
-      final List<LocalNotification> trimmed =
-          items.take(50).toList();
+        await prefs.setString(
+          _key(uid),
+          jsonEncode(
+            items.take(50).map((item) => item.toMap()).toList(),
+          ),
+        );
 
-      await prefs.setString(
-        _key(uid),
-        jsonEncode(
-          trimmed.map((item) => item.toMap()).toList(),
-        ),
-      );
-    } catch (e) {
-      debugPrint('NOTIFIKASI CREATE ERROR: $e');
-    }
+        debugPrint('NOTIFIKASI TERSIMPAN: $title');
+      } catch (e) {
+        debugPrint('NOTIFIKASI CREATE ERROR: $e');
+      }
+    });
+
+    // Tunggu operasi penyimpanan sebelumnya selesai.
+    _createQueue = operation;
+    return operation;
   }
-
+  
   // -------------------------------------------------------------
   // AMBIL SEMUA NOTIFIKASI (TERBARU DI ATAS)
   // -------------------------------------------------------------

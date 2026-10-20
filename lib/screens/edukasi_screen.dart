@@ -4,7 +4,6 @@ import 'home_screen.dart';
 import 'screening_screen.dart';
 import 'doctor_screen.dart';
 import '../widgets/bottom_navigation.dart';
-import '../widgets/stomachy_card.dart';
 import 'profile_screen.dart';
 import 'apa_itu_gerd_screen.dart';
 import 'waktu_makan_screen.dart';
@@ -22,6 +21,7 @@ class EdukasiScreen extends StatefulWidget {
 class _EdukasiScreenState extends State<EdukasiScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color primaryBrown = const Color(0xFF493028);
+  final Color borderColor = const Color(0xFFFF806D);
 
   int _selectedIndex = 3;
 
@@ -130,7 +130,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                           fontFamily: 'Fredoka',
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: primaryBrown,
+                          color: Colors.black,
                         ),
                       ),
                     ),
@@ -170,8 +170,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const ApaItuGerdScreen(),
+                            builder: (context) => const ApaItuGerdScreen(),
                           ),
                         );
                       },
@@ -242,8 +241,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const MitosFaktaScreen(),
+                            builder: (context) => const MitosFaktaScreen(),
                           ),
                         );
                       },
@@ -265,8 +263,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const WaktuMakanScreen(),
+                            builder: (context) => const WaktuMakanScreen(),
                           ),
                         );
                       },
@@ -302,15 +299,30 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
     required String description,
     required VoidCallback onTap,
   }) {
-    return StomachyCard(
-      color: const Color(0xFFFFFCFA),
-      radius: 20,
-      padding: const EdgeInsets.symmetric(
-        vertical: 10,
-      ),
+    return InkWell(
       onTap: onTap,
-      child: SizedBox(
-        height: 110,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: double.infinity,
+        height: 130,
+        padding: const EdgeInsets.symmetric(
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFCFA),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: borderColor,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.10),
+              blurRadius: 5,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
         child: Row(
           children: [
             // ======================================================
@@ -352,8 +364,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: primaryBrown,
                     ),
@@ -366,8 +377,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 11,
+                      fontSize: 12,
                       height: 1.25,
                       color: Color(0xFF39302C),
                     ),

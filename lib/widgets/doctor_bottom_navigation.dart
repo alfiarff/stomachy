@@ -29,7 +29,7 @@ class DoctorBottomNavigation extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.10),
@@ -41,7 +41,7 @@ class DoctorBottomNavigation extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 8,
-              vertical: 10,
+              vertical: 8,
             ),
             child: Row(
               mainAxisAlignment:
@@ -97,7 +97,7 @@ class DoctorBottomNavigation extends StatelessWidget {
           margin: const EdgeInsets.symmetric(
             horizontal: 2,
           ),
-          height: 60,
+          height: 48,
           decoration: BoxDecoration(
             color: active
                 ? activeBackground
@@ -121,7 +121,7 @@ class DoctorBottomNavigation extends StatelessWidget {
                 child: Icon(
                   active ? activeIcon : icon,
                   key: ValueKey(active),
-                  size: 26,
+                  size: 21,
                   color: primaryBrown,
                 ),
               ),
@@ -130,7 +130,7 @@ class DoctorBottomNavigation extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 10,
+                  fontSize: 9,
                   color: primaryBrown,
                   fontWeight: active
                       ? FontWeight.w800

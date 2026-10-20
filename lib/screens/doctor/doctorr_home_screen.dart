@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'doctor_notification_screen.dart';
 import 'doctor_patient_chat_screen.dart';
 import 'doctor_patients_screen.dart';
 import 'doctor_profile_screen.dart';
+
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -190,17 +192,73 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   }
 
   Widget _buildHeader(int unreadCount) {
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return _buildHeaderContent(
+        unreadCount: unreadCount,
+        photoBase64: null,
+        googlePhotoUrl: '',
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data();
+        final photoValue = data?['photoBase64']?.toString().trim() ?? '';
+        String googlePhotoUrl = user.photoURL ?? '';
+
+        if (googlePhotoUrl.startsWith('data:')) {
+          googlePhotoUrl = '';
+        }
+
+        return _buildHeaderContent(
+          unreadCount: unreadCount,
+          photoBase64: photoValue.isNotEmpty ? photoValue : null,
+          googlePhotoUrl: googlePhotoUrl,
+        );
+      },
+    );
+  }
+
+  Widget _buildHeaderContent({
+    required int unreadCount,
+    required String? photoBase64,
+    required String googlePhotoUrl,
+  }) {
     return SizedBox(
       height: 75,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(child: Align(alignment: Alignment.centerLeft, child: Image.asset('assets/images/logo_beranda_baru.png', height: 72, fit: BoxFit.contain))),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Image.asset(
+                'assets/images/logo_beranda_baru.png',
+                height: 72,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
           GestureDetector(
             onTap: _openNotifications,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                const SizedBox(width: 42, height: 42, child: Icon(Icons.notifications_none_rounded, size: 27, color: Color(0xFFB05039))),
+                const SizedBox(
+                  width: 42,
+                  height: 42,
+                  child: Icon(
+                    Icons.notifications_none_rounded,
+                    size: 27,
+                    color: Color(0xFFB05039),
+                  ),
+                ),
                 if (unreadCount > 0)
                   Positioned(
                     right: -3,
@@ -209,8 +267,19 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                       width: 19,
                       height: 19,
                       alignment: Alignment.center,
-                      decoration: const BoxDecoration(color: Color(0xFFAA4E39), shape: BoxShape.circle),
-                      child: Text(unreadCount > 9 ? '9+' : unreadCount.toString(), style: const TextStyle(fontFamily: 'Nunito', fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white)),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFAA4E39),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        unreadCount > 9 ? '9+' : unreadCount.toString(),
+                        style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
               ],
@@ -218,11 +287,77 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           ),
           const SizedBox(width: 10),
           GestureDetector(
-            onTap: _openProfile,
-            child: const SizedBox(width: 42, height: 42, child: Icon(Icons.account_circle_rounded, size: 39, color: Color(0xFFB05039))),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DoctorProfileScreen(),
+                ),
+              );
+              if (!mounted) return;
+              setState(() {});
+            },
+            child: Container(
+              width: 42,
+              height: 42,
+              clipBehavior: Clip.antiAlias,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFE5D8),
+                shape: BoxShape.circle,
+              ),
+              child: _buildDoctorProfilePhoto(
+                photoBase64: photoBase64,
+                googlePhotoUrl: googlePhotoUrl,
+              ),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDoctorProfilePhoto({
+    required String? photoBase64,
+    required String googlePhotoUrl,
+  }) {
+    if (photoBase64 != null && photoBase64.isNotEmpty) {
+      try {
+        String encodedPhoto = photoBase64;
+        // Mendukung Base64 biasa maupun data URI: data:image/...;base64,...
+        if (encodedPhoto.startsWith('data:') && encodedPhoto.contains(',')) {
+          encodedPhoto = encodedPhoto.substring(encodedPhoto.indexOf(',') + 1);
+        }
+
+        return Image.memory(
+          base64Decode(encodedPhoto),
+          width: 42,
+          height: 42,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _defaultDoctorProfileIcon(),
+        );
+      } catch (_) {
+        // Jika Base64 tidak valid, coba foto Firebase Authentication.
+      }
+    }
+
+    if (googlePhotoUrl.isNotEmpty) {
+      return Image.network(
+        googlePhotoUrl,
+        width: 42,
+        height: 42,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _defaultDoctorProfileIcon(),
+      );
+    }
+
+    return _defaultDoctorProfileIcon();
+  }
+
+  Widget _defaultDoctorProfileIcon() {
+    return const Icon(
+      Icons.account_circle_rounded,
+      size: 39,
+      color: Color(0xFFB05039),
     );
   }
 

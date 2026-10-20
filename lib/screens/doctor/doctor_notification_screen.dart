@@ -126,6 +126,7 @@ class _DoctorNotificationScreenState
               : 'Pasien $patient memiliki booking pada '
                   '$day, $time WIB.',
           createdAt: createdAt,
+          notificationId: notificationId,
         );
       }
 
@@ -134,7 +135,11 @@ class _DoctorNotificationScreenState
       // =========================================================
 
       final updatedItems =
-          await AppNotification.getAll(user.uid);
+        await AppNotification.getAll(user.uid);
+
+      updatedItems.sort(
+      (a, b) => b.createdAt.compareTo(a.createdAt),
+      );
 
       // =========================================================
       // 4. BELUM DIBACA
@@ -189,6 +194,10 @@ class _DoctorNotificationScreenState
       // tetap ditampilkan.
       final items =
           await AppNotification.getAll(user.uid);
+
+      items.sort(
+        (a, b) => b.createdAt.compareTo(a.createdAt),
+      );
 
       final List<LocalNotification> unread =
           items
