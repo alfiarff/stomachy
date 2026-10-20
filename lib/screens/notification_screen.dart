@@ -24,51 +24,49 @@ class AppNotification {
   // BUAT NOTIFIKASI BARU
   // -------------------------------------------------------------
 
+
   static Future<void> create({
     required String uid,
     required String type,
     required String title,
     required String body,
-
-    // Opsional — dipakai untuk tes notifikasi lama
     DateTime? createdAt,
+    String? notificationId,
   }) async {
     try {
-      final prefs =
-          await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
+      final items = await getAll(uid);
 
-      final List<LocalNotification> items =
-          await getAll(uid);
+      // Cegah satu pesan yang sama tersimpan dua kali.
+      if (notificationId != null &&
+          items.any((item) => item.id == notificationId)) {
+        return;
+      }
 
       items.insert(
         0,
         LocalNotification(
-          id: DateTime.now()
-              .microsecondsSinceEpoch
-              .toString(),
+          id: notificationId ??
+              DateTime.now().microsecondsSinceEpoch.toString(),
           type: type,
           title: title,
           body: body,
-          createdAt:
-              createdAt ?? DateTime.now(),
+          createdAt: createdAt ?? DateTime.now(),
           isRead: false,
         ),
       );
 
-      // Simpan maksimal 50 notifikasi terbaru
-      final List<LocalNotification> trimmed =
-          items.take(50).toList();
-
       await prefs.setString(
         _key(uid),
         jsonEncode(
-          trimmed.map((item) => item.toMap()).toList(),
+          items.take(50).map((item) => item.toMap()).toList(),
         ),
       );
     } catch (e) {
       debugPrint('NOTIFIKASI CREATE ERROR: $e');
     }
   }
+
 
   // -------------------------------------------------------------
   // AMBIL SEMUA NOTIFIKASI (TERBARU DI ATAS)

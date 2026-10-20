@@ -8,6 +8,8 @@ import 'doctor_notification_screen.dart';
 import 'doctor_patient_chat_screen.dart';
 import 'doctor_patients_screen.dart';
 import 'doctor_profile_screen.dart';
+import '../../services/notification_service.dart';
+import '../notification_screen.dart';
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -21,6 +23,15 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   final Color brown = const Color(0xFFB05039);
   String _doctorName = 'Dokter';
   Timer? _activationTimer;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _doctorConsultationSubscription;
+
+  final Map<String,
+      StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>
+      _patientMessageSubscriptions = {};
+
+  final Map<String, Set<String>> _seenPatientMessageIds = {};
+  final Set<String> _initializedMessageStreams = {};
 
   @override
   void initState() {
@@ -31,11 +42,19 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       (_) => _activateDueConsultations(),
     );
     _activateDueConsultations();
+    _startDoctorMessageListener();
   }
 
   @override
   void dispose() {
     _activationTimer?.cancel();
+    _doctorConsultationSubscription?.cancel();
+
+    for (final subscription in _patientMessageSubscriptions.values) {
+      subscription.cancel();
+    }
+
+    _patientMessageSubscriptions.clear();
     super.dispose();
   }
 
@@ -54,6 +73,133 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       final user = FirebaseAuth.instance.currentUser;
       setState(() => _doctorName = user?.displayName?.trim().isNotEmpty == true ? user!.displayName!.trim() : 'Dokter');
     }
+  }
+
+  void _startDoctorMessageListener() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    _doctorConsultationSubscription = FirebaseFirestore.instance
+        .collection('consultations')
+        .where('doctorId', isEqualTo: user.uid)
+        .snapshots()
+        .listen(
+      (snapshot) {
+        final activeIds = snapshot.docs.map((doc) => doc.id).toSet();
+
+        // Hentikan listener untuk konsultasi yang sudah tidak ada.
+        final removedIds = _patientMessageSubscriptions.keys
+            .where((id) => !activeIds.contains(id))
+            .toList();
+
+        for (final id in removedIds) {
+          _patientMessageSubscriptions.remove(id)?.cancel();
+          _seenPatientMessageIds.remove(id);
+          _initializedMessageStreams.remove(id);
+        }
+
+        for (final consultation in snapshot.docs) {
+          if (_patientMessageSubscriptions.containsKey(consultation.id)) {
+            continue;
+          }
+
+          final consultationId = consultation.id;
+          final consultationData = consultation.data();
+          final patientName =
+              (consultationData['userName'] ??
+                      consultationData['name'] ??
+                      'Pasien')
+                  .toString();
+
+          _seenPatientMessageIds[consultationId] = {};
+
+          final subscription = consultation.reference
+              .collection('messages')
+              .snapshots()
+              .listen(
+            (messagesSnapshot) {
+              final seen = _seenPatientMessageIds[consultationId];
+              if (seen == null) return;
+
+              // Snapshot pertama menjadi baseline:
+              // pesan lama tidak memicu notifikasi baru.
+              if (!_initializedMessageStreams.contains(consultationId)) {
+                seen.addAll(messagesSnapshot.docs.map((doc) => doc.id));
+                _initializedMessageStreams.add(consultationId);
+                return;
+              }
+
+              for (final messageDoc in messagesSnapshot.docs) {
+                if (seen.contains(messageDoc.id)) continue;
+
+                seen.add(messageDoc.id);
+
+                final data = messageDoc.data();
+                final role =
+                    (data['senderRole'] ?? '').toString().toLowerCase();
+                final senderId = (data['senderId'] ?? '').toString();
+                final message =
+                    (data['message'] ?? '').toString().trim();
+
+                final isPatientMessage = [
+                  'user',
+                  'patient',
+                  'pasien',
+                ].contains(role);
+
+                if (!isPatientMessage ||
+                    senderId == user.uid ||
+                    message.isEmpty) {
+                  continue;
+                }
+
+                _notifyNewPatientMessage(
+                  consultationId: consultationId,
+                  messageId: messageDoc.id,
+                  patientName: patientName,
+                  message: message,
+                  doctorUid: user.uid,
+                );
+              }
+            },
+            onError: (Object error) {
+              debugPrint(
+                'LISTENER PESAN PASIEN ERROR: $error',
+              );
+            },
+          );
+
+          _patientMessageSubscriptions[consultationId] = subscription;
+        }
+      },
+      onError: (Object error) {
+        debugPrint('LISTENER KONSULTASI ERROR: $error');
+      },
+    );
+  }
+
+  Future<void> _notifyNewPatientMessage({
+    required String consultationId,
+    required String messageId,
+    required String patientName,
+    required String message,
+    required String doctorUid,
+  }) async {
+    final uniqueId = 'patient_message_${consultationId}_$messageId';
+
+    await NotificationService.showPatientMessage(
+      messageId: uniqueId,
+      patientName: patientName,
+      message: message,
+    );
+
+    await AppNotification.create(
+      uid: doctorUid,
+      type: 'chat',
+      title: 'Pesan Baru dari $patientName',
+      body: message,
+      notificationId: uniqueId,
+    );
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _consultationStream() {
