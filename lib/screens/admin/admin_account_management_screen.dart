@@ -32,7 +32,8 @@ class _AdminAccountManagementScreenState
   final Color softOrange = const Color(0xFFFFE3D1);
   final Color redAccent = const Color(0xFFE93636);
 
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController =
+      TextEditingController();
 
   String _searchQuery = '';
 
@@ -47,7 +48,8 @@ class _AdminAccountManagementScreenState
 
   void _onSearchChanged() {
     setState(() {
-      _searchQuery = _searchController.text.trim().toLowerCase();
+      _searchQuery =
+          _searchController.text.trim().toLowerCase();
     });
   }
 
@@ -82,39 +84,47 @@ class _AdminAccountManagementScreenState
     return 'dr. $name';
   }
 
-  List<QueryDocumentSnapshot<Map<String, dynamic>>> _filterAccounts(
+  List<QueryDocumentSnapshot<Map<String, dynamic>>>
+      _filterAccounts(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
   ) {
-    final filtered = docs.where((doc) {
-      final data = doc.data();
-      final String role = (data['role'] ?? '').toString();
+    final filtered =
+        docs.where((doc) {
+          final data = doc.data();
+          final String role =
+              (data['role'] ?? '').toString();
 
-      // Akun admin tidak ditampilkan di daftar ini.
-      if (role.trim().toLowerCase() == 'admin') {
-        return false;
-      }
+          // Akun admin tidak ditampilkan di daftar ini.
+          if (role.trim().toLowerCase() == 'admin') {
+            return false;
+          }
 
-      if (_selectedTab == 'dokter') {
-        if (!_isDoctorRole(role)) return false;
-      } else {
-        if (_isDoctorRole(role)) return false;
-      }
+          if (_selectedTab == 'dokter') {
+            if (!_isDoctorRole(role)) return false;
+          } else {
+            if (_isDoctorRole(role)) return false;
+          }
 
-      if (_searchQuery.isNotEmpty) {
-        final String name = _accountName(data).toLowerCase();
-        final String email = _accountEmail(data).toLowerCase();
+          if (_searchQuery.isNotEmpty) {
+            final String name =
+                _accountName(data).toLowerCase();
+            final String email =
+                _accountEmail(data).toLowerCase();
 
-        if (!name.contains(_searchQuery) && !email.contains(_searchQuery)) {
-          return false;
-        }
-      }
+            if (!name.contains(_searchQuery) &&
+                !email.contains(_searchQuery)) {
+              return false;
+            }
+          }
 
-      return true;
-    }).toList();
+          return true;
+        }).toList();
 
     filtered.sort((a, b) {
-      final String nameA = _accountName(a.data()).toLowerCase();
-      final String nameB = _accountName(b.data()).toLowerCase();
+      final String nameA =
+          _accountName(a.data()).toLowerCase();
+      final String nameB =
+          _accountName(b.data()).toLowerCase();
       return nameA.compareTo(nameB);
     });
 
@@ -131,10 +141,16 @@ class _AdminAccountManagementScreenState
     required bool value,
   }) async {
     try {
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'isActive': value,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .set(
+        {
+          'isActive': value,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
 
       if (!mounted) return;
 
@@ -142,7 +158,9 @@ class _AdminAccountManagementScreenState
         SnackBar(
           behavior: SnackBarBehavior.floating,
           content: Text(
-            value ? 'Akun $name diaktifkan.' : 'Akun $name dinonaktifkan.',
+            value
+                ? 'Akun $name diaktifkan.'
+                : 'Akun $name dinonaktifkan.',
           ),
         ),
       );
@@ -152,7 +170,9 @@ class _AdminAccountManagementScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          content: Text('Gagal mengubah status akun: $e'),
+          content: Text(
+            'Gagal mengubah status akun: $e',
+          ),
         ),
       );
     }
@@ -168,29 +188,36 @@ class _AdminAccountManagementScreenState
       backgroundColor: backgroundColor,
       floatingActionButton: _buildAddButton(),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
 
-            const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: _buildSearchField(),
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                ),
+                child: _buildSearchField(),
+              ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: _buildTabBar(),
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                ),
+                child: _buildTabBar(),
+              ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            Expanded(child: _buildAccountList()),
-          ],
+              Expanded(child: _buildAccountList()),
+            ],
+          ),
         ),
       ),
     );
@@ -208,14 +235,17 @@ class _AdminAccountManagementScreenState
           SizedBox(
             width: 45,
             height: 44,
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              alignment: Alignment.centerLeft,
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(
-                Icons.arrow_back_rounded,
-                size: 29,
-                color: Color(0xFF171310),
+            child: Transform.translate(
+              offset: const Offset(12, 0), // Geser panah 12 px ke kanan
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                alignment: Alignment.center,
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  size: 29,
+                  color: Color(0xFF171310),
+                ),
               ),
             ),
           ),
@@ -282,7 +312,9 @@ class _AdminAccountManagementScreenState
           ),
           isDense: true,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -296,19 +328,28 @@ class _AdminAccountManagementScreenState
     return Row(
       children: [
         Expanded(
-          child: _buildTabButton(label: 'Dokter', value: 'dokter'),
+          child: _buildTabButton(
+            label: 'Dokter',
+            value: 'dokter',
+          ),
         ),
 
         const SizedBox(width: 10),
 
         Expanded(
-          child: _buildTabButton(label: 'Pengguna', value: 'pengguna'),
+          child: _buildTabButton(
+            label: 'Pengguna',
+            value: 'pengguna',
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildTabButton({required String label, required String value}) {
+  Widget _buildTabButton({
+    required String label,
+    required String value,
+  }) {
     final bool selected = _selectedTab == value;
 
     return GestureDetector(
@@ -326,7 +367,8 @@ class _AdminAccountManagementScreenState
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(selected ? 0.15 : 0.05),
+              color: Colors.black
+                  .withOpacity(selected ? 0.15 : 0.05),
               blurRadius: 5,
               offset: const Offset(0, 2),
             ),
@@ -337,8 +379,12 @@ class _AdminAccountManagementScreenState
           style: TextStyle(
             fontFamily: 'Nunito',
             fontSize: 12,
-            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-            color: selected ? Colors.white : const Color(0xFF493C37),
+            fontWeight: selected
+                ? FontWeight.w800
+                : FontWeight.w600,
+            color: selected
+                ? Colors.white
+                : const Color(0xFF493C37),
           ),
         ),
       ),
@@ -350,12 +396,18 @@ class _AdminAccountManagementScreenState
   // ===============================================================
 
   Widget _buildAccountList() {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('users').snapshots(),
+    return StreamBuilder<
+        QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFB9543A)),
+            child: CircularProgressIndicator(
+              color: Color(0xFFB9543A),
+            ),
           );
         }
 
@@ -372,8 +424,7 @@ class _AdminAccountManagementScreenState
           );
         }
 
-        final docs =
-            snapshot.data?.docs ??
+        final docs = snapshot.data?.docs ??
             <QueryDocumentSnapshot<Map<String, dynamic>>>[];
 
         final filtered = _filterAccounts(docs);
@@ -384,13 +435,19 @@ class _AdminAccountManagementScreenState
 
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(22, 0, 22, 100),
+          padding: const EdgeInsets.fromLTRB(
+            22,
+            0,
+            22,
+            100,
+          ),
           child: Column(
             children: [
               for (int i = 0; i < filtered.length; i++) ...[
                 _buildAccountCard(filtered[i]),
 
-                if (i != filtered.length - 1) const SizedBox(height: 12),
+                if (i != filtered.length - 1)
+                  const SizedBox(height: 12),
               ],
             ],
           ),
@@ -403,7 +460,9 @@ class _AdminAccountManagementScreenState
   // KARTU AKUN
   // ===============================================================
 
-  Widget _buildAccountCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+  Widget _buildAccountCard(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
     final data = doc.data();
     final String uid = doc.id;
     final String role = (data['role'] ?? '').toString();
@@ -420,17 +479,24 @@ class _AdminAccountManagementScreenState
     // Default aktif jika field 'isActive' belum ada.
     final bool isActive = data['isActive'] != false;
 
-    String photoValue = (data['photoBase64'] ?? '').toString().trim();
+    String photoValue =
+        (data['photoBase64'] ?? '').toString().trim();
 
-    if (photoValue.startsWith('data:') && photoValue.contains(',')) {
-      photoValue = photoValue.substring(photoValue.indexOf(',') + 1);
+    if (photoValue.startsWith('data:') &&
+        photoValue.contains(',')) {
+      photoValue =
+          photoValue.substring(photoValue.indexOf(',') + 1);
     }
 
-    final String? photoBase64 = photoValue.isNotEmpty ? photoValue : null;
+    final String? photoBase64 =
+        photoValue.isNotEmpty ? photoValue : null;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 13,
+        vertical: 12,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -451,14 +517,17 @@ class _AdminAccountManagementScreenState
               color: Color(0xFFFFE5D8),
               shape: BoxShape.circle,
             ),
-            child: ClipOval(child: _buildAvatar(photoBase64)),
+            child: ClipOval(
+              child: _buildAvatar(photoBase64),
+            ),
           ),
 
           const SizedBox(width: 12),
 
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
@@ -494,21 +563,32 @@ class _AdminAccountManagementScreenState
           Switch(
             value: isActive,
             onChanged: (value) {
-              _toggleAccountStatus(uid: uid, name: name, value: value);
+              _toggleAccountStatus(
+                uid: uid,
+                name: name,
+                value: value,
+              );
             },
-            thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.selected)) {
-                return Colors.white;
-              }
-              return const Color(0xFFB8B0AC);
-            }),
-            trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.selected)) {
-                return const Color(0xFFB9543A);
-              }
-              return const Color(0xFFE5DDD8);
-            }),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            thumbColor:
+                WidgetStateProperty.resolveWith<Color?>(
+              (states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Colors.white;
+                }
+                return const Color(0xFFB8B0AC);
+              },
+            ),
+            trackColor:
+                WidgetStateProperty.resolveWith<Color?>(
+              (states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const Color(0xFFB9543A);
+                }
+                return const Color(0xFFE5DDD8);
+              },
+            ),
+            materialTapTargetSize:
+                MaterialTapTargetSize.shrinkWrap,
           ),
         ],
       ),
@@ -553,7 +633,9 @@ class _AdminAccountManagementScreenState
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 34),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 34,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -574,7 +656,9 @@ class _AdminAccountManagementScreenState
             const SizedBox(height: 22),
 
             Text(
-              isSearching ? 'Akun Tidak Ditemukan' : 'Belum Ada Akun',
+              isSearching
+                  ? 'Akun Tidak Ditemukan'
+                  : 'Belum Ada Akun',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Nunito',
@@ -590,8 +674,8 @@ class _AdminAccountManagementScreenState
               isSearching
                   ? 'Coba kata kunci lain untuk mencari akun.'
                   : _selectedTab == 'dokter'
-                  ? 'Belum ada akun dokter. Tambahkan lewat tombol + di bawah.'
-                  : 'Belum ada pengguna terdaftar.',
+                      ? 'Belum ada akun dokter. Tambahkan lewat tombol + di bawah.'
+                      : 'Belum ada pengguna terdaftar.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Nunito',
@@ -623,11 +707,16 @@ class _AdminAccountManagementScreenState
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const AdminAddAccountScreen(),
+              builder: (context) =>
+                  const AdminAddAccountScreen(),
             ),
           );
         },
-        child: const Icon(Icons.add_rounded, size: 30, color: Colors.white),
+        child: const Icon(
+          Icons.add_rounded,
+          size: 30,
+          color: Colors.white,
+        ),
       ),
     );
   }
