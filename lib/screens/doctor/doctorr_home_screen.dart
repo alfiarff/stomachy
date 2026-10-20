@@ -19,6 +19,7 @@ class DoctorHomeScreen extends StatefulWidget {
 
 class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   int _selectedIndex = 0;
+  int _notificationUnreadCount = 0;
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color brown = const Color(0xFFB05039);
   String _doctorName = 'Dokter';
@@ -43,6 +44,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
     _activateDueConsultations();
     _startDoctorMessageListener();
+    _refreshNotificationCount();
   }
 
   @override
@@ -56,6 +58,20 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
 
     _patientMessageSubscriptions.clear();
     super.dispose();
+  }
+
+  Future<void> _refreshNotificationCount() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+
+  final count =
+      await AppNotification.getRecentUnreadCount(user.uid);
+
+  if (!mounted) return;
+
+  setState(() {
+    _notificationUnreadCount = count;
+  });
   }
 
   Future<void> _loadDoctorName() async {
@@ -289,8 +305,15 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     }
   }
 
-  void _openNotifications() {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const DoctorNotificationScreen()));
+  Future<void> _openNotifications() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DoctorNotificationScreen(),
+      ),
+    );
+
+    await _refreshNotificationCount();
   }
 
   void _openProfile() {
@@ -340,14 +363,31 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       height: 75,
       child: Row(
         children: [
-          Expanded(child: Align(alignment: Alignment.centerLeft, child: Image.asset('assets/images/logo_beranda_baru.png', height: 72, fit: BoxFit.contain))),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Image.asset(
+                'assets/images/logo_beranda_baru.png',
+                height: 72,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
           GestureDetector(
             onTap: _openNotifications,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                const SizedBox(width: 42, height: 42, child: Icon(Icons.notifications_none_rounded, size: 27, color: Color(0xFFB05039))),
-                if (unreadCount > 0)
+                const SizedBox(
+                  width: 42,
+                  height: 42,
+                  child: Icon(
+                    Icons.notifications_none_rounded,
+                    size: 27,
+                    color: Color(0xFFB05039),
+                  ),
+                ),
+                if (_notificationUnreadCount > 0)
                   Positioned(
                     right: -3,
                     top: -4,
@@ -355,8 +395,20 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                       width: 19,
                       height: 19,
                       alignment: Alignment.center,
-                      decoration: const BoxDecoration(color: Color(0xFFAA4E39), shape: BoxShape.circle),
-                      child: Text(unreadCount > 9 ? '9+' : unreadCount.toString(), style: const TextStyle(fontFamily: 'Nunito', fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white)),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFAA4E39),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        _notificationUnreadCount > 9
+                            ? '9+'
+                            : _notificationUnreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                   ),
               ],
@@ -365,7 +417,15 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           const SizedBox(width: 10),
           GestureDetector(
             onTap: _openProfile,
-            child: const SizedBox(width: 42, height: 42, child: Icon(Icons.account_circle_rounded, size: 39, color: Color(0xFFB05039))),
+            child: const SizedBox(
+              width: 42,
+              height: 42,
+              child: Icon(
+                Icons.account_circle_rounded,
+                size: 39,
+                color: Color(0xFFB05039),
+              ),
+            ),
           ),
         ],
       ),
