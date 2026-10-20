@@ -3,13 +3,16 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../../widgets/doctor_bottom_navigation.dart';
-import '../notification_screen.dart';
 import 'doctor_chat_screen.dart';
 import 'doctor_notification_screen.dart';
 import 'doctor_patient_chat_screen.dart';
 import 'doctor_patients_screen.dart';
 import 'doctor_profile_screen.dart';
+
+import '../notification_screen.dart';
+
+import '../../widgets/doctor_bottom_navigation.dart';
+import '../../services/notification_service.dart';
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -523,6 +526,10 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
 // Badge dihitung dari AppNotification.getRecentUnreadCount
 // (belum dibaca & < 24 jam) — sumber yang sama dengan halaman
 // DoctorNotificationScreen, jadi angkanya selalu cocok.
+//
+// Selain itu lonceng juga mendengarkan badgeSignal dari
+// NotificationService, sehingga angka langsung muncul saat
+// ada pesan baru dari pasien tanpa harus buka-tutup halaman.
 // ===============================================================
 
 class _DoctorNotificationBell extends StatefulWidget {
@@ -541,6 +548,22 @@ class _DoctorNotificationBellState
   void initState() {
     super.initState();
     _refreshCount();
+
+    NotificationService.badgeSignal.addListener(
+      _onBadgeSignal,
+    );
+  }
+
+  void _onBadgeSignal() {
+    _refreshCount();
+  }
+
+  @override
+  void dispose() {
+    NotificationService.badgeSignal.removeListener(
+      _onBadgeSignal,
+    );
+    super.dispose();
   }
 
   Future<void> _refreshCount() async {
