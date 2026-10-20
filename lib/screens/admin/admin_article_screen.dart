@@ -28,6 +28,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _summaryController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
+  final TextEditingController _categoryController = TextEditingController();
   bool _isPublished = true;
   AdminArticle? _editingArticle;
   bool _isSaving = false;
@@ -37,12 +38,9 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     _titleController.dispose();
     _summaryController.dispose();
     _contentController.dispose();
+    _categoryController.dispose();
     super.dispose();
   }
-
-  // ===============================================================
-  // NAVIGATION
-  // ===============================================================
 
   void _onNavigationTap(int index) {
     if (index == 1) return;
@@ -69,10 +67,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       return;
     }
   }
-
-  // ===============================================================
-  // BUILD
-  // ===============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -101,10 +95,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       ),
     );
   }
-
-  // ===============================================================
-  // STREAM ARTIKEL DARI FIRESTORE
-  // ===============================================================
 
   Widget _buildArticlesList() {
     return StreamBuilder<List<AdminArticle>>(
@@ -135,10 +125,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       },
     );
   }
-
-  // ===============================================================
-  // HEADER
-  // ===============================================================
 
   Widget _buildHeader(String title) {
     return SizedBox(
@@ -179,10 +165,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 
-  // ===============================================================
-  // TOMBOL TAMBAH
-  // ===============================================================
-
   Widget _buildAddButton() {
     return SizedBox(
       width: double.infinity,
@@ -210,18 +192,13 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 
-  // ===============================================================
-  // ARTICLE CARD - BISA DIPENCET UNTUK LIHAT DETAIL
-  // ===============================================================
-
-  Widget _buildArticleCard(AdminArticle article) {
+    Widget _buildArticleCard(AdminArticle article) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                AdminArticleDetailScreen(article: article),
+            builder: (context) => AdminArticleDetailScreen(article: article),
           ),
         );
       },
@@ -242,10 +219,8 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // CHIP STATUS
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
               decoration: BoxDecoration(
                 color: article.isPublished
                     ? const Color(0xFFE5F3E8)
@@ -281,8 +256,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // GAMBAR + TEKS
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -312,6 +285,18 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (article.category.isNotEmpty)
+                        Text(
+                          article.category.toUpperCase(),
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFFA9583C),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      const SizedBox(height: 4),
                       Text(
                         article.title,
                         maxLines: 2,
@@ -343,8 +328,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
               ],
             ),
             const SizedBox(height: 10),
-
-            // TOMBOL AKSI
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -400,10 +383,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 
-  // ===============================================================
-  // FORM ARTIKEL (TAMBAH & EDIT)
-  // ===============================================================
-
   void _showArticleForm({required AdminArticle? editArticle}) {
     _editingArticle = editArticle;
 
@@ -411,11 +390,13 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       _titleController.text = editArticle.title;
       _summaryController.text = editArticle.summary;
       _contentController.text = editArticle.content;
+      _categoryController.text = editArticle.category;
       _isPublished = editArticle.isPublished;
     } else {
       _titleController.clear();
       _summaryController.clear();
       _contentController.clear();
+      _categoryController.clear();
       _isPublished = true;
     }
 
@@ -457,7 +438,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
                       Text(
                         _editingArticle == null
                             ? 'Tambah Artikel Baru'
@@ -470,7 +450,23 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
+                      const Text(
+                        'Kategori',
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF493C37),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _categoryController,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: _inputDecoration(
+                            'Contoh: Saluran Cerna, Tips Makan'),
+                      ),
+                      const SizedBox(height: 14),
                       const Text(
                         'Judul Artikel',
                         style: TextStyle(
@@ -486,10 +482,9 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                         maxLines: 2,
                         textCapitalization: TextCapitalization.sentences,
                         decoration: _inputDecoration(
-                            'Contoh: Tips Tidur Nyenyak untuk Penderita GERD'),
+                            'Contoh: Waspadai GERD: Bukan Sekadar Asam Lambung Naik'),
                       ),
                       const SizedBox(height: 14),
-
                       const Text(
                         'Ringkasan',
                         style: TextStyle(
@@ -508,7 +503,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                             'Tulis ringkasan singkat artikel...'),
                       ),
                       const SizedBox(height: 14),
-
                       const Text(
                         'Isi Artikel',
                         style: TextStyle(
@@ -527,7 +521,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                             'Tulis isi lengkap artikel di sini...'),
                       ),
                       const SizedBox(height: 14),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -552,7 +545,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-
                       SizedBox(
                         width: double.infinity,
                         height: 46,
@@ -618,14 +610,11 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 
-  // ===============================================================
-  // SUBMIT (TAMBAH / EDIT) - KE FIRESTORE
-  // ===============================================================
-
   Future<void> _submitArticle() async {
     final title = _titleController.text.trim();
     final summary = _summaryController.text.trim();
     final content = _contentController.text.trim();
+    final category = _categoryController.text.trim();
 
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -657,6 +646,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
           content: content,
           imageAsset: _editingArticle!.imageAsset,
           isPublished: _isPublished,
+          category: category,
         );
 
         if (!mounted) return;
@@ -674,6 +664,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
           content: content,
           imageAsset: 'assets/images/artikel_tidur.png',
           isPublished: _isPublished,
+          category: category,
         );
 
         if (!mounted) return;
@@ -703,10 +694,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       }
     }
   }
-
-  // ===============================================================
-  // KONFIRMASI HAPUS
-  // ===============================================================
 
   void _showDeleteConfirmation(AdminArticle article) {
     showDialog(
@@ -797,17 +784,13 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                         child: ElevatedButton(
                           onPressed: () async {
                             Navigator.pop(dialogContext);
-
                             try {
-                              await AdminContentService.deleteArticle(
-                                  article.id);
-
+                              await AdminContentService.deleteArticle(article.id);
                               if (!mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   behavior: SnackBarBehavior.floating,
-                                  content:
-                                      Text('Artikel berhasil dihapus.'),
+                                  content: Text('Artikel berhasil dihapus.'),
                                 ),
                               );
                             } catch (e) {
@@ -850,10 +833,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 
-  // ===============================================================
-  // LOADING STATE
-  // ===============================================================
-
   Widget _buildLoadingState() {
     return Container(
       width: double.infinity,
@@ -878,10 +857,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       ),
     );
   }
-
-  // ===============================================================
-  // ERROR STATE
-  // ===============================================================
 
   Widget _buildErrorState(String error) {
     return Container(
@@ -918,10 +893,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
       ),
     );
   }
-
-  // ===============================================================
-  // EMPTY STATE
-  // ===============================================================
 
   Widget _buildEmptyState() {
     return Container(

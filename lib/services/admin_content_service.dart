@@ -1,5 +1,9 @@
 ﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
+// ===============================================================
+// MODEL: ARTIKEL
+// ===============================================================
+
 class AdminArticle {
   final String id;
   final String title;
@@ -7,6 +11,7 @@ class AdminArticle {
   final String imageAsset;
   final bool isPublished;
   final String content;
+  final String category;
 
   const AdminArticle({
     required this.id,
@@ -15,6 +20,7 @@ class AdminArticle {
     required this.imageAsset,
     required this.isPublished,
     required this.content,
+    required this.category,
   });
 
   factory AdminArticle.fromFirestore(DocumentSnapshot doc) {
@@ -26,6 +32,7 @@ class AdminArticle {
       imageAsset: data['imageAsset'] ?? 'assets/images/artikel_tidur.png',
       isPublished: data['isPublished'] ?? false,
       content: data['content'] ?? '',
+      category: data['category'] ?? 'Kesehatan Lambung',
     );
   }
 
@@ -36,9 +43,14 @@ class AdminArticle {
       'imageAsset': imageAsset,
       'isPublished': isPublished,
       'content': content,
+      'category': category,
     };
   }
 }
+
+// ===============================================================
+// MODEL: ITEM KONTEN
+// ===============================================================
 
 class AdminContentItem {
   final String title;
@@ -50,10 +62,18 @@ class AdminContentItem {
   });
 }
 
+// ===============================================================
+// SERVICE
+// ===============================================================
+
 class AdminContentService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static CollectionReference get _articlesRef => _db.collection('articles');
+
+  // -----------------------------------------------------------
+  // STREAM ARTIKEL (SEMUA)
+  // -----------------------------------------------------------
 
   static Stream<List<AdminArticle>> get articlesStream {
     return _articlesRef
@@ -66,6 +86,10 @@ class AdminContentService {
     });
   }
 
+  // -----------------------------------------------------------
+  // STREAM ARTIKEL TAYANG
+  // -----------------------------------------------------------
+
   static Stream<List<AdminArticle>> get publishedArticlesStream {
     return _articlesRef
         .where('isPublished', isEqualTo: true)
@@ -77,11 +101,19 @@ class AdminContentService {
     });
   }
 
+  // -----------------------------------------------------------
+  // STREAM ARTIKEL TAYANG PERTAMA
+  // -----------------------------------------------------------
+
   static Stream<AdminArticle?> get publishedArticleStream {
     return publishedArticlesStream.map((list) {
       return list.isNotEmpty ? list.first : null;
     });
   }
+
+  // -----------------------------------------------------------
+  // TAMBAH ARTIKEL
+  // -----------------------------------------------------------
 
   static Future<void> addArticle({
     required String title,
@@ -89,6 +121,7 @@ class AdminContentService {
     required String imageAsset,
     required bool isPublished,
     required String content,
+    required String category,
   }) async {
     await _articlesRef.add({
       'title': title,
@@ -96,9 +129,14 @@ class AdminContentService {
       'imageAsset': imageAsset,
       'isPublished': isPublished,
       'content': content,
+      'category': category,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+
+  // -----------------------------------------------------------
+  // UPDATE ARTIKEL
+  // -----------------------------------------------------------
 
   static Future<void> updateArticle({
     required String id,
@@ -107,6 +145,7 @@ class AdminContentService {
     required String imageAsset,
     required bool isPublished,
     required String content,
+    required String category,
   }) async {
     await _articlesRef.doc(id).update({
       'title': title,
@@ -114,12 +153,21 @@ class AdminContentService {
       'imageAsset': imageAsset,
       'isPublished': isPublished,
       'content': content,
+      'category': category,
     });
   }
+
+  // -----------------------------------------------------------
+  // HAPUS ARTIKEL
+  // -----------------------------------------------------------
 
   static Future<void> deleteArticle(String id) async {
     await _articlesRef.doc(id).delete();
   }
+
+  // -----------------------------------------------------------
+  // EDUKASI GERD (statik)
+  // -----------------------------------------------------------
 
   static List<AdminContentItem> edukasiItems = [
     AdminContentItem(title: 'Apa Itu GERD?', category: 'Materi Dasar'),
@@ -129,11 +177,19 @@ class AdminContentService {
     AdminContentItem(title: 'Waktu Makan yang Tepat', category: 'Materi Dasar'),
   ];
 
+  // -----------------------------------------------------------
+  // REKOMENDASI MAKANAN
+  // -----------------------------------------------------------
+
   static List<AdminContentItem> foodItems = [
     AdminContentItem(title: 'Oatmeal, Ubi Jalar, Roti Gandum', category: 'Karbohidrat'),
     AdminContentItem(title: 'Pisang, Melon, Apel, Pir, Pepaya', category: 'Buah-Buahan'),
     AdminContentItem(title: 'Putih Telur, Ayam, Ikan', category: 'Protein'),
   ];
+
+  // -----------------------------------------------------------
+  // REKOMENDASI OLAHRAGA
+  // -----------------------------------------------------------
 
   static List<AdminContentItem> sportItems = [
     AdminContentItem(title: 'Yoga', category: 'Relaksasi'),
