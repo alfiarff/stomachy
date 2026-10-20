@@ -244,7 +244,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String googlePhotoUrl,
   }) {
     return StomachyCard(
-      color: const Color(0xFFFFFCF9),
+      color: const Color(0xFFFFFFFF),
       radius: 16,
       padding: const EdgeInsets.symmetric(
         horizontal: 15,
@@ -534,7 +534,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required VoidCallback onTap,
   }) {
     return StomachyCard(
-      color: const Color(0xFFFFFCF9),
+      color: Colors.white,
       radius: 16,
       padding: const EdgeInsets.symmetric(
         horizontal: 16,

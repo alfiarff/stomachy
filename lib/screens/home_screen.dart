@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
 
 import 'screening_screen.dart';
 import 'doctor_screen.dart';
@@ -218,6 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+ 
   // ===============================================================
   // HEADER
   // ===============================================================
@@ -244,32 +246,98 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 10),
 
           GestureDetector(
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const ProfileScreen(),
                 ),
               );
+
+              if (mounted) {
+                setState(() {});
+              }
             },
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFF5EF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.account_circle_rounded,
-                size: 37,
-                color: Color(0xFFB9543A),
-              ),
+            child: StreamBuilder(
+              stream: FirebaseAuth.instance.currentUser == null
+                  ? null
+                  : FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .snapshots(),
+              builder: (context, snapshot) {
+                final user = FirebaseAuth.instance.currentUser;
+                final data = snapshot.data?.data();
+
+                final photoBase64 = data?['photoBase64'];
+                final photoURL = user?.photoURL;
+
+                Widget avatar;
+
+                if (photoBase64 is String &&
+                    photoBase64.isNotEmpty) {
+                  try {
+                    avatar = Image.memory(
+                      base64Decode(photoBase64),
+                      width: 38,
+                      height: 38,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.account_circle_rounded,
+                          size: 37,
+                          color: Color(0xFFB9543A),
+                        );
+                      },
+                    );
+                  } catch (_) {
+                    avatar = const Icon(
+                      Icons.account_circle_rounded,
+                      size: 37,
+                      color: Color(0xFFB9543A),
+                    );
+                  }
+                } else if (photoURL != null &&
+                    photoURL.isNotEmpty) {
+                  avatar = Image.network(
+                    photoURL,
+                    width: 38,
+                    height: 38,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.account_circle_rounded,
+                        size: 37,
+                        color: Color(0xFFB9543A),
+                      );
+                    },
+                  );
+                } else {
+                  avatar = const Icon(
+                    Icons.account_circle_rounded,
+                    size: 37,
+                    color: Color(0xFFB9543A),
+                  );
+                }
+
+                return Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFF5EF),
+                    shape: BoxShape.circle,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Center(child: avatar),
+                );
+              },
             ),
           ),
         ],
       ),
     );
   }
+
 
   // ===============================================================
   // GREETING CARD
