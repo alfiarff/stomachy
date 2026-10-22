@@ -42,14 +42,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // menjadi redup dan tidak bisa diubah.
   // ===============================================================
 
-  bool notificationApp = true;
   bool notifArtikel = true;
   bool notifEdukasi = true;
   bool notifOlahraga = true;
   bool notifMakanan = true;
-
   bool notifBalasanDokter = false;
-  bool notifPengingatSkrining = false;
 
   bool _isLoading = true;
 
@@ -85,28 +82,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             if (settings is Map) {
               setState(() {
-                notificationApp =
-                    settings['notificationApp'] as bool? ?? notificationApp;
-
                 notifArtikel =
                     settings['notifArtikel'] as bool? ?? notifArtikel;
 
                 notifEdukasi =
                     settings['notifEdukasi'] as bool? ?? notifEdukasi;
 
-                notifOlahraga =
-                    settings['notifOlahraga'] as bool? ?? notifOlahraga;
-
                 notifMakanan =
                     settings['notifMakanan'] as bool? ?? notifMakanan;
+
+                notifOlahraga =
+                    settings['notifOlahraga'] as bool? ?? notifOlahraga;
 
                 notifBalasanDokter =
                     settings['notifBalasanDokter'] as bool? ??
                     notifBalasanDokter;
-
-                notifPengingatSkrining =
-                    settings['notifPengingatSkrining'] as bool? ??
-                    notifPengingatSkrining;
               });
             }
           }
@@ -136,15 +126,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
 
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'settings': {
-          'notificationApp': notificationApp,
-          'notifArtikel': notifArtikel,
-          'notifEdukasi': notifEdukasi,
-          'notifOlahraga': notifOlahraga,
-          'notifMakanan': notifMakanan,
-          'notifBalasanDokter': notifBalasanDokter,
-          'notifPengingatSkrining': notifPengingatSkrining,
-        },
+      'settings': {
+        'notifArtikel': notifArtikel,
+        'notifEdukasi': notifEdukasi,
+        'notifMakanan': notifMakanan,
+        'notifOlahraga': notifOlahraga,
+        'notifBalasanDokter': notifBalasanDokter,
+      },
         'settingsUpdatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
@@ -251,43 +239,81 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 10),
 
-                    _buildNotificationAppCard(),
-
-                    const SizedBox(height: 10),
-
                     // BALASAN DOKTER
                     _buildSimpleNotificationCard(
                       icon: BootstrapIcons.chat_dots,
                       title: 'Balasan Dokter',
-                      description: 'Balasan chat konsultasi dari dokter',
                       value: notifBalasanDokter,
                       onChanged: (value) {
                         setState(() {
                           notifBalasanDokter = value;
                         });
+                        _saveSettings();
+                      },
+                    ),
 
+                    const SizedBox(height: 20),
+
+                    // EDUKASI
+                    _buildSimpleNotificationCard(
+                      icon: BootstrapIcons.book,
+                      title: 'Edukasi',
+                      value: notifEdukasi,
+                      onChanged: (value) {
+                        setState(() {
+                          notifEdukasi = value;
+                        });
                         _saveSettings();
                       },
                     ),
 
                     const SizedBox(height: 10),
 
-                    // PENGINGAT SKRINING MINGGUAN
+                    // ARTIKEL MINGGUAN
                     _buildSimpleNotificationCard(
-                      icon: BootstrapIcons.alarm,
-                      title: 'Pengingat Skrining Mingguan',
-                      description: 'Setiap Senin - 09.00 (jadwal tetap)',
-                      value: notifPengingatSkrining,
+                      icon: BootstrapIcons.newspaper,
+                      title: 'Artikel Mingguan',
+                      value: notifArtikel,
                       onChanged: (value) {
                         setState(() {
-                          notifPengingatSkrining = value;
+                          notifArtikel = value;
                         });
-
                         _saveSettings();
                       },
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
+
+                    // REKOMENDASI MAKANAN
+                    _buildSimpleNotificationCard(
+                      icon: BootstrapIcons.egg_fried,
+                      title: 'Rekomendasi Makanan',
+                      value: notifMakanan,
+                      onChanged: (value) {
+                        setState(() {
+                          notifMakanan = value;
+                        });
+                        _saveSettings();
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // REKOMENDASI OLAHRAGA
+                    _buildSimpleNotificationCard(
+                      icon: BootstrapIcons.bicycle,
+                      title: 'Rekomendasi Olahraga',
+                      value: notifOlahraga,
+                      onChanged: (value) {
+                        setState(() {
+                          notifOlahraga = value;
+                        });
+                        _saveSettings();
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
                   ],
                 ),
               ),
@@ -442,17 +468,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
 
                   SizedBox(height: 1),
-
-                  Text(
-                    'Ganti kata sandi akun anda',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 11,
-                      height: 1.2,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -468,251 +483,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // ===============================================================
-  // KARTU NOTIFIKASI APLIKASI
-  // ===============================================================
-
-  Widget _buildNotificationAppCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(17),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // ======================================================
-          // BARIS UTAMA : MASTER TOGGLE
-          // ======================================================
-
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFE8D8),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Icon(BootstrapIcons.bell, size: 19, color: brown),
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Notifikasi Aplikasi',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black,
-                      ),
-                    ),
-
-                    SizedBox(height: 1),
-
-                    Text(
-                      'Pemberitahuan konten baru dari STOMACHY',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 11,
-                        height: 1.2,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              _buildCustomSwitch(
-                value: notificationApp,
-                onChanged: (value) {
-                  setState(() {
-                    notificationApp = value;
-                  });
-
-                  _saveSettings();
-                },
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 14),
-
-          // ======================================================
-          // SUB-ITEM NOTIFIKASI
-          // ======================================================
-          Opacity(
-            opacity: notificationApp ? 1.0 : 0.45,
-            child: Column(
-              children: [
-                _buildSubNotificationItem(
-                  icon: BootstrapIcons.newspaper,
-                  title: 'Artikel Mingguan',
-                  description: 'Saat ada artikel mingguan baru',
-                  value: notifArtikel,
-                  onChanged: (value) {
-                    setState(() {
-                      notifArtikel = value;
-                    });
-
-                    _saveSettings();
-                  },
-                ),
-
-                const SizedBox(height: 12),
-
-                _buildSubNotificationItem(
-                  icon: BootstrapIcons.book,
-                  title: 'Edukasi',
-                  description: 'Saat ada edukasi baru',
-                  value: notifEdukasi,
-                  onChanged: (value) {
-                    setState(() {
-                      notifEdukasi = value;
-                    });
-
-                    _saveSettings();
-                  },
-                ),
-
-                const SizedBox(height: 12),
-
-                _buildSubNotificationItem(
-                  icon: BootstrapIcons.bicycle,
-                  title: 'Rekomendasi Olahraga',
-                  description: 'Saat rekomendasi olahraga baru',
-                  value: notifOlahraga,
-                  onChanged: (value) {
-                    setState(() {
-                      notifOlahraga = value;
-                    });
-
-                    _saveSettings();
-                  },
-                ),
-
-                const SizedBox(height: 12),
-
-                _buildSubNotificationItem(
-                  icon: BootstrapIcons.egg_fried,
-                  title: 'Rekomendasi Makanan',
-                  description: 'Saat rekomendasi makanan baru',
-                  value: notifMakanan,
-                  onChanged: (value) {
-                    setState(() {
-                      notifMakanan = value;
-                    });
-
-                    _saveSettings();
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===============================================================
-  // SUB-ITEM NOTIFIKASI
-  // ===============================================================
-
-  Widget _buildSubNotificationItem({
-    required IconData icon,
-    required String title,
-    required String description,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Row(
-      children: [
-        // =====================================================
-        // SPASI + GARIS PUTUS-PUTUS
-        // =====================================================
-
-        const SizedBox(width: 20),
-
-        _buildDashSegment(),
-
-        const SizedBox(width: 19),
-
-        // =====================================================
-        // ICON
-        // =====================================================
-        SizedBox(width: 22, child: Icon(icon, size: 17, color: brown)),
-
-        const SizedBox(width: 9),
-
-        // =====================================================
-        // TEKS
-        // =====================================================
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
-                ),
-              ),
-
-              const SizedBox(height: 1),
-
-              Text(
-                description,
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 10,
-                  height: 1.2,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(width: 8),
-
-        // =====================================================
-        // SWITCH
-        // =====================================================
-        _buildCustomSwitch(
-          value: value,
-          onChanged: notificationApp ? onChanged : null,
-        ),
-      ],
-    );
-  }
-
-  // ===============================================================
   // KARTU NOTIFIKASI SEDERHANA
   // ===============================================================
 
   Widget _buildSimpleNotificationCard({
     required IconData icon,
     required String title,
-    required String description,
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
@@ -733,10 +509,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       child: Row(
         children: [
-          // =======================================================
-          // ICON
-          // =======================================================
-
           Container(
             width: 40,
             height: 40,
@@ -744,49 +516,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: Color(0xFFFFE8D8),
               shape: BoxShape.circle,
             ),
-            child: Center(child: Icon(icon, size: 19, color: brown)),
+            child: Center(
+              child: Icon(icon, size: 19, color: brown),
+            ),
           ),
 
           const SizedBox(width: 10),
 
-          // =======================================================
-          // TEXT
-          // =======================================================
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 1),
-
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 11,
-                    height: 1.2,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
+              ),
             ),
           ),
 
-          // =======================================================
-          // SWITCH
-          // =======================================================
-          _buildCustomSwitch(value: value, onChanged: onChanged),
+          _buildCustomSwitch(
+            value: value,
+            onChanged: onChanged,
+          ),
         ],
       ),
     );
@@ -835,30 +587,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  // ===============================================================
-  // SEGMENT GARIS PUTUS-PUTUS VERTIKAL
-  // ===============================================================
-
-  Widget _buildDashSegment() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (int i = 0; i < 3; i++) ...[
-          Container(
-            width: 2,
-            height: 7,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD9A08F),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          if (i != 2) const SizedBox(height: 5),
-        ],
-      ],
     );
   }
 }
