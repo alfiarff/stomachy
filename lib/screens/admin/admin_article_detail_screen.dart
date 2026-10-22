@@ -16,19 +16,16 @@ class AdminArticleDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF5EF),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [_buildHeroImage(), _buildArticleBody()],
-                ),
-              ),
-            ),
-          ],
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(context),
+              _buildHeroImage(),
+              _buildArticleBody(),
+            ],
+          ),
         ),
       ),
     );
@@ -38,54 +35,46 @@ class AdminArticleDetailScreen extends StatelessWidget {
   // HEADER
   // ===============================================================
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF5EF),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x14000000),
-                  blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const SizedBox(
-              width: 42,
-              height: 42,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  size: 26,
-                  color: Color(0xFF171310),
-                ),
+  
+Widget _buildHeader(BuildContext context) {
+  return SizedBox(
+    height: 48,
+    child: Row(
+      children: [
+        GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: const SizedBox(
+            width: 42,
+            height: 42,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Icon(
+                Icons.arrow_back_rounded,
+                size: 29,
+                color: Color(0xFF171310),
               ),
             ),
           ),
-          const Expanded(
-            child: Center(
-              child: Text(
-                'Artikel Kesehatan',
-                style: TextStyle(
-                  fontFamily: 'Fredoka',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF171310),
-                ),
+        ),
+        const Expanded(
+          child: Center(
+            child: Text(
+              'Artikel Kesehatan',
+              style: TextStyle(
+                fontFamily: 'Fredoka',
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF171310),
               ),
             ),
           ),
-          const SizedBox(width: 42),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(width: 42),
+      ],
+    ),
+  );
+}
+
 
   // ===============================================================
   // HERO IMAGE

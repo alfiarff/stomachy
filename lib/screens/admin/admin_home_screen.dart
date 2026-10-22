@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,12 +23,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _selectedIndex = 0;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
-  final Color accentBrown = const Color(0xFFB9543A);
+  final Color accentBrown = const Color(0xFFB05039);
 
   static const Color headingDark = Color(0xFF251814);
   static const Color bodyText = Color(0xFF6B5147);
 
   String _adminName = 'Admin';
+  String? _adminPhotoBase64;
+  String? _adminPhotoUrl;
 
   @override
   void initState() {
@@ -50,6 +54,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         final data = doc.data();
         if (data != null) {
           final firestoreName = data['name'];
+          final photoBase64 = data['photoBase64'];
+          final photoURL = data['photoURL'];
+          if (photoBase64 is String && photoBase64.isNotEmpty) {
+            _adminPhotoBase64 = photoBase64;
+          }
+          if (photoURL is String && photoURL.isNotEmpty) {
+            _adminPhotoUrl = photoURL;
+          }
           if (firestoreName is String && firestoreName.trim().isNotEmpty) {
             name = firestoreName.trim();
           }
@@ -114,9 +126,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
               _buildGreeting(),
-              const SizedBox(height: 26),
+              const SizedBox(height: 16),
               _buildArticleCard(),
               const SizedBox(height: 25),
               const Text(
@@ -130,6 +142,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               ),
               const SizedBox(height: 12),
               _buildContentManagement(),
+              const SizedBox(height: 15),
+              _buildAccountManagementCard(),
               const SizedBox(height: 15),
             ],
           ),
@@ -174,19 +188,56 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             child: Container(
               width: 38,
               height: 38,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFF5EF),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF5EF),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFB05039).withOpacity(0.25),
+                  width: 1,
+                ),
               ),
-              child: const Icon(
-                Icons.account_circle_rounded,
-                size: 37,
-                color: Color(0xFFB9543A),
-              ),
+              clipBehavior: Clip.antiAlias,
+              child: _buildAdminAvatar(),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAdminAvatar() {
+    if (_adminPhotoBase64 != null && _adminPhotoBase64!.isNotEmpty) {
+      try {
+        return Image.memory(
+          base64Decode(_adminPhotoBase64!),
+          width: 38,
+          height: 38,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _defaultAdminAvatar(),
+        );
+      } catch (_) {
+        return _defaultAdminAvatar();
+      }
+    }
+
+    if (_adminPhotoUrl != null && _adminPhotoUrl!.isNotEmpty) {
+      return Image.network(
+        _adminPhotoUrl!,
+        width: 38,
+        height: 38,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _defaultAdminAvatar(),
+      );
+    }
+
+    return _defaultAdminAvatar();
+  }
+
+  Widget _defaultAdminAvatar() {
+    return const Icon(
+      Icons.account_circle_rounded,
+      size: 37,
+      color: Color(0xFFB05039),
     );
   }
 
@@ -197,13 +248,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Widget _buildGreeting() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFE6CB),
+        color: const Color(0xFFFFEDE3),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withOpacity(0.07),
             blurRadius: 7,
             offset: const Offset(0, 3),
           ),
@@ -216,10 +267,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             'Halo,',
             style: TextStyle(
               fontFamily: 'Fredoka',
-              fontSize: 18,
+              fontSize: 22,
               fontWeight: FontWeight.w800,
               color: Colors.black,
-              height: 1.15,
+              height: 1.2,
             ),
           ),
           Text(
@@ -228,20 +279,20 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Fredoka',
-              fontSize: 18,
+              fontSize: 22,
               fontWeight: FontWeight.w800,
               color: Colors.black,
-              height: 1.15,
+              height: 1.2,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 7),
           Text(
             _formatTodayDate(),
             style: const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 9.5,
+              fontSize: 12,
               fontWeight: FontWeight.w400,
-              color: Color(0xFF5A392F),
+              color: Colors.black,
             ),
           ),
         ],
@@ -318,7 +369,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           borderRadius: BorderRadius.circular(17),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(17),
@@ -374,18 +425,18 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 9),
                 if (article != null)
                   Row(
                     children: [
                       SizedBox(
-                        width: 95,
-                        height: 95,
+                        width: 92,
+                        height: 92,
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(13),
+                          borderRadius: BorderRadius.circular(12),
                           child: Image.asset(
                             article.imageAsset,
-                            fit: BoxFit.contain,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
@@ -400,7 +451,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontFamily: 'Nunito',
-                                fontSize: 13,
+                                fontSize: 14,
                                 height: 1.2,
                                 fontWeight: FontWeight.w800,
                                 color: headingDark,
@@ -413,7 +464,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontFamily: 'Nunito',
-                                fontSize: 10,
+                                fontSize: 11,
                                 height: 1.25,
                                 fontWeight: FontWeight.w400,
                                 color: bodyText,
@@ -430,7 +481,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       Icon(
                         Icons.article_outlined,
                         size: 40,
-                        color: Color(0xFFB9543A),
+                        color: Color(0xFFB05039),
                       ),
                       SizedBox(width: 12),
                       Expanded(
@@ -448,12 +499,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     ],
                   ),
                 if (article != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 9),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
+                      horizontal: 9,
+                      vertical: 7,
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFE9D9),
@@ -463,8 +514,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       children: [
                         Icon(
                           Icons.info_outline_rounded,
-                          size: 15,
-                          color: Color(0xFFB9543A),
+                          size: 14,
+                          color: Color(0xFFB05039),
                         ),
                         SizedBox(width: 8),
                         Expanded(
@@ -473,7 +524,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                             'siapkan artikel berikutnya!',
                             style: TextStyle(
                               fontFamily: 'Nunito',
-                              fontSize: 10,
+                              fontSize: 9,
                               height: 1.3,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF5A392F),
@@ -635,7 +686,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 26),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -654,7 +705,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               width: 54,
               height: 54,
               decoration: const BoxDecoration(
-                color: Color(0xFFFFE1D2),
+                color: Color(0xFFFFE1C8),
                 shape: BoxShape.circle,
               ),
               child: Center(child: Icon(icon, size: 27, color: accentBrown)),
@@ -678,4 +729,96 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       ),
     );
   }
+
+  // ===============================================================
+  // ACCOUNT MANAGEMENT CARD
+  // ===============================================================
+
+  Widget _buildAccountManagementCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const AdminProfileScreen(),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFE1C8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.manage_accounts_rounded,
+                size: 34,
+                color: Color(0xFFB05039),
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Manajemen Akun',
+                    style: TextStyle(
+                      fontFamily: 'Fredoka',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF251814),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Kelola data admin, profil,\ndan pengaturan akun',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 13,
+                      height: 1.5,
+                      color: Color(0xFF6B5147),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 42,
+              height: 42,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE99560),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.chevron_right_rounded,
+                size: 28,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }
