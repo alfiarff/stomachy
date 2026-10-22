@@ -1,11 +1,10 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'admin_add_doctor_screen.dart';
-import 'admin_add_user_screen.dart';
+import 'admin_add_account_screen.dart';
 
 // ===============================================================
 // MANAJEMEN AKUN (ADMIN)
@@ -313,7 +312,7 @@ Future<void> _toggleAccountStatus({
           color: Colors.black,
         ),
         decoration: InputDecoration(
-          hintText: 'Cari nama atau email akun...',
+          hintText: 'Cari nama akun...',
           hintStyle: const TextStyle(
             fontFamily: 'Nunito',
             fontSize: 11,
@@ -325,19 +324,11 @@ Future<void> _toggleAccountStatus({
             size: 20,
             color: Color(0xFFB8B0AC),
           ),
-          suffixIcon: _searchController.text.isEmpty
-              ? null
-              : IconButton(
-                  onPressed: _searchController.clear,
-                  icon: const Icon(
-                    Icons.close_rounded,
-                    size: 18,
-                    color: Color(0xFFB8B0AC),
-                  ),
-                ),
           isDense: true,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -718,40 +709,29 @@ Future<void> _toggleAccountStatus({
   // ===============================================================
 
   Widget _buildAddButton() {
-    return FloatingActionButton.extended(
-      onPressed: () {
-        if (_selectedTab == 'dokter') {
+    return SizedBox(
+      width: 56,
+      height: 56,
+      child: FloatingActionButton(
+        heroTag: 'addAccountFab',
+        backgroundColor: brown,
+        elevation: 4,
+        shape: const CircleBorder(),
+        onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const AdminAddDoctorScreen(),
+              builder: (context) =>
+                  const AdminAddAccountScreen(),
             ),
           );
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AdminAddUserScreen(),
-            ),
-          );
-        }
-      },
-      backgroundColor: const Color(0xFFA9583C),
-      foregroundColor: Colors.white,
-      elevation: 4,
-      icon: const Icon(Icons.add_rounded),
-      label: Text(
-        _selectedTab == 'dokter'
-            ? 'Tambah Dokter'
-            : 'Tambah Pengguna',
-        style: const TextStyle(
-          fontFamily: 'Nunito',
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
+        },
+        child: const Icon(
+          Icons.add_rounded,
+          size: 30,
+          color: Colors.white,
         ),
       ),
     );
   }
 }
-
-
