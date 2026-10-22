@@ -680,196 +680,123 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
   // ===============================================================
 
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-
-      barrierDismissible: true,
-
-      barrierColor: Colors.black.withOpacity(0.65),
-
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-
-          elevation: 0,
-
-          insetPadding: const EdgeInsets.symmetric(horizontal: 45),
-
-          child: Container(
-            width: double.infinity,
-
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 25),
-
-            decoration: BoxDecoration(
-              color: Colors.white,
-
-              borderRadius: BorderRadius.circular(18),
-            ),
-
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-
-              children: [
-                const Text(
-                  'Konfirmasi Logout',
-
-                  textAlign: TextAlign.center,
-
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-
-                    fontSize: 12,
-
-                    fontWeight: FontWeight.w700,
-
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 7),
-
-                const Text(
-                  'Apakah anda yakin ingin keluar dari sistem?',
-
-                  textAlign: TextAlign.center,
-
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-
-                    fontSize: 11,
-
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 30,
-
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.pop(dialogContext);
-                          },
-
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.zero,
-
-                            side: const BorderSide(color: brown, width: 0.8),
-
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(7),
-                            ),
-                          ),
-
-                          child: const Text(
-                            'Batal',
-
-                            style: TextStyle(
-                              fontFamily: 'Nunito',
-
-                              fontSize: 11,
-
-                              fontWeight: FontWeight.w500,
-
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 10),
-
-                    Expanded(
-                      child: SizedBox(
-                        height: 30,
-
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            try {
-                              await NotificationService.stopChatWatcher();
-                              await FirebaseAuth.instance.signOut();
-
-                              if (!mounted) return;
-
-                              Navigator.of(
-                                context,
-
-                                rootNavigator: true,
-                              ).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
-
-                                (route) => false,
-                              );
-                            } catch (_) {
-                              if (!dialogContext.mounted) return;
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Gagal keluar dari akun.',
-
-                                    style: TextStyle(
-                                      fontFamily: 'Nunito',
-
-                                      fontSize: 11,
-
-                                      color: Colors.white,
-                                    ),
-                                  ),
-
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          },
-
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: brown,
-
-                            foregroundColor: Colors.white,
-
-                            elevation: 0,
-
-                            padding: EdgeInsets.zero,
-
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(7),
-                            ),
-                          ),
-
-                          child: const Text(
-                            'Ya, Keluar',
-
-                            style: TextStyle(
-                              fontFamily: 'Nunito',
-
-                              fontSize: 11,
-
-                              fontWeight: FontWeight.w600,
-
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+  
+void _showLogoutDialog() {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierColor: Colors.black.withOpacity(0.65),
+    builder: (BuildContext dialogContext) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 45),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 25),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
           ),
-        );
-      },
-    );
-  }
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Konfirmasi Keluar',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 7),
+              const Text(
+                'Apakah anda yakin ingin keluar dari sistem?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
+                  color: Color(0xFF493C37),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          side: BorderSide(color: brown, width: 0.9),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Batal',
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: brown,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await FirebaseAuth.instance.signOut();
+
+                          if (!dialogContext.mounted) return;
+
+                          Navigator.pop(dialogContext);
+
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: brown,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Ya, Keluar',
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
 }
 
 // ===============================================================

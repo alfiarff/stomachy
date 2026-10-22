@@ -11,6 +11,7 @@ import '../../services/admin_content_service.dart';
 import 'admin_article_screen.dart';
 import 'admin_content_screen.dart';
 import 'admin_profile_screen.dart';
+import 'admin_account_management_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -740,7 +741,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => const AdminProfileScreen(),
+            builder: (_) => const AdminAccountManagementScreen(),
           ),
         );
       },
@@ -761,15 +762,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         child: Row(
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: 54,
+              height: 54,
               decoration: const BoxDecoration(
                 color: Color(0xFFFFE1C8),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.manage_accounts_rounded,
-                size: 34,
+                Icons.manage_accounts_outlined,
+                size: 30,
                 color: Color(0xFFB05039),
               ),
             ),
@@ -782,19 +783,19 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   Text(
                     'Manajemen Akun',
                     style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      fontSize: 16,
+                      fontFamily: 'Nunito',
+                      fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: Color(0xFF251814),
                     ),
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Kelola data admin, profil,\ndan pengaturan akun',
+                    'Kelola data admin, profil, dan pengaturan akun',
                     style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 13,
-                      height: 1.5,
+                      height: 1,
                       color: Color(0xFF6B5147),
                     ),
                   ),
@@ -803,15 +804,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ),
             const SizedBox(width: 8),
             Container(
-              width: 42,
-              height: 42,
+              width: 33,
+              height: 33,
               decoration: const BoxDecoration(
-                color: Color(0xFFE99560),
+                color: Color(0xFFB05039),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.chevron_right_rounded,
-                size: 28,
+                size: 22,
                 color: Colors.white,
               ),
             ),
