@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 class DoctorBottomNavigation extends StatelessWidget {
@@ -10,7 +11,8 @@ class DoctorBottomNavigation extends StatelessWidget {
     required this.onItemSelected,
   });
 
-  static const Color primaryBrown = Color(0xFFAA4E39);
+  // WARNA UTAMA STOMACHY
+  static const Color primaryBrown = Color(0xFFB05039);
 
   static const Color activeBackground = Color(0xFFFFE5D8);
 
@@ -21,7 +23,9 @@ class DoctorBottomNavigation extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Container(
+          // MARGIN SAMA DENGAN NAVIGASI USER DAN ADMIN
           margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
@@ -33,8 +37,14 @@ class DoctorBottomNavigation extends StatelessWidget {
               ),
             ],
           ),
+
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            // PADDING SAMA DENGAN NAVIGASI USER DAN ADMIN
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 8,
+            ),
+
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -44,18 +54,21 @@ class DoctorBottomNavigation extends StatelessWidget {
                   activeIcon: Icons.home_rounded,
                   label: 'Beranda',
                 ),
+
                 _buildNavItem(
                   index: 1,
                   icon: Icons.groups_outlined,
                   activeIcon: Icons.groups_rounded,
                   label: 'Pasien',
                 ),
+
                 _buildNavItem(
                   index: 2,
                   icon: Icons.chat_bubble_outline_rounded,
                   activeIcon: Icons.chat_bubble_rounded,
                   label: 'Chat',
                 ),
+
                 _buildNavItem(
                   index: 3,
                   icon: Icons.person_outline_rounded,
@@ -70,6 +83,7 @@ class DoctorBottomNavigation extends StatelessWidget {
     );
   }
 
+  // NAV ITEM
   Widget _buildNavItem({
     required int index,
     required IconData icon,
@@ -82,22 +96,30 @@ class DoctorBottomNavigation extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => onItemSelected(index),
+
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           margin: const EdgeInsets.symmetric(horizontal: 2),
+
+          // TINGGI SAMA DENGAN NAVIGASI USER DAN ADMIN
           height: 48,
+
           decoration: BoxDecoration(
             color: active ? activeBackground : Colors.transparent,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(15),
           ),
+
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 transitionBuilder: (child, animation) {
-                  return ScaleTransition(scale: animation, child: child);
+                  return ScaleTransition(
+                    scale: animation,
+                    child: child,
+                  );
                 },
                 child: Icon(
                   active ? activeIcon : icon,
@@ -106,14 +128,18 @@ class DoctorBottomNavigation extends StatelessWidget {
                   color: primaryBrown,
                 ),
               ),
-              const SizedBox(height: 3),
+
+              const SizedBox(height: 1),
+
               Text(
                 label,
                 style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 9,
                   color: primaryBrown,
-                  fontWeight: active ? FontWeight.w800 : FontWeight.w700,
+                  fontWeight: active
+                      ? FontWeight.w800
+                      : FontWeight.w700,
                 ),
               ),
             ],

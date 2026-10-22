@@ -10,7 +10,7 @@ class AdminBottomNavigation extends StatelessWidget {
     required this.onItemSelected,
   });
 
-  static const Color primaryBrown = Color(0xFFAA4E39);
+  static const Color primaryBrown = Color(0xFFB05039);
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +19,10 @@ class AdminBottomNavigation extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Container(
-          margin: const EdgeInsets.fromLTRB(14, 0, 14, 13),
+          margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.10),
@@ -32,7 +32,7 @@ class AdminBottomNavigation extends StatelessWidget {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
               children: [
                 _buildNavItem(
@@ -83,10 +83,10 @@ class AdminBottomNavigation extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           margin: const EdgeInsets.symmetric(horizontal: 2),
-          height: 60,
+          height: 48,
           decoration: BoxDecoration(
             color: active ? const Color(0xFFFFE5D8) : Colors.transparent,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(15),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -99,16 +99,16 @@ class AdminBottomNavigation extends StatelessWidget {
                 child: Icon(
                   active ? activeIcon : icon,
                   key: ValueKey(active),
-                  size: 26,
+                  size: 21,
                   color: primaryBrown,
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 1),
               Text(
                 label,
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 12,
+                  fontSize: 9,
                   color: primaryBrown,
                   fontWeight: active ? FontWeight.w800 : FontWeight.w700,
                 ),
