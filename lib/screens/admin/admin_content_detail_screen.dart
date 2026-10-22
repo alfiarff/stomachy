@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../services/admin_content_service.dart';
 
@@ -51,38 +51,41 @@ class AdminContentDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const SizedBox(
-              width: 42,
-              height: 42,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  size: 26,
-                  color: Color(0xFF171310),
+      child: SizedBox(
+        height: 48,
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Icon(
+                    Icons.arrow_back_rounded,
+                    size: 29,
+                    color: Color(0xFF171310),
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                _getHeaderTitle(),
-                style: const TextStyle(
-                  fontFamily: 'Fredoka',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF171310),
+            Expanded(
+              child: Center(
+                child: Text(
+                  _getHeaderTitle(),
+                  style: const TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF171310),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 42),
-        ],
+            const SizedBox(width: 42),
+          ],
+        ),
       ),
     );
   }
@@ -179,7 +182,7 @@ class AdminContentDetailScreen extends StatelessWidget {
           Text(
             item.title,
             style: const TextStyle(
-              fontFamily: 'Fredoka',
+              fontFamily: 'Nunito',
               fontSize: 22,
               fontWeight: FontWeight.w800,
               color: Color(0xFF251814),
@@ -234,10 +237,10 @@ class AdminContentDetailScreen extends StatelessWidget {
           trimmed.length > 3 &&
           !trimmed.contains(RegExp(r'[.]$')) &&
           !trimmed.startsWith('-') &&
-          !trimmed.startsWith('•');
+          !trimmed.startsWith('â€¢');
 
       // List item
-      final isList = trimmed.startsWith('-') || trimmed.startsWith('•');
+      final isList = trimmed.startsWith('-') || trimmed.startsWith('â€¢');
       final isNumbered = RegExp(r'^\d+\.').hasMatch(trimmed);
 
       if (isAllCaps && !isList && !isNumbered) {
@@ -263,8 +266,9 @@ class AdminContentDetailScreen extends StatelessWidget {
       child: Text(
         text,
         style: const TextStyle(
-          fontFamily: 'Fredoka',
+          fontFamily: 'Nunito',
           fontSize: 15,
+
           fontWeight: FontWeight.w800,
           color: Color(0xFF251814),
         ),
@@ -273,7 +277,7 @@ class AdminContentDetailScreen extends StatelessWidget {
   }
 
   Widget _buildBullet(String text) {
-    final cleanText = text.replaceFirst(RegExp(r'^[-•]\s*'), '');
+    final cleanText = text.replaceFirst(RegExp(r'^[-â€¢]\s*'), '');
     return Padding(
       padding: const EdgeInsets.only(left: 8, bottom: 6),
       child: Row(
@@ -315,3 +319,8 @@ class AdminContentDetailScreen extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
