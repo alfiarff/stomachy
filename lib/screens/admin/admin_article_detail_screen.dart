@@ -41,12 +41,12 @@ class AdminArticleDetailScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 4,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF5EF),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 4,
             offset: Offset(0, 2),
           ),
         ],
@@ -74,7 +74,7 @@ class AdminArticleDetailScreen extends StatelessWidget {
                 'Artikel Kesehatan',
                 style: TextStyle(
                   fontFamily: 'Fredoka',
-                  fontSize: 18,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF171310),
                 ),
@@ -162,18 +162,17 @@ class AdminArticleDetailScreen extends StatelessWidget {
 
           if (article.category.isNotEmpty) const SizedBox(height: 12),
 
-          // JUDUL
-          Text(
-            article.title,
-            style: const TextStyle(
-              fontFamily: 'Fredoka',
-              fontSize: 22,
+                    // JUDUL
+                    Text(
+                      article.title,
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 22,
               fontWeight: FontWeight.w800,
               color: Color(0xFF251814),
               height: 1.3,
             ),
           ),
-
           const SizedBox(height: 12),
 
           // INFO: STATUS + READING TIME
@@ -343,7 +342,7 @@ class AdminArticleDetailScreen extends StatelessWidget {
       child: Text(
         text,
         style: const TextStyle(
-          fontFamily: 'Fredoka',
+          fontFamily: 'Nunito',
           fontSize: 15,
           fontWeight: FontWeight.w800,
           color: Color(0xFF251814),
@@ -394,6 +393,7 @@ class AdminArticleDetailScreen extends StatelessWidget {
       ),
     );
   }
+
 
   // ===============================================================
   // ESTIMASI WAKTU BACA

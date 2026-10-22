@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import '../services/admin_content_service.dart';
+import 'admin/admin_article_detail_screen.dart';
 import 'dart:convert';
 
 import 'screening_screen.dart';
@@ -877,130 +878,194 @@ class _HomeScreenState extends State<HomeScreen> {
   // ARTICLE SECTION
   // ===============================================================
 
-  Widget _buildArticleSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Artikel Minggu Ini',
-          style: TextStyle(
-            fontFamily: 'Fredoka',
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+
+Widget _buildArticleSection() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Artikel Minggu Ini',
+        style: TextStyle(
+          fontFamily: 'Fredoka',
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+          color: Colors.black,
         ),
+      ),
 
-        const SizedBox(height: 12),
+      const SizedBox(height: 12),
 
-        InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ArtikelTidurScreen(),
+      StreamBuilder<List<AdminArticle>>(
+        stream: AdminContentService.articlesStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(
+                  color: Color(0xFFB9543A),
+                ),
               ),
             );
-          },
-          borderRadius: BorderRadius.circular(17),
-          child: Container(
-            width: double.infinity,
-            height: 126,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(17),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 7,
-                  offset: const Offset(0, 3),
+          }
+
+          if (snapshot.hasError) {
+            return const Text(
+              'Artikel gagal dimuat.',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                color: Colors.black,
+              ),
+            );
+          }
+
+          // Hanya tampilkan artikel yang sudah diterbitkan admin.
+          final articles = (snapshot.data ?? [])
+              .where((article) => article.isPublished)
+              .toList();
+
+          if (articles.isEmpty) {
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(17),
+              ),
+              child: const Text(
+                'Belum ada artikel yang diterbitkan.',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
+                  color: Colors.black,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 105,
-                  height: 105,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(13),
-                    child: Image.asset(
-                      'assets/images/artikel_tidur.png',
-                      fit: BoxFit.contain,
+              ),
+            );
+          }
+
+          // Artikel paling baru ditampilkan lebih dahulu.
+          articles.sort((a, b) => b.id.compareTo(a.id));
+
+          final article = articles.first;
+
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      AdminArticleDetailScreen(article: article),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(17),
+            child: Container(
+              width: double.infinity,
+              height: 126,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(17),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 7,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 105,
+                    height: 105,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(13),
+                      child: Image.asset(
+                        article.imageAsset,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: const Color(0xFFFFE7D8),
+                            child: const Icon(
+                              Icons.article_outlined,
+                              size: 40,
+                              color: Color(0xFFB9543A),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(width: 12),
+                  const SizedBox(width: 12),
 
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Tips Tidur Nyenyak untuk Penderita GERD',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 13,
-                          height: 1.2,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black,
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          article.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 13,
+                            height: 1.2,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(height: 5),
+                        const SizedBox(height: 5),
 
-                      const Text(
-                        'Tidur cukup bantu lambung menjadi lebih sehat.',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 10,
-                          height: 1.25,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.black,
+                        Text(
+                          article.summary,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 10,
+                            height: 1.25,
+                            color: Colors.black,
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(height: 7),
+                        const SizedBox(height: 7),
 
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Baca Selengkapnya',
-                            style: TextStyle(
-                              fontFamily: 'Nunito',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Baca Selengkapnya',
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: brown,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 13,
                               color: brown,
                             ),
-                          ),
-
-                          const SizedBox(width: 4),
-
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 13,
-                            color: brown,
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
-      ],
-    );
-  }
+          );
+        },
+      ),
+    ],
+  );
+}
 }
 
 // ===============================================================
