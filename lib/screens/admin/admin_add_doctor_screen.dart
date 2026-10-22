@@ -6,14 +6,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-class AdminAddAccountScreen extends StatefulWidget {
-  const AdminAddAccountScreen({super.key});
+class AdminAddDoctorScreen extends StatefulWidget {
+  const AdminAddDoctorScreen({super.key});
 
   @override
-  State<AdminAddAccountScreen> createState() => _AdminAddAccountScreenState();
+  State<AdminAddDoctorScreen> createState() => _AdminAddDoctorScreenState();
 }
 
-class _AdminAddAccountScreenState extends State<AdminAddAccountScreen> {
+class _AdminAddDoctorScreenState extends State<AdminAddDoctorScreen> {
   static const Color backgroundColor = Color(0xFFFFF5EF);
   static const Color brown = Color(0xFFB05039);
   static const Color softOrange = Color(0xFFFFE3D1);
@@ -695,9 +695,9 @@ class _AdminAddAccountScreenState extends State<AdminAddAccountScreen> {
             child: ElevatedButton(
               onPressed: _isSaving ? null : _saveAccount,
               style: ElevatedButton.styleFrom(
-                backgroundColor: softOrange,
-                foregroundColor: const Color(0xFF5A392F),
-                disabledBackgroundColor: softOrange,
+                backgroundColor: brown,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: brown,
                 elevation: 2,
                 shadowColor: Colors.black.withOpacity(0.12),
                 side: BorderSide.none,
@@ -716,12 +716,11 @@ class _AdminAddAccountScreenState extends State<AdminAddAccountScreen> {
                     )
                   : const Text(
                       'Simpan Data Akun',
-                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF5A392F),
+                        color: Colors.white,
                       ),
                     ),
             ),
