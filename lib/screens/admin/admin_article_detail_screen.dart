@@ -37,8 +37,14 @@ class AdminArticleDetailScreen extends StatelessWidget {
 
   
 Widget _buildHeader(BuildContext context) {
-  return SizedBox(
-    height: 48,
+  return Container(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 15,
+      vertical: 8,
+    ),
+    decoration: const BoxDecoration(
+      color: Color(0xFFFFF5EF),
+    ),
     child: Row(
       children: [
         GestureDetector(
@@ -50,7 +56,7 @@ Widget _buildHeader(BuildContext context) {
               alignment: Alignment.centerLeft,
               child: Icon(
                 Icons.arrow_back_rounded,
-                size: 29,
+                size: 26,
                 color: Color(0xFF171310),
               ),
             ),
@@ -83,7 +89,7 @@ Widget _buildHeader(BuildContext context) {
   Widget _buildHeroImage() {
     return Container(
       width: double.infinity,
-      height: 220,
+      height: 160,
       margin: const EdgeInsets.fromLTRB(15, 15, 15, 0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),

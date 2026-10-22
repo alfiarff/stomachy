@@ -1066,7 +1066,7 @@ Widget _buildArticleSection() {
     ],
   );
 }
-}
+
 
 // ===============================================================
 // TOMBOL LONCENG NOTIFIKASI

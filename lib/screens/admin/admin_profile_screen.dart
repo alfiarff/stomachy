@@ -443,7 +443,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Konfirmasi Logout',
+                  'Konfirmasi Keluar',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Nunito',

@@ -12,6 +12,9 @@ import 'admin_article_screen.dart';
 import 'admin_content_screen.dart';
 import 'admin_profile_screen.dart';
 import 'admin_account_management_screen.dart';
+import 'admin_manage_edukasi_screen.dart';
+import 'admin_manage_makanan_screen.dart';
+import 'admin_manage_olahraga_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -620,59 +623,60 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   // KELOLA KONTEN
   // ===============================================================
 
-  Widget _buildContentManagement() {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _buildContentCard(
-              icon: BootstrapIcons.book,
-              title: 'Edukasi',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AdminContentScreen(),
-                  ),
-                );
-              },
-            ),
+  
+Widget _buildContentManagement() {
+  return IntrinsicHeight(
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: _buildContentCard(
+            icon: BootstrapIcons.book,
+            title: 'Edukasi',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdminManageEdukasiScreen(),
+                ),
+              );
+            },
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildContentCard(
-              icon: BootstrapIcons.egg_fried,
-              title: 'Rekomendasi\nMakanan',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AdminContentScreen(),
-                  ),
-                );
-              },
-            ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildContentCard(
+            icon: BootstrapIcons.egg_fried,
+            title: 'Rekomendasi\nMakanan',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdminManageMakananScreen(),
+                ),
+              );
+            },
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildContentCard(
-              icon: BootstrapIcons.activity,
-              title: 'Rekomendasi\nOlahraga',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AdminContentScreen(),
-                  ),
-                );
-              },
-            ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildContentCard(
+            icon: BootstrapIcons.activity,
+            title: 'Rekomendasi\nOlahraga',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdminManageOlahragaScreen(),
+                ),
+              );
+            },
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   // ===============================================================
   // CONTENT CARD
