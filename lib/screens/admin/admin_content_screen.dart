@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../widgets/admin_bottom_navigation.dart';
 
@@ -83,7 +83,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                 icon: Icons.school_rounded,
                 title: 'Edukasi',
                 subtitle: 'Materi edukasi kesehatan lambung',
-                screen: const AdminManageEdukasiScreen(),
+                screen: AdminManageEdukasiScreen(),
               ),
 
               const SizedBox(height: 14),

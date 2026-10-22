@@ -237,10 +237,10 @@ class AdminContentDetailScreen extends StatelessWidget {
           trimmed.length > 3 &&
           !trimmed.contains(RegExp(r'[.]$')) &&
           !trimmed.startsWith('-') &&
-          !trimmed.startsWith('â€¢');
+          !trimmed.startsWith('•');
 
       // List item
-      final isList = trimmed.startsWith('-') || trimmed.startsWith('â€¢');
+      final isList = trimmed.startsWith('-') || trimmed.startsWith('•');
       final isNumbered = RegExp(r'^\d+\.').hasMatch(trimmed);
 
       if (isAllCaps && !isList && !isNumbered) {
@@ -277,7 +277,7 @@ class AdminContentDetailScreen extends StatelessWidget {
   }
 
   Widget _buildBullet(String text) {
-    final cleanText = text.replaceFirst(RegExp(r'^[-â€¢]\s*'), '');
+    final cleanText = text.replaceFirst(RegExp(r'^[-•]\s*'), '');
     return Padding(
       padding: const EdgeInsets.only(left: 8, bottom: 6),
       child: Row(
@@ -319,6 +319,7 @@ class AdminContentDetailScreen extends StatelessWidget {
     );
   }
 }
+
 
 
 
