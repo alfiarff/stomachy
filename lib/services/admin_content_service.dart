@@ -32,14 +32,15 @@ class AdminArticle {
     );
   }
 
+
   Map<String, dynamic> toFirestore() {
     return {
       'title': title,
-      'summary': summary,
-      'imageAsset': imageAsset,
-      'isPublished': isPublished,
-      'content': content,
       'category': category,
+      'imageAsset': imageAsset,
+      'content': content,
+      'summary': summary,
+      'isPublished': isPublished,
     };
   }
 }
@@ -51,6 +52,8 @@ class AdminContentItem {
   final String type;
   final String imageAsset;
   final String content;
+  final String summary;
+  final List<Map<String, dynamic>> sections;
 
   const AdminContentItem({
     required this.id,
@@ -59,10 +62,13 @@ class AdminContentItem {
     required this.type,
     required this.imageAsset,
     required this.content,
-  });
+    this.summary = '',
+    this.sections = const [],
+  }); 
 
   factory AdminContentItem.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
     return AdminContentItem(
       id: doc.id,
       title: data['title'] ?? '',
@@ -70,8 +76,13 @@ class AdminContentItem {
       type: data['type'] ?? 'edukasi',
       imageAsset: data['imageAsset'] ?? 'assets/images/edukasi_gerd.png',
       content: data['content'] ?? '',
+      summary: data['summary'] ?? '',
+      sections: (data['sections'] as List<dynamic>? ?? [])
+          .whereType<Map>()
+          .map((section) => Map<String, dynamic>.from(section))
+          .toList(),
     );
-  }
+  } 
 
   Map<String, dynamic> toFirestore() {
     return {
@@ -174,6 +185,8 @@ class AdminContentService {
     required String type,
     required String imageAsset,
     required String content,
+    String summary = '',
+    List<Map<String, dynamic>> sections = const [],
   }) async {
     await _contentsRef.add({
       'title': title,
@@ -181,6 +194,8 @@ class AdminContentService {
       'type': type,
       'imageAsset': imageAsset,
       'content': content,
+      'summary': summary,
+      'sections': sections,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -192,6 +207,8 @@ class AdminContentService {
     required String type,
     required String imageAsset,
     required String content,
+    String summary = '',
+    List<Map<String, dynamic>> sections = const [],
   }) async {
     await _contentsRef.doc(id).update({
       'title': title,
@@ -199,6 +216,8 @@ class AdminContentService {
       'type': type,
       'imageAsset': imageAsset,
       'content': content,
+      'summary': summary,
+      'sections': sections,
     });
   }
 

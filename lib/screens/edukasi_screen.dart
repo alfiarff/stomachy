@@ -1,15 +1,14 @@
+
 import 'package:flutter/material.dart';
+
+import '../services/admin_content_service.dart';
+import '../widgets/bottom_navigation.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
 import 'doctor_screen.dart';
-import '../widgets/bottom_navigation.dart';
 import 'profile_screen.dart';
-import 'apa_itu_gerd_screen.dart';
-import 'waktu_makan_screen.dart';
-import 'pertolongan_saat_kambuh_screen.dart';
-import 'mitos_fakta_screen.dart';
-import 'gejala_tanda_bahaya_screen.dart';
+import 'user_content_detail_screen.dart';
 
 class EdukasiScreen extends StatefulWidget {
   const EdukasiScreen({super.key});
@@ -25,76 +24,71 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
 
   int _selectedIndex = 3;
 
-  // ================================================================
-  // NAVIGATION
-  // ================================================================
-
   void _onNavigationTap(int index) {
-    if (index == 3) {
-      return;
+    if (index == 3) return;
+
+    Widget? destination;
+
+    switch (index) {
+      case 0:
+        destination = const HomeScreen();
+        break;
+      case 1:
+        destination = const ScreeningScreen();
+        break;
+      case 2:
+        destination = const DoctorScreen();
+        break;
+      case 4:
+        destination = const ProfileScreen();
+        break;
     }
 
-    // BERANDA
-    if (index == 0) {
+    if (destination != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => destination!),
       );
-      return;
-    }
-
-    // SKRINING
-    if (index == 1) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ScreeningScreen()),
-      );
-      return;
-    }
-
-    // DOKTER
-    if (index == 2) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DoctorScreen()),
-      );
-      return;
-    }
-
-    // PROFIL
-    if (index == 4) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileScreen()),
-      );
-      return;
     }
   }
 
-  // ================================================================
-  // BUILD
-  // ================================================================
+  String _getDescription(AdminContentItem item) {
+    final content = item.content.trim();
+
+    if (content.isEmpty) {
+      return item.category.isNotEmpty
+          ? item.category
+          : 'Pelajari materi edukasi GERD.';
+    }
+
+    final firstParagraph = content
+        .split('\n')
+        .map((line) => line.trim())
+        .firstWhere(
+          (line) => line.isNotEmpty,
+          orElse: () => '',
+        );
+
+    if (firstParagraph.isEmpty) {
+      return 'Pelajari materi edukasi GERD.';
+    }
+
+    return firstParagraph;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-
       body: SafeArea(
         child: Column(
           children: [
-            // ========================================================
-            // HEADER
-            // ========================================================
-
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
+                    onTap: () => Navigator.maybePop(context),
                     child: const SizedBox(
                       width: 42,
                       height: 42,
@@ -108,8 +102,7 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                       ),
                     ),
                   ),
-
-                  Expanded(
+                  const Expanded(
                     child: Center(
                       child: Text(
                         'Edukasi GERD',
@@ -122,139 +115,110 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 42),
                 ],
               ),
             ),
-
-            // ========================================================
-            // EDUCATION LIST
-            // ========================================================
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 90),
-                child: Column(
-                  children: [
-                    // ==================================================
-                    // 1. APA ITU GERD
-                    // ==================================================
+              child: StreamBuilder<List<AdminContentItem>>(
+                stream: AdminContentService.getContentsStream('edukasi'),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFA9583C),
+                      ),
+                    );
+                  }
 
-                    _buildEducationCard(
-                      image: 'assets/images/edukasi_apa_itu_gerd.png',
-                      title: 'Apa Itu GERD?',
-                      description:
-                          'Kenali pengertian GERD, penyebab, dan\n'
-                          'bagaimana prosesnya bisa terjadi',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ApaItuGerdScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              size: 42,
+                              color: Color(0xFFB9543A),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Edukasi gagal dimuat.',
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Periksa koneksi dan aturan akses Firestore.\n'
+                              '${snapshot.error}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 12,
+                                color: Color(0xFF6B5147),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
 
-                    const SizedBox(height: 20),
+                  final items = snapshot.data ?? [];
 
-                    // ==================================================
-                    // 2. GEJALA & TANDA BAHAYA
-                    // ==================================================
-                    _buildEducationCard(
-                      image: 'assets/images/edukasi_gejala_red_flags.png',
-                      title: 'Gejala & Tanda Bahaya (Red Flags)',
-                      description:
-                          'Kenali ciri khas gejala GERD dan tanda bahaya\n'
-                          'kapan kamu harus segera ke dokter',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const GejalaTandaBahayaScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                  if (items.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.menu_book_outlined,
+                              size: 48,
+                              color: Color(0xFFB9543A),
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'Belum ada konten edukasi.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF493C37),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
 
-                    const SizedBox(height: 20),
+                  return ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 90),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: 20),
+                    itemBuilder: (context, index) {
+                      final item = items[index];
 
-                    // ==================================================
-                    // 3. PERTOLONGAN PERTAMA
-                    // ==================================================
-                    _buildEducationCard(
-                      image: 'assets/images/edukasi_pertolongan_pertama.png',
-                      title: 'Pertolongan Pertama Saat Kambuh',
-                      description:
-                          'Langkah praktis dan cepat untuk meredakan\n'
-                          'rasa tidak nyaman saat asam lambung naik',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const PertolonganSaatKambuhScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ==================================================
-                    // 4. MITOS VS FAKTA
-                    // ==================================================
-                    _buildEducationCard(
-                      image: 'assets/images/edukasi_mitos_fakta.png',
-                      title: 'Mitos vs. Fakta GERD',
-                      description:
-                          'Sering dengar anggapan seputar asam\n'
-                          'lambung? Cek mana yang mitos dan fakta\n'
-                          'medisnya',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MitosFaktaScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ==================================================
-                    // 5. WAKTU MAKAN
-                    // ==================================================
-                    _buildEducationCard(
-                      image: 'assets/images/edukasi_waktu_makan.png',
-                      title: 'Waktu Makan yang Tepat untuk Penderita GERD',
-                      description:
-                          'Panduan mengatur waktu makan untuk penderita GERD.',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const WaktuMakanScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 14),
-                  ],
-                ),
+                      return _buildEducationCard(
+                        item: item,
+                        description: _getDescription(item),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
-
-      // ==============================================================
-      // BOTTOM NAVIGATION
-      // ==============================================================
       bottomNavigationBar: AppBottomNavigation(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationTap,
@@ -262,18 +226,19 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
     );
   }
 
-  // ================================================================
-  // EDUCATION CARD
-  // ================================================================
-
   Widget _buildEducationCard({
-    required String image,
-    required String title,
+    required AdminContentItem item,
     required String description,
-    required VoidCallback onTap,
   }) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => UserContentDetailScreen(item: item),
+          ),
+        );
+      },
       borderRadius: BorderRadius.circular(20),
       child: Container(
         width: double.infinity,
@@ -293,10 +258,6 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
         ),
         child: Row(
           children: [
-            // ======================================================
-            // IMAGE
-            // ======================================================
-
             Container(
               width: 90,
               height: 90,
@@ -307,38 +268,41 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(5),
-                child: Image.asset(image, fit: BoxFit.contain),
+                child: Image.asset(
+                  item.imageAsset,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.menu_book_rounded,
+                    size: 38,
+                    color: Color(0xFFB9543A),
+                  ),
+                ),
               ),
             ),
-
             const SizedBox(width: 14),
-
-            // ======================================================
-            // TEXT
-            // ======================================================
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    item.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
+                      fontFamily: 'Nunito',
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: primaryBrown,
                     ),
                   ),
-
                   const SizedBox(height: 7),
-
                   Text(
                     description,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
+                      fontFamily: 'Nunito',
                       fontSize: 12,
                       height: 1.25,
                       color: Color(0xFF39302C),
@@ -347,10 +311,6 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
                 ],
               ),
             ),
-
-            // ======================================================
-            // ARROW
-            // ======================================================
             const Padding(
               padding: EdgeInsets.only(left: 5, right: 14),
               child: Icon(

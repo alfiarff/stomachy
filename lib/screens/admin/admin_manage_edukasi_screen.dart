@@ -16,19 +16,22 @@ class _AdminManageEdukasiScreenState extends State<AdminManageEdukasiScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
 
   static const Color headingDark = Color(0xFF251814);
-  static const Color bodyText = Color(0xFF6B5147);
 
   static const String contentType = 'edukasi';
   static const String defaultCategory = 'Materi Dasar';
   static const String defaultImageAsset = 'assets/images/edukasi_gerd.png';
 
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
-  final TextEditingController _contentController = TextEditingController();
-  final TextEditingController _searchController = TextEditingController();
+    final TextEditingController _titleController = TextEditingController();
+    final TextEditingController _categoryController = TextEditingController();
+    final TextEditingController _contentController = TextEditingController();
+    final TextEditingController _summaryController = TextEditingController();
+    final TextEditingController _searchController = TextEditingController();
+
+    final List<_EducationSectionDraft> _sections = [];
 
   AdminContentItem? _editingItem;
   bool _isSaving = false;
+
 
   @override
   void dispose() {
@@ -36,6 +39,12 @@ class _AdminManageEdukasiScreenState extends State<AdminManageEdukasiScreen> {
     _titleController.dispose();
     _categoryController.dispose();
     _contentController.dispose();
+    _summaryController.dispose();
+
+    for (final section in _sections) {
+      section.dispose();
+    }
+
     super.dispose();
   }
 
@@ -133,7 +142,7 @@ class _AdminManageEdukasiScreenState extends State<AdminManageEdukasiScreen> {
         borderRadius: BorderRadius.circular(21),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -275,7 +284,7 @@ class _AdminManageEdukasiScreenState extends State<AdminManageEdukasiScreen> {
           borderRadius: BorderRadius.circular(17),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 7,
               offset: const Offset(0, 3),
             ),
@@ -398,161 +407,356 @@ class _AdminManageEdukasiScreenState extends State<AdminManageEdukasiScreen> {
     );
   }
 
-  void _showContentForm({required AdminContentItem? editItem}) {
+
+    void _showContentForm({required AdminContentItem? editItem}) {
     _editingItem = editItem;
 
+    for (final section in _sections) {
+        section.dispose();
+    }
+    _sections.clear();
+
     if (editItem != null) {
-      _titleController.text = editItem.title;
-      _categoryController.text = editItem.category;
-      _contentController.text = editItem.content;
+        _titleController.text = editItem.title;
+        _categoryController.text = editItem.category;
+        _contentController.text = editItem.content;
+        _summaryController.text = editItem.summary;
+
+        for (final section in editItem.sections) {
+        final rawPoints = section['points'];
+        final points = rawPoints is List
+            ? rawPoints.map((point) => point.toString()).toList()
+            : <String>[];
+
+        _sections.add(
+            _EducationSectionDraft(
+            title: section['title']?.toString() ?? '',
+            points: points.isEmpty ? [''] : points,
+            ),
+        );
+        }
+
+        // Konten lama yang belum memiliki sections tetap bisa diedit.
+        if (_sections.isEmpty && editItem.content.trim().isNotEmpty) {
+        _sections.add(
+            _EducationSectionDraft(
+            title: 'Materi',
+            points: [editItem.content],
+            ),
+        );
+        }
     } else {
-      _titleController.clear();
-      _categoryController.text = defaultCategory;
-      _contentController.clear();
+        _titleController.clear();
+        _categoryController.text = defaultCategory;
+        _contentController.clear();
+        _summaryController.clear();
     }
 
     showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext sheetContext) {
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (BuildContext sheetContext) {
         return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setSheetState) {
+            builder: (BuildContext context, StateSetter setSheetState) {
+            Widget fieldLabel(String text) {
+                return Text(
+                text,
+                style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF493C37),
+                ),
+                );
+            }
+
+            Widget textField({
+                required TextEditingController controller,
+                required String hint,
+                int maxLines = 1,
+            }) {
+                return TextField(
+                controller: controller,
+                maxLines: maxLines,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: _inputDecoration(hint),
+                );
+            }
+
             return Padding(
-              padding: EdgeInsets.only(
+                padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Container(
+                ),
+                child: Container(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                    maxHeight: MediaQuery.of(context).size.height * 0.88,
                 ),
                 decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(22),
+                    ),
                 ),
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Center(
+                        Center(
                         child: Container(
-                          width: 42,
-                          height: 4,
-                          decoration: BoxDecoration(
+                            width: 42,
+                            height: 4,
+                            decoration: BoxDecoration(
                             color: const Color(0xFFE0CBBE),
                             borderRadius: BorderRadius.circular(10),
-                          ),
+                            ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _editingItem == null ? 'Tambah Konten Baru' : 'Edit Konten',
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                        _editingItem == null
+                            ? 'Tambah Edukasi'
+                            : 'Edit Edukasi',
                         style: const TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF251814),
+                            fontFamily: 'Fredoka',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF251814),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Kategori',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF493C37),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
+                        const SizedBox(height: 16),
+
+                        fieldLabel('Kategori'),
+                        const SizedBox(height: 6),
+                        textField(
                         controller: _categoryController,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: _inputDecoration('Contoh: Materi Dasar'),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Judul',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF493C37),
+                        hint: 'Contoh: Materi Dasar',
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
+                        const SizedBox(height: 14),
+
+                        fieldLabel('Judul Edukasi'),
+                        const SizedBox(height: 6),
+                        textField(
                         controller: _titleController,
+                        hint: 'Contoh: Apa Itu GERD?',
                         maxLines: 2,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: _inputDecoration('Contoh: Apa Itu GERD?'),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Isi Konten',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF493C37),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _contentController,
-                        maxLines: 6,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: _inputDecoration(
-                          'Tulis isi lengkap konten di sini...',
+                        const SizedBox(height: 14),
+
+                        fieldLabel('Ringkasan / Deskripsi Pembuka'),
+                        const SizedBox(height: 6),
+                        textField(
+                        controller: _summaryController,
+                        hint: 'Tulis pengantar singkat materi...',
+                        maxLines: 4,
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
+                        const SizedBox(height: 20),
+
+                        Row(
+                        children: [
+                            Expanded(
+                            child: fieldLabel('Bagian Materi'),
+                            ),
+                            TextButton.icon(
+                            onPressed: () {
+                                setSheetState(() {
+                                _sections.add(_EducationSectionDraft());
+                                });
+                            },
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: const Text('Tambah Bagian'),
+                            style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFB05039),
+                            ),
+                            ),
+                        ],
+                        ),
+                        const SizedBox(height: 8),
+
+                        if (_sections.isEmpty)
+                        Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                            color: const Color(0xFFFFF5EF),
+                            borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                            'Belum ada bagian materi. Tekan "Tambah Bagian" untuk mulai.',
+                            style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 12,
+                                color: Color(0xFF6B5147),
+                            ),
+                            ),
+                        ),
+
+                        for (int i = 0; i < _sections.length; i++) ...[
+                        Container(
+                            margin: const EdgeInsets.only(bottom: 14),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                            color: const Color(0xFFFFF5EF),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                                color: const Color(0xFFF0DCD1),
+                            ),
+                            ),
+                            child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                                Row(
+                                children: [
+                                    Expanded(
+                                    child: Text(
+                                        'Bagian ${i + 1}',
+                                        style: const TextStyle(
+                                        fontFamily: 'Nunito',
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF493C37),
+                                        ),
+                                    ),
+                                    ),
+                                    IconButton(
+                                    tooltip: 'Hapus bagian',
+                                    onPressed: () {
+                                        setSheetState(() {
+                                        _sections.removeAt(i).dispose();
+                                        });
+                                    },
+                                    icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Color(0xFFB05039),
+                                        size: 20,
+                                    ),
+                                    ),
+                                ],
+                                ),
+                                const SizedBox(height: 6),
+                                fieldLabel('Judul Bagian'),
+                                const SizedBox(height: 6),
+                                textField(
+                                controller: _sections[i].titleController,
+                                hint: 'Contoh: Gejala GERD',
+                                ),
+                                const SizedBox(height: 14),
+
+                                fieldLabel('Poin Materi'),
+                                const SizedBox(height: 8),
+
+                                for (
+                                int j = 0;
+                                j < _sections[i].pointControllers.length;
+                                j++
+                                ) ...[
+                                Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                    Expanded(
+                                        child: textField(
+                                        controller:
+                                            _sections[i].pointControllers[j],
+                                        hint: 'Tulis poin materi...',
+                                        maxLines: 3,
+                                        ),
+                                    ),
+                                    IconButton(
+                                        tooltip: 'Hapus poin',
+                                        onPressed: () {
+                                        setSheetState(() {
+                                            final points =
+                                                _sections[i].pointControllers;
+
+                                            if (points.length > 1) {
+                                            points.removeAt(j).dispose();
+                                            } else {
+                                            points.first.clear();
+                                            }
+                                        });
+                                        },
+                                        icon: const Icon(
+                                        Icons.remove_circle_outline_rounded,
+                                        color: Color(0xFFB05039),
+                                        size: 20,
+                                        ),
+                                    ),
+                                    ],
+                                ),
+                                const SizedBox(height: 8),
+                                ],
+
+                                Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                    onPressed: () {
+                                    setSheetState(() {
+                                        _sections[i]
+                                            .pointControllers
+                                            .add(TextEditingController());
+                                    });
+                                    },
+                                    icon: const Icon(
+                                    Icons.add_rounded,
+                                    size: 17,
+                                    ),
+                                    label: const Text('Tambah Poin'),
+                                    style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFFB05039),
+                                    ),
+                                ),
+                                ),
+                            ],
+                            ),
+                        ),
+                        ],
+
+                        const SizedBox(height: 8),
+                        SizedBox(
                         width: double.infinity,
                         height: 46,
                         child: ElevatedButton(
-                          onPressed: _isSaving ? null : _submitContent,
-                          style: ElevatedButton.styleFrom(
+                            onPressed: _isSaving ? null : _submitContent,
+                            style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFA9583C),
                             foregroundColor: Colors.white,
                             elevation: 3,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(23),
+                                borderRadius: BorderRadius.circular(23),
                             ),
-                          ),
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
+                            ),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
                                     color: Colors.white,
                                     strokeWidth: 2,
-                                  ),
+                                    ),
                                 )
-                              : Text(
-                                  _editingItem == null
-                                      ? 'Simpan Konten'
-                                      : 'Simpan Perubahan',
-                                  style: const TextStyle(
+                                : Text(
+                                    _editingItem == null
+                                        ? 'Simpan Edukasi'
+                                        : 'Simpan Perubahan',
+                                    style: const TextStyle(
                                     fontFamily: 'Nunito',
                                     fontSize: 13,
                                     fontWeight: FontWeight.w800,
-                                  ),
+                                    ),
                                 ),
                         ),
-                      ),
+                        ),
                     ],
-                  ),
+                    ),
                 ),
-              ),
+                ),
             );
-          },
+            },
         );
-      },
+        },
     );
-  }
+    }
 
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
@@ -568,10 +772,44 @@ class _AdminManageEdukasiScreenState extends State<AdminManageEdukasiScreen> {
     );
   }
 
-  Future<void> _submitContent() async {
+
+    Future<void> _submitContent() async {
     final title = _titleController.text.trim();
     final category = _categoryController.text.trim();
-    final content = _contentController.text.trim();
+    final summary = _summaryController.text.trim();
+
+    final sections = _sections
+        .map((section) {
+            final points = section.pointControllers
+                .map((controller) => controller.text.trim())
+                .where((point) => point.isNotEmpty)
+                .toList();
+
+            return <String, dynamic>{
+            'title': section.titleController.text.trim(),
+            'points': points,
+            };
+        })
+        .where(
+            (section) =>
+                (section['title'] as String).isNotEmpty ||
+                (section['points'] as List).isNotEmpty,
+        )
+        .toList();
+
+    // Tetap simpan content agar kompatibel dengan konten lama.
+    final content = sections
+        .map((section) {
+            final sectionTitle = section['title'] as String;
+            final points = section['points'] as List;
+
+            return [
+            if (sectionTitle.isNotEmpty) sectionTitle,
+            ...points.map((point) => '• $point'),
+            ].join('\n');
+        })
+        .where((text) => text.isNotEmpty)
+        .join('\n\n');
 
     final String imageAsset =
         (_editingItem != null && _editingItem!.imageAsset.isNotEmpty)
@@ -579,84 +817,118 @@ class _AdminManageEdukasiScreenState extends State<AdminManageEdukasiScreen> {
             : defaultImageAsset;
 
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('Judul tidak boleh kosong.'),
+            behavior: SnackBarBehavior.floating,
+            content: Text('Judul tidak boleh kosong.'),
         ),
-      );
-      return;
+        );
+        return;
     }
 
-    if (content.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    if (summary.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('Isi konten tidak boleh kosong.'),
+            behavior: SnackBarBehavior.floating,
+            content: Text('Ringkasan edukasi tidak boleh kosong.'),
         ),
-      );
-      return;
+        );
+        return;
+    }
+
+    if (sections.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            content: Text('Tambahkan minimal satu bagian materi.'),
+        ),
+        );
+        return;
+    }
+
+    for (final section in sections) {
+        if ((section['title'] as String).isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            content: Text('Setiap bagian materi harus memiliki judul.'),
+            ),
+        );
+        return;
+        }
+
+        if ((section['points'] as List).isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            content: Text('Setiap bagian harus memiliki minimal satu poin.'),
+            ),
+        );
+        return;
+        }
     }
 
     setState(() => _isSaving = true);
 
     try {
-      if (_editingItem != null) {
+        if (_editingItem != null) {
         await AdminContentService.updateContent(
-          id: _editingItem!.id,
-          title: title,
-          category: category,
-          type: contentType,
-          imageAsset: imageAsset,
-          content: content,
+            id: _editingItem!.id,
+            title: title,
+            category: category,
+            type: contentType,
+            imageAsset: imageAsset,
+            content: content,
+            summary: summary,
+            sections: sections,
         );
-
-        if (!mounted) return;
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            content: Text('Perubahan konten berhasil disimpan!'),
-          ),
-        );
-      } else {
+        } else {
         await AdminContentService.addContent(
-          title: title,
-          category: category,
-          type: contentType,
-          imageAsset: imageAsset,
-          content: content,
+            title: title,
+            category: category,
+            type: contentType,
+            imageAsset: imageAsset,
+            content: content,
+            summary: summary,
+            sections: sections,
         );
+        }
 
         if (!mounted) return;
+
         Navigator.pop(context);
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            content: Text('Konten baru berhasil ditambahkan!'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('Gagal menyimpan: $e'),
+            behavior: SnackBarBehavior.floating,
+            content: Text(
+            _editingItem == null
+                ? 'Edukasi berhasil ditambahkan!'
+                : 'Perubahan edukasi berhasil disimpan!',
+            ),
         ),
-      );
+        );
+    } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            behavior: SnackBarBehavior.floating,
+            content: Text('Gagal menyimpan: $e'),
+        ),
+        );
     } finally {
-      if (mounted) {
+        if (mounted) {
         setState(() => _isSaving = false);
-      }
+        }
     }
-  }
+    }
 
   void _showDeleteConfirmation(AdminContentItem item) {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.65),
+      barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (BuildContext dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -877,5 +1149,27 @@ class _AdminManageEdukasiScreenState extends State<AdminManageEdukasiScreen> {
         ],
       ),
     );
+  }
+} 
+
+
+class _EducationSectionDraft {
+  final TextEditingController titleController;
+  final List<TextEditingController> pointControllers;
+
+  _EducationSectionDraft({
+    String title = '',
+    List<String> points = const [''],
+  })  : titleController = TextEditingController(text: title),
+        pointControllers = points
+            .map((point) => TextEditingController(text: point))
+            .toList();
+
+  void dispose() {
+    titleController.dispose();
+
+    for (final controller in pointControllers) {
+      controller.dispose();
+    }
   }
 }
