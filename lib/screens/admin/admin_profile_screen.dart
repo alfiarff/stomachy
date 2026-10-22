@@ -449,7 +449,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                     fontFamily: 'Nunito',
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFFB9543A),
+                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(height: 7),
