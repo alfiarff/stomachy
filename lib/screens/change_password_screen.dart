@@ -51,7 +51,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   // ===============================================================
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
-
   final Color cardColor = const Color(0xFFFFE9DC);
 
   // Brown utama STOMACHY
@@ -216,17 +215,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
               const SizedBox(height: 37),
 
-              // =====================================================
-              // SAVE BUTTON
-              // =====================================================
-              _buildSaveButton(),
+              _buildActionButtons(),
 
-              const SizedBox(height: 10),
-
-              // =====================================================
-              // CANCEL BUTTON
-              // =====================================================
-              _buildCancelButton(),
             ],
           ),
         ),
@@ -517,86 +507,86 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
-  // ===============================================================
-  // SAVE BUTTON
-  // ===============================================================
+  // =====================================================
+  // TOMBOL SIMPAN DAN BATAL
+  // =====================================================
 
-  Widget _buildSaveButton() {
-    return GestureDetector(
-      onTap: _isLoading ? null : _changePassword,
-      child: Container(
-        width: double.infinity,
-        height: 50,
-        decoration: BoxDecoration(
-          color: brown,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Center(
-          child: _isLoading
-              ? const SizedBox(
-                  width: 21,
-                  height: 21,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text(
-                  'Simpan Kata Sandi',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        // TOMBOL BATAL
+        Expanded(
+          child: SizedBox(
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFFB05039),
+                disabledBackgroundColor: Colors.white,
+                elevation: 2,
+                shadowColor: Colors.black.withOpacity(0.12),
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
                 ),
-        ),
-      ),
-    );
-  }
-
-  // ===============================================================
-  // CANCEL BUTTON
-  // ===============================================================
-
-  Widget _buildCancelButton() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-      },
-      child: Container(
-        width: double.infinity,
-        height: 50,
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFE6D5),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: const Center(
-          child: Text(
-            'Batal',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFFB05039),
+              ),
+              child: const Text(
+                'Batal',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFB05039),
+                ),
+              ),
             ),
           ),
         ),
-      ),
+
+        const SizedBox(width: 12),
+
+        // TOMBOL SIMPAN KATA SANDI
+        Expanded(
+          child: SizedBox(
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _changePassword,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB05039),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: const Color(0xFFB05039),
+                elevation: 2,
+                shadowColor: Colors.black.withOpacity(0.12),
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 19,
+                      height: 19,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Simpan Kata Sandi',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
