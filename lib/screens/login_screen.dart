@@ -306,11 +306,38 @@ class _LoginScreenState extends State<LoginScreen> {
       // AMBIL DATA USER DULU
       // ===========================================================
 
-      final userRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid);
 
-      final existingDoc = await userRef.get();
+final userRef = FirebaseFirestore.instance
+    .collection('users')
+    .doc(user.uid);
+
+final existingDoc = await userRef.get();
+
+// CEK APAKAH AKUN ADA
+if (!existingDoc.exists) {
+  await FirebaseAuth.instance.signOut();
+
+  if (!mounted) return;
+
+  _showMessage('Data akun belum terdaftar di sistem.');
+  return;
+}
+
+// CEK STATUS AKUN ON/OFF
+final existingData = existingDoc.data();
+
+if (existingData == null ||
+    existingData['isActive'] == false) {
+  await FirebaseAuth.instance.signOut();
+
+  if (!mounted) return;
+
+  _showMessage(
+    'Akun ini telah dinonaktifkan oleh administrator.',
+  );
+  return;
+}
+
 
       // ===========================================================
       // CEK ROLE YANG SUDAH ADA

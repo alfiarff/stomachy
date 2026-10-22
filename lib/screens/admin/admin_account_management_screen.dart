@@ -135,48 +135,62 @@ class _AdminAccountManagementScreenState
   // AKTIF / NONAKTIFKAN AKUN
   // ===============================================================
 
-  Future<void> _toggleAccountStatus({
-    required String uid,
-    required String name,
-    required bool value,
-  }) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .set(
-        {
-          'isActive': value,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
 
-      if (!mounted) return;
+Future<void> _toggleAccountStatus({
+  required String uid,
+  required String name,
+  required bool value,
+}) async {
+  try {
+    final userRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid);
 
+    // Simpan status akun yang dipilih admin.
+    await userRef.update({
+      'isActive': value,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    // Baca kembali untuk memastikan perubahan tersimpan.
+    final updatedDoc = await userRef.get();
+    final savedStatus = updatedDoc.data()?['isActive'];
+
+    if (!mounted) return;
+
+    if (savedStatus != value) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
+        const SnackBar(
           content: Text(
-            value
-                ? 'Akun $name diaktifkan.'
-                : 'Akun $name dinonaktifkan.',
+            'Status akun belum berhasil diperbarui.',
           ),
         ),
       );
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text(
-            'Gagal mengubah status akun: $e',
-          ),
-        ),
-      );
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          value
+              ? 'Akun $name berhasil diaktifkan.'
+              : 'Akun $name berhasil dinonaktifkan.',
+        ),
+      ),
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Gagal mengubah status akun: $e',
+        ),
+      ),
+    );
   }
+}
+
 
   // ===============================================================
   // BUILD
