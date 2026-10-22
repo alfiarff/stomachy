@@ -29,12 +29,15 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
   final TextEditingController _summaryController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+
   bool _isPublished = true;
   AdminArticle? _editingArticle;
   bool _isSaving = false;
 
   @override
   void dispose() {
+    _searchController.dispose();
     _titleController.dispose();
     _summaryController.dispose();
     _contentController.dispose();
@@ -73,25 +76,31 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+      floatingActionButton: _buildAddButton(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(15, 10, 15, 95),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader('Artikel'),
-              const SizedBox(height: 18),
-              _buildAddButton(),
-              const SizedBox(height: 18),
-              _buildArticlesList(),
-              const SizedBox(height: 15),
-            ],
-          ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+              child: _buildHeader('Artikel'),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
+              child: _buildSearchField(),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(15, 5, 15, 90),
+                child: _buildArticlesList(),
+              ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: AdminBottomNavigation(
@@ -101,33 +110,41 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 
-  Widget _buildArticlesList() {
-    return StreamBuilder<List<AdminArticle>>(
-      stream: AdminContentService.articlesStream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingState();
-        }
 
-        if (snapshot.hasError) {
-          return _buildErrorState(snapshot.error.toString());
-        }
-
-        final articles = snapshot.data ?? [];
-
-        if (articles.isEmpty) {
-          return _buildEmptyState();
-        }
-
-        return Column(
-          children: [
-            for (int i = 0; i < articles.length; i++) ...[
-              _buildArticleCard(articles[i]),
-              if (i != articles.length - 1) const SizedBox(height: 14),
-            ],
-          ],
-        );
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      onChanged: (_) {
+        setState(() {});
       },
+      decoration: InputDecoration(
+        hintText: 'Cari artikel...',
+        hintStyle: const TextStyle(
+          fontFamily: 'Nunito',
+          fontSize: 13,
+          color: Color(0xFF9B8880),
+        ),
+        prefixIcon: const Icon(
+          Icons.search_rounded,
+          color: Color(0xFFA9583C),
+        ),
+        suffixIcon: _searchController.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.close_rounded),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {});
+                },
+              )
+            : null,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
+        ),
+      ),
     );
   }
 
@@ -170,28 +187,89 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
     );
   }
 
+
+  Widget _buildArticlesList() {
+    return StreamBuilder<List<AdminArticle>>(
+      stream: AdminContentService.articlesStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingState();
+        }
+
+        if (snapshot.hasError) {
+          return _buildErrorState(snapshot.error.toString());
+        }
+
+        final articles = snapshot.data ?? [];
+        final keyword = _searchController.text.trim().toLowerCase();
+
+        final filteredArticles = articles.where((article) {
+          return article.title.toLowerCase().contains(keyword) ||
+              article.summary.toLowerCase().contains(keyword) ||
+              article.category.toLowerCase().contains(keyword);
+        }).toList();
+
+        if (filteredArticles.isEmpty) {
+          if (keyword.isNotEmpty) {
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                vertical: 40,
+                horizontal: 20,
+              ),
+              child: const Column(
+                children: [
+                  Icon(
+                    Icons.search_off_rounded,
+                    size: 45,
+                    color: Color(0xFFB9543A),
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'Artikel tidak ditemukan',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF493C37),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return _buildEmptyState();
+        }
+
+        return Column(
+          children: [
+            for (int i = 0; i < filteredArticles.length; i++) ...[
+              _buildArticleCard(filteredArticles[i]),
+              if (i != filteredArticles.length - 1)
+                const SizedBox(height: 14),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+
   Widget _buildAddButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 46,
-      child: ElevatedButton.icon(
-        onPressed: () => _showArticleForm(editArticle: null),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFA9583C),
-          foregroundColor: Colors.white,
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(23),
-          ),
-        ),
-        icon: const Icon(Icons.add_rounded, size: 20),
-        label: const Text(
-          'Tambah Artikel',
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-          ),
+    return FloatingActionButton.extended(
+      onPressed: () => _showArticleForm(editArticle: null),
+      backgroundColor: const Color(0xFFA9583C),
+      foregroundColor: Colors.white,
+      elevation: 4,
+      icon: const Icon(Icons.add_rounded),
+      label: const Text(
+        'Tambah Artikel',
+        style: TextStyle(
+          fontFamily: 'Nunito',
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
