@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/admin_content_service.dart';
+import '../../widgets/stomachy_cover_image.dart';
 
 // ===============================================================
 // DETAIL ARTIKEL (ADMIN) - TAMPILAN PROFESIONAL
@@ -35,52 +36,50 @@ class AdminArticleDetailScreen extends StatelessWidget {
   // HEADER
   // ===============================================================
 
-  
-Widget _buildHeader(BuildContext context) {
-  return Container(
-    padding: const EdgeInsets.symmetric(
-      horizontal: 15,
-      vertical: 8,
-    ),
-    decoration: const BoxDecoration(
-      color: Color(0xFFFFF5EF),
-    ),
-    child: Row(
-      children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const SizedBox(
-            width: 42,
-            height: 42,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Icon(
-                Icons.arrow_back_rounded,
-                size: 26,
-                color: Color(0xFF171310),
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 15,
+        vertical: 8,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFFF5EF),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const SizedBox(
+              width: 42,
+              height: 42,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  size: 26,
+                  color: Color(0xFF171310),
+                ),
               ),
             ),
           ),
-        ),
-        const Expanded(
-          child: Center(
-            child: Text(
-              'Artikel Kesehatan',
-              style: TextStyle(
-                fontFamily: 'Fredoka',
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF171310),
+          const Expanded(
+            child: Center(
+              child: Text(
+                'Artikel Kesehatan',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF171310),
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 42),
-      ],
-    ),
-  );
-}
-
+          const SizedBox(width: 42),
+        ],
+      ),
+    );
+  }
 
   // ===============================================================
   // HERO IMAGE
@@ -103,19 +102,10 @@ Widget _buildHeader(BuildContext context) {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
-        child: Image.asset(
-          article.imageAsset,
+        child: StomachyCoverImage(
+          imageSrc: article.imageAsset,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: const Color(0xFFFFE7D8),
-              child: const Icon(
-                Icons.article_outlined,
-                size: 70,
-                color: Color(0xFFB9543A),
-              ),
-            );
-          },
+          fallbackIcon: Icons.article_outlined,
         ),
       ),
     );
@@ -157,12 +147,12 @@ Widget _buildHeader(BuildContext context) {
 
           if (article.category.isNotEmpty) const SizedBox(height: 12),
 
-                    // JUDUL
-                    Text(
-                      article.title,
-                      style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 22,
+          // JUDUL
+          Text(
+            article.title,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 22,
               fontWeight: FontWeight.w800,
               color: Color(0xFF251814),
               height: 1.3,
@@ -388,7 +378,6 @@ Widget _buildHeader(BuildContext context) {
       ),
     );
   }
-
 
   // ===============================================================
   // ESTIMASI WAKTU BACA

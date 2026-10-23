@@ -10,10 +10,10 @@ import 'doctor_screen.dart';
 import 'screening_history_screen.dart';
 import 'edukasi_screen.dart';
 import 'profile_screen.dart';
-import 'artikel_tidur_screen.dart';
 import 'notification_screen.dart';
 
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_cover_image.dart';
 import '../services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -875,197 +875,190 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ===============================================================
-  // ARTICLE SECTION
+  // ARTICLE SECTION (1 MINGGU 1 ARTIKEL)
+  //
+  // Artikel yang tayang dihitung dengan rumus yang sama persis
+  // dengan beranda admin (lihat _computeWeeklyArticle di bawah),
+  // jadi admin dan user selalu melihat artikel yang sama.
   // ===============================================================
 
-
-Widget _buildArticleSection() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        'Artikel Minggu Ini',
-        style: TextStyle(
-          fontFamily: 'Fredoka',
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
-          color: Colors.black,
+  Widget _buildArticleSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Artikel Minggu Ini',
+          style: TextStyle(
+            fontFamily: 'Fredoka',
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: Colors.black,
+          ),
         ),
-      ),
 
-      const SizedBox(height: 12),
+        const SizedBox(height: 12),
 
-      StreamBuilder<List<AdminArticle>>(
-        stream: AdminContentService.articlesStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(
-                  color: Color(0xFFB9543A),
-                ),
-              ),
-            );
-          }
-
-          if (snapshot.hasError) {
-            return const Text(
-              'Artikel gagal dimuat.',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                color: Colors.black,
-              ),
-            );
-          }
-
-          // Hanya tampilkan artikel yang sudah diterbitkan admin.
-          final articles = (snapshot.data ?? [])
-              .where((article) => article.isPublished)
-              .toList();
-
-          if (articles.isEmpty) {
-            return Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(17),
-              ),
-              child: const Text(
-                'Belum ada artikel yang diterbitkan.',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 12,
-                  color: Colors.black,
-                ),
-              ),
-            );
-          }
-
-          // Artikel paling baru ditampilkan lebih dahulu.
-          articles.sort((a, b) => b.id.compareTo(a.id));
-
-          final article = articles.first;
-
-          return InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      AdminArticleDetailScreen(article: article),
+        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('articles')
+              .where('isPublished', isEqualTo: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(
+                    color: Color(0xFFB9543A),
+                  ),
                 ),
               );
-            },
-            borderRadius: BorderRadius.circular(17),
-            child: Container(
-              width: double.infinity,
-              height: 126,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(17),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 7,
-                    offset: const Offset(0, 3),
+            }
+
+            if (snapshot.hasError) {
+              return const Text(
+                'Artikel gagal dimuat.',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  color: Colors.black,
+                ),
+              );
+            }
+
+            final info = _computeWeeklyArticle(
+              snapshot.data?.docs ??
+                  const <QueryDocumentSnapshot<Map<String, dynamic>>>[],
+            );
+            final article = info.article;
+
+            if (article == null) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(17),
+                ),
+                child: const Text(
+                  'Belum ada artikel yang diterbitkan.',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    color: Colors.black,
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 105,
-                    height: 105,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(13),
-                      child: Image.asset(
-                        article.imageAsset,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: const Color(0xFFFFE7D8),
-                            child: const Icon(
-                              Icons.article_outlined,
-                              size: 40,
-                              color: Color(0xFFB9543A),
-                            ),
-                          );
-                        },
+                ),
+              );
+            }
+
+            return InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AdminArticleDetailScreen(article: article),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(17),
+              child: Container(
+                width: double.infinity,
+                height: 126,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(17),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 7,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 105,
+                      height: 105,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(13),
+                        child: StomachyCoverImage(
+                          imageSrc: article.imageAsset,
+                          fit: BoxFit.cover,
+                          fallbackIcon: Icons.article_outlined,
+                        ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(width: 12),
+                    const SizedBox(width: 12),
 
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          article.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 13,
-                            height: 1.2,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            article.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 13,
+                              height: 1.2,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black,
+                            ),
                           ),
-                        ),
 
-                        const SizedBox(height: 5),
+                          const SizedBox(height: 5),
 
-                        Text(
-                          article.summary,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 10,
-                            height: 1.25,
-                            color: Colors.black,
+                          Text(
+                            article.summary,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 10,
+                              height: 1.25,
+                              color: Colors.black,
+                            ),
                           ),
-                        ),
 
-                        const SizedBox(height: 7),
+                          const SizedBox(height: 7),
 
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Baca Selengkapnya',
-                              style: TextStyle(
-                                fontFamily: 'Nunito',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Baca Selengkapnya',
+                                style: TextStyle(
+                                  fontFamily: 'Nunito',
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: brown,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 13,
                                 color: brown,
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 13,
-                              color: brown,
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-      ),
-    ],
-  );
-}
+            );
+          },
+        ),
+      ],
+    );
+  }
 }
 
 // ===============================================================
@@ -1190,4 +1183,77 @@ class _NotificationBellState extends State<_NotificationBell> {
       ),
     );
   }
+}
+
+// ===============================================================
+// HASIL HITUNGAN ARTIKEL MINGGUAN
+// ===============================================================
+
+class _WeeklyArticleInfo {
+  final AdminArticle? article;
+  final int publishedCount;
+  final int daysUntilSwitch;
+
+  const _WeeklyArticleInfo({
+    required this.article,
+    required this.publishedCount,
+    required this.daysUntilSwitch,
+  });
+}
+
+// ===============================================================
+// HITUNG ARTIKEL AKTIF MINGGU INI (MEKANISME 1 MINGGU 1 ARTIKEL)
+//
+// Aturan:
+// 1. Semua artikel ber-status isPublished == true menjadi antrian
+//    tayang, diurutkan dari yang TERBARU (createTime dokumen).
+// 2. Artikel yang baru dipublikasikan langsung tayang, lalu
+//    tayangan berputar otomatis ke artikel sebelumnya setiap
+//    Senin (pembagian 7 hari sejak 1 Jan 2024).
+// 3. Fungsi ini juga ada di admin_home_screen.dart dengan rumus
+//    PERSIS SAMA supaya tampilan admin & user sinkron.
+//    JANGAN mengubah rumus hanya di salah satu file!
+// ===============================================================
+
+_WeeklyArticleInfo _computeWeeklyArticle(
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+) {
+  final published =
+      docs.where((doc) => doc.data()['isPublished'] == true).toList()
+        ..sort((a, b) {
+          final aTime = a.data()['createdAt'];
+          final bTime = b.data()['createdAt'];
+
+          final aDate = aTime is Timestamp
+              ? aTime.toDate()
+              : DateTime.fromMillisecondsSinceEpoch(0);
+
+          final bDate = bTime is Timestamp
+              ? bTime.toDate()
+              : DateTime.fromMillisecondsSinceEpoch(0);
+
+          return bDate.compareTo(aDate);
+        });
+
+  if (published.isEmpty) {
+    return const _WeeklyArticleInfo(
+      article: null,
+      publishedCount: 0,
+      daysUntilSwitch: 7,
+    );
+  }
+
+  final now = DateTime.now();
+  final daysSinceAnchor = now.difference(DateTime(2024, 1, 1)).inDays;
+  final weekIndex = daysSinceAnchor ~/ 7;
+  final daysIntoWeek = daysSinceAnchor % 7;
+  final daysUntilSwitch = 7 - daysIntoWeek;
+
+  final activeDoc = published[weekIndex % published.length];
+
+  return _WeeklyArticleInfo(
+    article: AdminArticle.fromFirestore(activeDoc),
+    publishedCount: published.length,
+    daysUntilSwitch: daysUntilSwitch,
+  );
 }

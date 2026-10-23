@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../widgets/admin_bottom_navigation.dart';
+import '../../widgets/stomachy_cover_image.dart';
 import '../../services/admin_content_service.dart';
 
 import 'admin_article_screen.dart';
@@ -344,12 +345,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
   // ===============================================================
-  // ARTIKEL CARD (BACA SEKALI PAKAI get())
+  // ARTIKEL CARD (1 MINGGU 1 ARTIKEL + HITUNGAN BERGANTI)
   // ===============================================================
 
   Widget _buildArticleCard() {
-    return FutureBuilder<AdminArticle?>(
-      future: _getPublishedArticle(),
+    return FutureBuilder<_WeeklyArticleInfo>(
+      future: _getWeeklyArticleInfo(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildHomeArticleLoading();
@@ -359,7 +360,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           return _buildHomeArticleError();
         }
 
-        final article = snapshot.data;
+        final info = snapshot.data!;
+        final article = info.article;
 
         return InkWell(
           onTap: () {
@@ -438,9 +440,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         height: 92,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.asset(
-                            article.imageAsset,
+                          child: StomachyCoverImage(
+                            imageSrc: article.imageAsset,
                             fit: BoxFit.cover,
+                            fallbackIcon: Icons.article_outlined,
                           ),
                         ),
                       ),
@@ -514,19 +517,24 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       color: const Color(0xFFFFE9D9),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.info_outline_rounded,
                           size: 14,
                           color: Color(0xFFB05039),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Berganti otomatis dalam 3 hari - '
-                            'siapkan artikel berikutnya!',
-                            style: TextStyle(
+                            info.publishedCount >= 2
+                                ? 'Berganti otomatis dalam ${info.daysUntilSwitch} '
+                                    'hari lagi — tayangan artikel berganti '
+                                    'setiap minggu.'
+                                : 'Artikel tayang selama 1 minggu. Tambahkan '
+                                    'artikel berikutnya di menu Artikel agar '
+                                    'tayangan bisa berganti otomatis!',
+                            style: const TextStyle(
                               fontFamily: 'Nunito',
                               fontSize: 9,
                               height: 1.3,
@@ -548,22 +556,17 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
   // ===============================================================
-  // AMBIL 1 ARTIKEL TAYANG (PAKE get, BUKAN STREAM)
+  // AMBIL ARTIKEL YANG TAYANG MINGGU INI (PAKE get, BUKAN STREAM)
   // ===============================================================
 
-  Future<AdminArticle?> _getPublishedArticle() async {
+  Future<_WeeklyArticleInfo> _getWeeklyArticleInfo() async {
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('articles')
           .where('isPublished', isEqualTo: true)
-          .limit(1)
           .get();
 
-      if (snapshot.docs.isEmpty) {
-        return null;
-      }
-
-      return AdminArticle.fromFirestore(snapshot.docs.first);
+      return _computeWeeklyArticle(snapshot.docs);
     } catch (e) {
       rethrow;
     }
@@ -623,60 +626,59 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   // KELOLA KONTEN
   // ===============================================================
 
-  
-Widget _buildContentManagement() {
-  return IntrinsicHeight(
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: _buildContentCard(
-            icon: BootstrapIcons.book,
-            title: 'Edukasi',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdminManageEdukasiScreen(),
-                ),
-              );
-            },
+  Widget _buildContentManagement() {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _buildContentCard(
+              icon: BootstrapIcons.book,
+              title: 'Edukasi',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdminManageEdukasiScreen(),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildContentCard(
-            icon: BootstrapIcons.egg_fried,
-            title: 'Rekomendasi\nMakanan',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdminManageMakananScreen(),
-                ),
-              );
-            },
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildContentCard(
+              icon: BootstrapIcons.egg_fried,
+              title: 'Rekomendasi\nMakanan',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdminManageMakananScreen(),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildContentCard(
-            icon: BootstrapIcons.activity,
-            title: 'Rekomendasi\nOlahraga',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdminManageOlahragaScreen(),
-                ),
-              );
-            },
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildContentCard(
+              icon: BootstrapIcons.activity,
+              title: 'Rekomendasi\nOlahraga',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdminManageOlahragaScreen(),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   // ===============================================================
   // CONTENT CARD
@@ -825,5 +827,77 @@ Widget _buildContentManagement() {
       ),
     );
   }
+}
 
+// ===============================================================
+// HASIL HITUNGAN ARTIKEL MINGGUAN
+// ===============================================================
+
+class _WeeklyArticleInfo {
+  final AdminArticle? article;
+  final int publishedCount;
+  final int daysUntilSwitch;
+
+  const _WeeklyArticleInfo({
+    required this.article,
+    required this.publishedCount,
+    required this.daysUntilSwitch,
+  });
+}
+
+// ===============================================================
+// HITUNG ARTIKEL AKTIF MINGGU INI (MEKANISME 1 MINGGU 1 ARTIKEL)
+//
+// Aturan:
+// 1. Semua artikel ber-status isPublished == true menjadi antrian
+//    tayang, diurutkan dari yang TERBARU (createTime dokumen).
+// 2. Artikel yang baru dipublikasikan langsung tayang, lalu
+//    tayangan berputar otomatis ke artikel sebelumnya setiap
+//    Senin (pembagian 7 hari sejak 1 Jan 2024).
+// 3. Fungsi ini juga ada di home_screen.dart (user) dengan
+//    rumus PERSIS SAMA supaya tampilan admin & user sinkron.
+//    JANGAN mengubah rumus hanya di salah satu file!
+// ===============================================================
+
+_WeeklyArticleInfo _computeWeeklyArticle(
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+) {
+  final published =
+      docs.where((doc) => doc.data()['isPublished'] == true).toList()
+        ..sort((a, b) {
+          final aTime = a.data()['createdAt'];
+          final bTime = b.data()['createdAt'];
+
+          final aDate = aTime is Timestamp
+              ? aTime.toDate()
+              : DateTime.fromMillisecondsSinceEpoch(0);
+
+          final bDate = bTime is Timestamp
+              ? bTime.toDate()
+              : DateTime.fromMillisecondsSinceEpoch(0);
+
+          return bDate.compareTo(aDate);
+        });
+
+  if (published.isEmpty) {
+    return const _WeeklyArticleInfo(
+      article: null,
+      publishedCount: 0,
+      daysUntilSwitch: 7,
+    );
+  }
+
+  final now = DateTime.now();
+  final daysSinceAnchor = now.difference(DateTime(2024, 1, 1)).inDays;
+  final weekIndex = daysSinceAnchor ~/ 7;
+  final daysIntoWeek = daysSinceAnchor % 7;
+  final daysUntilSwitch = 7 - daysIntoWeek;
+
+  final activeDoc = published[weekIndex % published.length];
+
+  return _WeeklyArticleInfo(
+    article: AdminArticle.fromFirestore(activeDoc),
+    publishedCount: published.length,
+    daysUntilSwitch: daysUntilSwitch,
+  );
 }
