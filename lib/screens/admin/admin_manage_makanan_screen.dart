@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../services/admin_content_service.dart';
+import '../../widgets/stomachy_cover_image.dart';
 
 import 'admin_content_detail_screen.dart';
+import 'admin_makanan_form_screen.dart';
 
 // ===============================================================
 // KELOLA REKOMENDASI MAKANAN (ADMIN)
 //
-// CRUD khusus konten rekomendasi makanan.
-// type = 'makanan' (sudah dikunci di file ini)
+// - List + cari + hapus konten makanan
+// - Tambah/Edit -> AdminMakananFormScreen (full screen)
+// - type = 'makanan' (dikunci di file ini)
 // ===============================================================
 
 class AdminManageMakananScreen extends StatefulWidget {
@@ -19,38 +22,15 @@ class AdminManageMakananScreen extends StatefulWidget {
       _AdminManageMakananScreenState();
 }
 
-class _AdminManageMakananScreenState
-    extends State<AdminManageMakananScreen> {
-  final Color backgroundColor = const Color(0xFFFFF5EF);
-
-  static const Color headingDark = Color(0xFF251814);
-  static const Color bodyText = Color(0xFF6B5147);
-
-  // =============================================================
-  // PENGATURAN KONTEN MAKANAN
-  // =============================================================
-
+class _AdminManageMakananScreenState extends State<AdminManageMakananScreen> {
   static const String contentType = 'makanan';
-  static const String defaultCategory = 'Karbohidrat';
+  static const Color headingDark = Color(0xFF251814);
 
-  // TODO: ganti ke asset khusus makanan kalau sudah ada,
-  // mis. 'assets/images/makanan.png'
-  static const String defaultImageAsset = 'assets/images/edukasi_gerd.png';
-
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
-  final TextEditingController _contentController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-
-  AdminContentItem? _editingItem;
-  bool _isSaving = false;
 
   @override
   void dispose() {
     _searchController.dispose();
-    _titleController.dispose();
-    _categoryController.dispose();
-    _contentController.dispose();
     super.dispose();
   }
 
@@ -58,34 +38,34 @@ class _AdminManageMakananScreenState
   // BUILD
   // =============================================================
 
-    @override
-    Widget build(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: backgroundColor,
-        floatingActionButton: _buildAddButton(),
-        body: SafeArea(
+      backgroundColor: const Color(0xFFFFF5EF),
+      floatingActionButton: _buildAddButton(),
+      body: SafeArea(
         child: Column(
-            children: [
+          children: [
             Padding(
-                padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
-                child: _buildHeader('Kelola Makanan'),
+              padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+              child: _buildHeader('Kelola Makanan'),
             ),
             Padding(
-                padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
-                child: _buildSearchField(),
+              padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
+              child: _buildSearchField(),
             ),
             Expanded(
-                child: SingleChildScrollView(
+              child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(15, 5, 15, 90),
                 child: _buildContentList(),
-                ),
+              ),
             ),
-            ],
+          ],
         ),
-        ),
+      ),
     );
-    }
+  }
 
   // =============================================================
   // HEADER
@@ -134,134 +114,142 @@ class _AdminManageMakananScreenState
   // TOMBOL TAMBAH
   // =============================================================
 
-    Widget _buildAddButton() {
+  Widget _buildAddButton() {
     return FloatingActionButton.extended(
-        onPressed: () => _showContentForm(editItem: null),
-        backgroundColor: const Color(0xFFA9583C),
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AdminMakananFormScreen(),
+          ),
+        );
+      },
+      backgroundColor: const Color(0xFFA9583C),
+      foregroundColor: Colors.white,
+      elevation: 4,
+      icon: const Icon(Icons.add_rounded),
+      label: const Text(
         'Tambah Makanan',
         style: TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
+          fontFamily: 'Nunito',
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
         ),
-        ),
+      ),
     );
-    }
+  }
 
+  // =============================================================
+  // PENCARIAN
+  // =============================================================
 
-    Widget _buildSearchField() {
+  Widget _buildSearchField() {
     return TextField(
-        controller: _searchController,
-        onChanged: (_) {
+      controller: _searchController,
+      onChanged: (_) {
         setState(() {});
-        },
-        decoration: InputDecoration(
+      },
+      decoration: InputDecoration(
         hintText: 'Cari makanan...',
         hintStyle: const TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 13,
-            color: Color(0xFF9B8880),
+          fontFamily: 'Nunito',
+          fontSize: 13,
+          color: Color(0xFF9B8880),
         ),
         prefixIcon: const Icon(
-            Icons.search_rounded,
-            color: Color(0xFFA9583C),
+          Icons.search_rounded,
+          color: Color(0xFFA9583C),
         ),
         suffixIcon: _searchController.text.isNotEmpty
             ? IconButton(
                 icon: const Icon(Icons.close_rounded),
                 onPressed: () {
-                    _searchController.clear();
-                    setState(() {});
+                  _searchController.clear();
+                  setState(() {});
                 },
-                )
+              )
             : null,
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
         ),
-        ),
+      ),
     );
-    }
-
+  }
 
   // =============================================================
   // DAFTAR KONTEN
   // =============================================================
 
-
-    Widget _buildContentList() {
+  Widget _buildContentList() {
     return StreamBuilder<List<AdminContentItem>>(
-        stream: AdminContentService.getContentsStream(contentType),
-        builder: (context, snapshot) {
+      stream: AdminContentService.getContentsStream(contentType),
+      builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildLoadingState();
+          return _buildLoadingState();
         }
 
         if (snapshot.hasError) {
-            return _buildErrorState(snapshot.error.toString());
+          return _buildErrorState(snapshot.error.toString());
         }
 
         final items = snapshot.data ?? [];
         final keyword = _searchController.text.trim().toLowerCase();
 
         final filteredItems = items.where((item) {
-            return item.title.toLowerCase().contains(keyword) ||
-                item.category.toLowerCase().contains(keyword);
+          return item.title.toLowerCase().contains(keyword) ||
+              item.category.toLowerCase().contains(keyword);
         }).toList();
 
         if (filteredItems.isEmpty) {
-            if (keyword.isNotEmpty) {
+          if (keyword.isNotEmpty) {
             return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
                 vertical: 40,
                 horizontal: 20,
-                ),
-                child: const Column(
+              ),
+              child: const Column(
                 children: [
-                    Icon(
+                  Icon(
                     Icons.search_off_rounded,
                     size: 45,
                     color: Color(0xFFB9543A),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
+                  ),
+                  SizedBox(height: 12),
+                  Text(
                     'Makanan tidak ditemukan',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF493C37),
+                      fontFamily: 'Nunito',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF493C37),
                     ),
-                    ),
+                  ),
                 ],
-                ),
+              ),
             );
-            }
+          }
 
-            return _buildEmptyState();
+          return _buildEmptyState();
         }
 
         return Column(
-            children: [
+          children: [
             for (int i = 0; i < filteredItems.length; i++) ...[
-                _buildContentCard(filteredItems[i]),
-                if (i != filteredItems.length - 1)
+              _buildContentCard(filteredItems[i]),
+              if (i != filteredItems.length - 1)
                 const SizedBox(height: 14),
             ],
-            ],
+          ],
         );
-        },
+      },
     );
-    }
+  }
 
   // =============================================================
   // CONTENT CARD
@@ -321,19 +309,13 @@ class _AdminManageMakananScreenState
                   height: 60,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      item.imageAsset,
+                    child: StomachyCoverImage(
+                      imageSrc: item.imageAsset,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: const Color(0xFFFFE7D8),
-                          child: const Icon(
-                            Icons.restaurant_outlined,
-                            size: 28,
-                            color: Color(0xFFB9543A),
-                          ),
-                        );
-                      },
+                      fallbackIcon: Icons.restaurant_outlined,
+                      fallbackIconSize: 28,
+                      fallbackColor: const Color(0xFFB9543A),
+                      fallbackBackgroundColor: const Color(0xFFFFE7D8),
                     ),
                   ),
                 ),
@@ -365,7 +347,15 @@ class _AdminManageMakananScreenState
                 _buildActionButton(
                   icon: Icons.edit_outlined,
                   label: 'Edit',
-                  onTap: () => _showContentForm(editItem: item),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AdminMakananFormScreen(editItem: item),
+                      ),
+                    );
+                  },
                 ),
 
                 const SizedBox(width: 8),
@@ -416,290 +406,6 @@ class _AdminManageMakananScreenState
         ),
       ),
     );
-  }
-
-  // =============================================================
-  // FORM TAMBAH / EDIT
-  // =============================================================
-
-  void _showContentForm({required AdminContentItem? editItem}) {
-    _editingItem = editItem;
-
-    if (editItem != null) {
-      _titleController.text = editItem.title;
-      _categoryController.text = editItem.category;
-      _contentController.text = editItem.content;
-    } else {
-      _titleController.clear();
-      _categoryController.text = defaultCategory;
-      _contentController.clear();
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext sheetContext) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.85,
-                ),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-                ),
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 42,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE0CBBE),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      Text(
-                        _editingItem == null
-                            ? 'Tambah Konten Baru'
-                            : 'Edit Konten',
-                        style: const TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF251814),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      const Text(
-                        'Kategori',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF493C37),
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      TextField(
-                        controller: _categoryController,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: _inputDecoration('Contoh: Karbohidrat'),
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      const Text(
-                        'Judul',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF493C37),
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      TextField(
-                        controller: _titleController,
-                        maxLines: 2,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: _inputDecoration(
-                          'Contoh: Sarapan Aman untuk Penderita GERD',
-                        ),
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      const Text(
-                        'Isi Konten',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF493C37),
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      TextField(
-                        controller: _contentController,
-                        maxLines: 6,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: _inputDecoration(
-                          'Tulis isi lengkap konten di sini...',
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 46,
-                        child: ElevatedButton(
-                          onPressed: _isSaving ? null : _submitContent,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFA9583C),
-                            foregroundColor: Colors.white,
-                            elevation: 3,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(23),
-                            ),
-                          ),
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  _editingItem == null
-                                      ? 'Simpan Konten'
-                                      : 'Simpan Perubahan',
-                                  style: const TextStyle(
-                                    fontFamily: 'Nunito',
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFB6A8A2)),
-      filled: true,
-      fillColor: const Color(0xFFFFF5EF),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-    );
-  }
-
-  // =============================================================
-  // SIMPAN KONTEN
-  // =============================================================
-
-  Future<void> _submitContent() async {
-    final title = _titleController.text.trim();
-    final category = _categoryController.text.trim();
-    final content = _contentController.text.trim();
-
-    // Saat edit -> pertahankan gambar lama konten.
-    // Saat tambah baru -> pakai gambar default.
-    final String imageAsset =
-        (_editingItem != null && _editingItem!.imageAsset.isNotEmpty)
-            ? _editingItem!.imageAsset
-            : defaultImageAsset;
-
-    if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('Judul tidak boleh kosong.'),
-        ),
-      );
-      return;
-    }
-
-    if (content.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('Isi konten tidak boleh kosong.'),
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isSaving = true);
-
-    try {
-      if (_editingItem != null) {
-        await AdminContentService.updateContent(
-          id: _editingItem!.id,
-          title: title,
-          category: category,
-          type: contentType,
-          imageAsset: imageAsset,
-          content: content,
-        );
-
-        if (!mounted) return;
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            content: Text('Perubahan konten berhasil disimpan!'),
-          ),
-        );
-      } else {
-        await AdminContentService.addContent(
-          title: title,
-          category: category,
-          type: contentType,
-          imageAsset: imageAsset,
-          content: content,
-        );
-
-        if (!mounted) return;
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            content: Text('Konten baru berhasil ditambahkan!'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('Gagal menyimpan: $e'),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
-    }
   }
 
   // =============================================================

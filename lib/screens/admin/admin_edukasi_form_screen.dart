@@ -7,10 +7,10 @@ import '../../services/admin_content_service.dart';
 import '../../widgets/stomachy_cover_image.dart';
 
 // ===============================================================
-// FORM TAMBAH / EDIT EDUKASI (FULL SCREEN)
-// - Gambar sampul: galeri -> crop 16:9 -> base64 -> field imageAsset
-// - Tombol simpan benar-benar berfungsi: loading, validasi, pesan error
-// - Setelah simpan sukses -> kembali ke layar Kelola Edukasi otomatis
+// FORM TAMBAH / EDIT EDUKASI (FULL SCREEN) — VERSI CARD
+// - Tiap bagian form dibungkus card putih:
+//   1) Gambar Sampul  2) Informasi Edukasi  3) Bagian Materi
+// - Logika simpan, validasi, dan gambar TIDAK berubah
 // ===============================================================
 
 class AdminEdukasiFormScreen extends StatefulWidget {
@@ -138,6 +138,69 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
   }
 
   // =============================================================
+  // CARD WRAPPER (BARU)
+  // =============================================================
+
+  Widget _buildFormCard({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            offset: const Offset(0, 3),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFE7D8),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  icon,
+                  size: 17,
+                  color: const Color(0xFFB05039),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF171310),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    );
+  }
+
+  // =============================================================
   // GAMBAR SAMPUL
   // =============================================================
 
@@ -167,8 +230,6 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel('Gambar Sampul'),
-        const SizedBox(height: 8),
         GestureDetector(
           onTap: _pickCover,
           child: Container(
@@ -185,16 +246,32 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          _selectedImageBytes == null
-              ? 'Ketuk gambar untuk memilih / mengganti sampul (rasio 16:9)'
-              : 'Gambar siap disimpan. Ketuk gambar untuk mengganti.',
-          style: const TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 10,
-            color: Color(0xFF999999),
-          ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(
+              _selectedImageBytes == null
+                  ? Icons.touch_app_rounded
+                  : Icons.check_circle_rounded,
+              size: 13,
+              color: _selectedImageBytes == null
+                  ? const Color(0xFF999999)
+                  : const Color(0xFF2E7D42),
+            ),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Text(
+                _selectedImageBytes == null
+                    ? 'Ketuk gambar untuk memilih / mengganti sampul (rasio 16:9)'
+                    : 'Gambar siap disimpan. Ketuk gambar untuk mengganti.',
+                style: const TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 10,
+                  color: Color(0xFF999999),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -236,12 +313,12 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String hint) {
+  InputDecoration _inputDecoration(String hint, {Color? fillColor}) {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFB6A8A2)),
       filled: true,
-      fillColor: const Color(0xFFFFF5EF),
+      fillColor: fillColor ?? const Color(0xFFFFF5EF),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
@@ -255,6 +332,7 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
     required TextEditingController controller,
     required String hint,
     int maxLines = 1,
+    Color? fillColor,
   }) {
     return TextField(
       controller: controller,
@@ -267,7 +345,41 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
         color: Color(0xFF493C37),
       ),
       cursorColor: const Color(0xFFB05039),
-      decoration: _inputDecoration(hint),
+      decoration: _inputDecoration(hint, fillColor: fillColor),
+    );
+  }
+
+  // =============================================================
+  // CARD 2: INFORMASI EDUKASI
+  // =============================================================
+
+  Widget _buildInfoFields() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _fieldLabel('Kategori'),
+        const SizedBox(height: 6),
+        _textField(
+          controller: _categoryController,
+          hint: 'Contoh: Materi Dasar',
+        ),
+        const SizedBox(height: 14),
+        _fieldLabel('Judul Edukasi'),
+        const SizedBox(height: 6),
+        _textField(
+          controller: _titleController,
+          hint: 'Contoh: Apa Itu GERD?',
+          maxLines: 2,
+        ),
+        const SizedBox(height: 14),
+        _fieldLabel('Ringkasan / Deskripsi Pembuka'),
+        const SizedBox(height: 6),
+        _textField(
+          controller: _summaryController,
+          hint: 'Tulis pengantar singkat materi...',
+          maxLines: 4,
+        ),
+      ],
     );
   }
 
@@ -443,69 +555,21 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCoverSection(),
+                    _buildFormCard(
+                      title: 'Gambar Sampul',
+                      icon: Icons.image_rounded,
+                      child: _buildCoverSection(),
+                    ),
                     const SizedBox(height: 16),
-                    _fieldLabel('Kategori'),
-                    const SizedBox(height: 6),
-                    _textField(
-                      controller: _categoryController,
-                      hint: 'Contoh: Materi Dasar',
+                    _buildFormCard(
+                      title: 'Informasi Edukasi',
+                      icon: Icons.edit_note_rounded,
+                      child: _buildInfoFields(),
                     ),
-                    const SizedBox(height: 14),
-                    _fieldLabel('Judul Edukasi'),
-                    const SizedBox(height: 6),
-                    _textField(
-                      controller: _titleController,
-                      hint: 'Contoh: Apa Itu GERD?',
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: 14),
-                    _fieldLabel('Ringkasan / Deskripsi Pembuka'),
-                    const SizedBox(height: 6),
-                    _textField(
-                      controller: _summaryController,
-                      hint: 'Tulis pengantar singkat materi...',
-                      maxLines: 4,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSectionsEditor(),
+                    const SizedBox(height: 16),
+                    _buildSectionsCard(),
                     const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFA9583C),
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor:
-                              const Color(0xFFA9583C).withOpacity(0.6),
-                          elevation: 3,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                        ),
-                        child: _isSubmitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                _isEditing
-                                    ? 'Simpan Perubahan'
-                                    : 'Simpan Edukasi',
-                                style: const TextStyle(
-                                  fontFamily: 'Nunito',
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                      ),
-                    ),
+                    _buildSubmitButton(),
                   ],
                 ),
               ),
@@ -517,17 +581,21 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
   }
 
   // =============================================================
-  // EDITOR BAGIAN MATERI
+  // CARD 3: BAGIAN MATERI
   // =============================================================
 
-  Widget _buildSectionsEditor() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(child: _fieldLabel('Bagian Materi')),
-            TextButton.icon(
+  Widget _buildSectionsCard() {
+    return _buildFormCard(
+      title: 'Bagian Materi',
+      icon: Icons.article_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = 0; i < _sections.length; i++) _buildSectionBox(i),
+          SizedBox(
+            width: double.infinity,
+            height: 42,
+            child: OutlinedButton.icon(
               onPressed: _isSubmitting
                   ? null
                   : () {
@@ -536,131 +604,186 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
                       });
                     },
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('Tambah Bagian'),
-              style: TextButton.styleFrom(
+              label: const Text(
+                'Tambah Bagian',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFB05039),
+                side: const BorderSide(
+                  color: Color(0xFFB05039),
+                  width: 1.2,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(21),
+                ),
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 8),
+          ),
+        ],
+      ),
+    );
+  }
 
-        for (int i = 0; i < _sections.length; i++) ...[
-          Container(
-            margin: const EdgeInsets.only(bottom: 14),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF5EF),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFF0DCD1)),
-            ),
-            child: Column(
+  Widget _buildSectionBox(int i) {
+    return Container(
+      margin: EdgeInsets.only(
+        bottom: i == _sections.length - 1 ? 12 : 14,
+      ),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFBEFE6),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF0DCD1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Bagian ${i + 1}',
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF493C37),
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Hapus bagian',
+                onPressed: _isSubmitting
+                    ? null
+                    : () {
+                        setState(() {
+                          _sections.removeAt(i).dispose();
+                        });
+                      },
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Color(0xFFB05039),
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          _fieldLabel('Judul Bagian'),
+          const SizedBox(height: 6),
+          _textField(
+            controller: _sections[i].titleController,
+            hint: 'Contoh: Gejala GERD',
+            fillColor: Colors.white,
+          ),
+          const SizedBox(height: 14),
+          _fieldLabel('Poin Materi'),
+          const SizedBox(height: 8),
+
+          for (int j = 0; j < _sections[i].pointControllers.length; j++) ...[
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Bagian ${i + 1}',
-                        style: const TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF493C37),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Hapus bagian',
-                      onPressed: _isSubmitting
-                          ? null
-                          : () {
-                              setState(() {
-                                _sections.removeAt(i).dispose();
-                              });
-                            },
-                      icon: const Icon(
-                        Icons.delete_outline_rounded,
-                        color: Color(0xFFB05039),
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                _fieldLabel('Judul Bagian'),
-                const SizedBox(height: 6),
-                _textField(
-                  controller: _sections[i].titleController,
-                  hint: 'Contoh: Gejala GERD',
-                ),
-                const SizedBox(height: 14),
-                _fieldLabel('Poin Materi'),
-                const SizedBox(height: 8),
-
-                for (int j = 0;
-                    j < _sections[i].pointControllers.length;
-                    j++) ...[
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _textField(
-                          controller: _sections[i].pointControllers[j],
-                          hint: 'Tulis poin materi...',
-                          maxLines: 3,
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Hapus poin',
-                        onPressed: _isSubmitting
-                            ? null
-                            : () {
-                                setState(() {
-                                  final points =
-                                      _sections[i].pointControllers;
-                                  if (points.length > 1) {
-                                    points.removeAt(j).dispose();
-                                  } else {
-                                    points.first.clear();
-                                  }
-                                });
-                              },
-                        icon: const Icon(
-                          Icons.remove_circle_outline_rounded,
-                          color: Color(0xFFB05039),
-                          size: 20,
-                        ),
-                      ),
-                    ],
+                Expanded(
+                  child: _textField(
+                    controller: _sections[i].pointControllers[j],
+                    hint: 'Tulis poin materi...',
+                    maxLines: 3,
+                    fillColor: Colors.white,
                   ),
-                  const SizedBox(height: 8),
-                ],
-
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: _isSubmitting
-                        ? null
-                        : () {
-                            setState(() {
-                              _sections[i]
-                                  .pointControllers
-                                  .add(TextEditingController());
-                            });
-                          },
-                    icon: const Icon(Icons.add_rounded, size: 17),
-                    label: const Text('Tambah Poin'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFFB05039),
-                    ),
+                ),
+                IconButton(
+                  tooltip: 'Hapus poin',
+                  onPressed: _isSubmitting
+                      ? null
+                      : () {
+                          setState(() {
+                            final points = _sections[i].pointControllers;
+                            if (points.length > 1) {
+                              points.removeAt(j).dispose();
+                            } else {
+                              points.first.clear();
+                            }
+                          });
+                        },
+                  icon: const Icon(
+                    Icons.remove_circle_outline_rounded,
+                    color: Color(0xFFB05039),
+                    size: 20,
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+          ],
+
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _isSubmitting
+                  ? null
+                  : () {
+                      setState(() {
+                        _sections[i].pointControllers.add(
+                          TextEditingController(),
+                        );
+                      });
+                    },
+              icon: const Icon(Icons.add_rounded, size: 17),
+              label: const Text('Tambah Poin'),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFB05039),
+              ),
+            ),
           ),
         ],
-      ],
+      ),
+    );
+  }
+
+  // =============================================================
+  // TOMBOL SIMPAN
+  // =============================================================
+
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: _isSubmitting ? null : _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFA9583C),
+          foregroundColor: Colors.white,
+          disabledBackgroundColor:
+              const Color(0xFFA9583C).withOpacity(0.6),
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+        child: _isSubmitting
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Text(
+                _isEditing ? 'Simpan Perubahan' : 'Simpan Edukasi',
+                style: const TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+      ),
     );
   }
 }
