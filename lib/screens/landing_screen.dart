@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,7 +10,10 @@ import 'login_screen.dart';
 // Kalau kamu punya file maskot terpisah (tanpa tulisan logo),
 // ganti path di bawah ini, contoh:
 // 'assets/images/maskot_stomachy.png'
+
 const String kMascotAsset = 'assets/images/mascot_happy_bayangan.png';
+const String kLogoAsset = 'assets/images/logo_beranda_baru.png';
+
 
 // ===============================================================
 // PALET WARNA LANDING PAGE
@@ -593,36 +595,18 @@ class _LandingPageOneState extends State<_LandingPageOne>
   // ===========================================================
   // LOGO KECIL
   // ===========================================================
-  Widget _buildHeaderLogo(Size size) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(
-          kMascotAsset,
-          width: size.width * 0.13,
-          height: size.width * 0.13,
-          fit: BoxFit.contain,
-        ),
-        SizedBox(width: size.width * 0.02),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildRainbowTitle(size),
-            Text(
-              'Teman Sehat Lambungmu',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: size.width * 0.026,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF6E6259),
-                letterSpacing: 0.2,
-              ),
-            ),
-          ],
-        ),
-      ],
+  
+    Widget _buildHeaderLogo(Size size) {
+      return Center(
+        child: Image.asset(
+          kLogoAsset,
+          width: size.width * 0.72,
+          height: size.height * 0.09,
+        fit: BoxFit.contain,
+      ),
     );
   }
+
 
   Widget _buildRainbowTitle(Size size) {
     const letters = 'STOMACHY';
@@ -1238,7 +1222,10 @@ class _LandingPageTwoState extends State<_LandingPageTwo>
       ),
       child: Row(
         children: [
-          Text(emoji, style: TextStyle(fontSize: size.width * 0.048)),
+          Text(
+            emoji,
+            style: TextStyle(fontSize: size.width * 0.048),
+          ),
           SizedBox(width: size.width * 0.03),
           Expanded(
             child: Text(
@@ -1255,6 +1242,7 @@ class _LandingPageTwoState extends State<_LandingPageTwo>
       ),
     );
   }
+
 }
 
 // ===============================================================
