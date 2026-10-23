@@ -10,11 +10,10 @@ import 'admin_manage_makanan_screen.dart';
 import 'admin_manage_olahraga_screen.dart';
 
 // ===============================================================
-// KELOLA KONTEN (ADMIN) - HALAMAN MENU
-//
-// Halaman "Konten" berisi 3 card:
-// Edukasi, Rekomendasi Makanan, Rekomendasi Olahraga.
-// Setiap card membuka halaman CRUD-nya masing-masing.
+// KELOLA KONTEN (ADMIN) - HALAMAN HUB
+// Berisi 3 card: Edukasi / Rekomendasi Makanan / Rekomendasi
+// Olahraga. Setiap card membuka halaman manajemen kontennya
+// masing-masing (file CRUD terpisah).
 // ===============================================================
 
 class AdminContentScreen extends StatefulWidget {
@@ -28,11 +27,6 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
 
   static const Color headingDark = Color(0xFF251814);
-  static const Color bodyText = Color(0xFF6B5147);
-
-  // =============================================================
-  // NAVIGATION
-  // =============================================================
 
   void _onNavigationTap(int index) {
     if (index == 2) return;
@@ -60,9 +54,12 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     }
   }
 
-  // =============================================================
-  // BUILD
-  // =============================================================
+  void _openManageScreen(Widget screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,35 +73,41 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader('Kelola Konten'),
-
-              const SizedBox(height: 8),
-
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: Text(
+                  'Pilih jenis konten yang ingin dikelola.',
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
+                    color: Color(0xFF6B5147),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
               _buildMenuCard(
-                icon: Icons.school_rounded,
+                icon: Icons.article_outlined,
                 title: 'Edukasi',
-                subtitle: 'Materi edukasi kesehatan lambung',
-                screen: AdminManageEdukasiScreen(),
+                subtitle: 'Kelola materi edukasi seputar GERD',
+                onTap: () => _openManageScreen(const AdminManageEdukasiScreen()),
               ),
-
               const SizedBox(height: 14),
-
               _buildMenuCard(
-                icon: Icons.restaurant_rounded,
+                icon: Icons.restaurant_outlined,
                 title: 'Rekomendasi Makanan',
-                subtitle: 'Saran makanan aman untuk penderita GERD',
-                screen: const AdminManageMakananScreen(),
+                subtitle: 'Kelola rekomendasi makanan untuk pengguna',
+                onTap: () =>
+                    _openManageScreen(const AdminManageMakananScreen()),
               ),
-
               const SizedBox(height: 14),
-
               _buildMenuCard(
                 icon: Icons.directions_run_rounded,
                 title: 'Rekomendasi Olahraga',
-                subtitle: 'Gerakan olahraga yang aman dilakukan',
-                screen: const AdminManageOlahragaScreen(),
+                subtitle: 'Kelola rekomendasi olahraga yang aman',
+                onTap: () =>
+                    _openManageScreen(const AdminManageOlahragaScreen()),
               ),
-
-              const SizedBox(height: 15),
             ],
           ),
         ),
@@ -115,10 +118,6 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       ),
     );
   }
-
-  // =============================================================
-  // HEADER
-  // =============================================================
 
   Widget _buildHeader(String title) {
     return SizedBox(
@@ -159,32 +158,23 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     );
   }
 
-  // =============================================================
-  // MENU CARD
-  // =============================================================
-
   Widget _buildMenuCard({
     required IconData icon,
     required String title,
     required String subtitle,
-    required Widget screen,
+    required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => screen),
-        );
-      },
+      onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(17),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 7,
               offset: const Offset(0, 3),
             ),
@@ -192,7 +182,6 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
         ),
         child: Row(
           children: [
-            // ICON
             Container(
               width: 52,
               height: 52,
@@ -200,16 +189,9 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                 color: const Color(0xFFFFE7D8),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(
-                icon,
-                size: 26,
-                color: const Color(0xFFB9543A),
-              ),
+              child: Icon(icon, size: 26, color: const Color(0xFFB9543A)),
             ),
-
             const SizedBox(width: 14),
-
-            // TEKS
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,20 +211,17 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
-                      color: bodyText,
+                      color: Color(0xFF6B5147),
                     ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(width: 8),
-
-            // CHEVRON
             const Icon(
               Icons.chevron_right_rounded,
-              size: 24,
-              color: Color(0xFFB9543A),
+              size: 22,
+              color: Color(0xFFB05039),
             ),
           ],
         ),

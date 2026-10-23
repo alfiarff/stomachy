@@ -1,8 +1,8 @@
-
 import 'package:flutter/material.dart';
 
 import '../services/admin_content_service.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/stomachy_cover_image.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
@@ -53,6 +53,12 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
   }
 
   String _getDescription(AdminContentItem item) {
+    // Prioritaskan ringkasan yang diisi admin saat membuat konten.
+    final summary = item.summary.trim();
+    if (summary.isNotEmpty) {
+      return summary;
+    }
+
     final content = item.content.trim();
 
     if (content.isEmpty) {
@@ -268,13 +274,16 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(5),
-                child: Image.asset(
-                  item.imageAsset,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.menu_book_rounded,
-                    size: 38,
-                    color: Color(0xFFB9543A),
+                // Mendukung base64 (hasil simpan admin) / URL / asset
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: StomachyCoverImage(
+                    imageSrc: item.imageAsset,
+                    fit: BoxFit.cover,
+                    fallbackIcon: Icons.menu_book_rounded,
+                    fallbackIconSize: 38,
+                    fallbackColor: const Color(0xFFB9543A),
+                    fallbackBackgroundColor: const Color(0xFFFFE9D9),
                   ),
                 ),
               ),

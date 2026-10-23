@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import '../services/admin_content_service.dart';
+import '../../widgets/stomachy_cover_image.dart';
 
 class UserContentDetailScreen extends StatefulWidget {
   final AdminContentItem item;
@@ -233,16 +234,11 @@ class _UserContentDetailScreenState
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(18),
-                        child: Image.asset(
-                          item.imageAsset,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Center(
-                            child: Icon(
-                              Icons.menu_book_rounded,
-                              size: 65,
-                              color: _accent,
-                            ),
-                          ),
+                        child: StomachyCoverImage(
+                          imageSrc: item.imageAsset,
+                          fit: BoxFit.cover,
+                          fallbackIcon: Icons.menu_book_rounded,
+                          fallbackIconSize: 65,
                         ),
                       ),
                     ),
