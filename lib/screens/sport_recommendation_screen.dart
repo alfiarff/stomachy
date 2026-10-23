@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 
-import 'home_screen.dart';
-import 'screening_screen.dart';
-import 'doctor_screen.dart';
-import 'edukasi_screen.dart';
-import 'profile_screen.dart';
+import '../services/admin_content_service.dart';
 import '../widgets/bottom_navigation.dart';
 import '../widgets/stomachy_card.dart';
+import '../widgets/stomachy_cover_image.dart';
+
+import 'doctor_screen.dart';
+import 'edukasi_screen.dart';
+import 'home_screen.dart';
+import 'profile_screen.dart';
+import 'screening_screen.dart';
+import 'user_content_detail_screen.dart';
+
+// ===============================================================
+// REKOMENDASI OLAHRAGA (USER) — DINAMIS DARI FIRESTORE
+//
+// - List konten type 'olahraga' yang ditambahkan lewat admin
+// - Ketuk card -> UserContentDetailScreen (mekanisme sama edukasi)
+// - Hero card & tips tambahan tetap statis
+// ===============================================================
 
 class RecommendationSportScreen extends StatefulWidget {
   const RecommendationSportScreen({super.key});
@@ -16,11 +28,11 @@ class RecommendationSportScreen extends StatefulWidget {
       _RecommendationSportScreenState();
 }
 
-class _RecommendationSportScreenState extends State<RecommendationSportScreen> {
+class _RecommendationSportScreenState
+    extends State<RecommendationSportScreen> {
   int _selectedIndex = 4;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
-  final Color primaryBrown = const Color(0xFF5A392F);
   final Color mainBrown = const Color(0xFFB9543A);
 
   // ===============================================================
@@ -110,61 +122,9 @@ class _RecommendationSportScreenState extends State<RecommendationSportScreen> {
               const SizedBox(height: 24),
 
               // ===================================================
-              // OLAHRAGA 1
+              // DAFTAR OLAHRAGA (DARI FIRESTORE)
               // ===================================================
-              _buildSportCard(
-                imagePath: 'assets/images/yoga.png',
-                title: 'Yoga',
-                category: 'Relaksasi',
-                description:
-                    'Melatih pernapasan dalam, meningkatkan '
-                    'relaksasi tubuh dan membantu menurunkan stres.',
-              ),
-
-              const SizedBox(height: 17),
-
-              // ===================================================
-              // OLAHRAGA 2
-              // ===================================================
-              _buildSportCard(
-                imagePath: 'assets/images/jalan_kaki.png',
-                title: 'Jalan Santai',
-                category: 'Rendah Intensitas',
-                description:
-                    'Membantu melancarkan pencernaan tanpa '
-                    'meningkatkan tekanan intraabdomen dan membuat '
-                    'tubuh lebih rileks.',
-              ),
-
-              const SizedBox(height: 17),
-
-              // ===================================================
-              // OLAHRAGA 3
-              // ===================================================
-              _buildSportCard(
-                imagePath: 'assets/images/berenang.png',
-                title: 'Berenang',
-                category: 'Rendah Intensitas',
-                description:
-                    'Dilakukan dengan tempo ringan dan durasi yang '
-                    'secukupnya. Beri jeda setelah makan untuk '
-                    'mengurangi risiko refluks asam lambung.',
-              ),
-
-              const SizedBox(height: 17),
-
-              // ===================================================
-              // OLAHRAGA 4
-              // ===================================================
-              _buildSportCard(
-                imagePath: 'assets/images/peregangan.png',
-                title: 'Stretching',
-                category: 'Fleksibilitas',
-                description:
-                    'Membantu melemaskan otot-otot tubuh, '
-                    'meningkatkan fleksibilitas, dan membuat '
-                    'tubuh lebih rileks.',
-              ),
+              _buildSportList(),
 
               const SizedBox(height: 34),
 
@@ -330,110 +290,258 @@ class _RecommendationSportScreenState extends State<RecommendationSportScreen> {
   }
 
   // ===============================================================
-  // SPORT CARD
+  // DAFTAR OLAHRAGA (STREAM FIRESTORE)
   // ===============================================================
 
-  Widget _buildSportCard({
-    required String imagePath,
-    required String title,
-    required String category,
-    required String description,
-  }) {
-    return StomachyCard(
-      color: const Color(0xFFFFFCF9),
-      radius: 13,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // =======================================================
-          // SPORT IMAGE
-          // =======================================================
+  Widget _buildSportList() {
+    return StreamBuilder<List<AdminContentItem>>(
+      stream: AdminContentService.getContentsStream('olahraga'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingCard();
+        }
 
-          Container(
-            width: 82,
-            height: 76,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFFFE8D8),
-            ),
-            child: ClipOval(
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
-                    Icons.directions_run_rounded,
-                    size: 40,
-                    color: Color(0xFFB9543A),
-                  );
-                },
+        if (snapshot.hasError) {
+          return _buildErrorCard(snapshot.error.toString());
+        }
+
+        final items = snapshot.data ?? [];
+
+        if (items.isEmpty) {
+          return _buildEmptyCard();
+        }
+
+        return Column(
+          children: [
+            for (int i = 0; i < items.length; i++) ...[
+              _buildSportCard(items[i]),
+              if (i != items.length - 1) const SizedBox(height: 17),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  // ===============================================================
+  // SPORT CARD (DINAMIS)
+  // ===============================================================
+
+  Widget _buildSportCard(AdminContentItem item) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserContentDetailScreen(item: item),
+          ),
+        );
+      },
+      child: StomachyCard(
+        color: const Color(0xFFFFFCF9),
+        radius: 13,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // =======================================================
+            // SPORT IMAGE
+            // =======================================================
+
+            Container(
+              width: 82,
+              height: 76,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFFFE8D8),
+              ),
+              child: ClipOval(
+                child: StomachyCoverImage(
+                  imageSrc: item.imageAsset,
+                  fit: BoxFit.cover,
+                  fallbackIcon: Icons.directions_run_rounded,
+                  fallbackIconSize: 40,
+                  fallbackColor: const Color(0xFFB9543A),
+                  fallbackBackgroundColor: const Color(0xFFFFE8D8),
+                ),
               ),
             ),
-          ),
 
-          const SizedBox(width: 11),
+            const SizedBox(width: 11),
 
-          // =======================================================
-          // SPORT INFORMATION
-          // =======================================================
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // TITLE
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFFB9543A),
+            // =======================================================
+            // SPORT INFORMATION
+            // =======================================================
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // TITLE
+                  Text(
+                    item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFFB9543A),
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 3),
+                  // CATEGORY
+                  if (item.category.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDDEBD2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        item.category,
+                        style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
 
-                // CATEGORY
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 1,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDDEBD2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    category,
+                  const SizedBox(height: 3),
+
+                  // DESCRIPTION
+                  Text(
+                    _getDescription(item),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                      fontWeight: FontWeight.w400,
                       color: Colors.black,
                     ),
                   ),
-                ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                const SizedBox(height: 3),
+  // ===============================================================
+  // DESKRIPSI CARD (SUMMARY DULU, FALLBACK CONTENT)
+  // ===============================================================
 
-                // DESCRIPTION
-                Text(
-                  description,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 11,
-                    height: 1.25,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
+  String _getDescription(AdminContentItem item) {
+    final summary = item.summary.trim();
+    if (summary.isNotEmpty) {
+      return summary;
+    }
+    return item.content.trim().replaceAll('\n', ' ');
+  }
+
+  // ===============================================================
+  // STATE LOADING / ERROR / KOSONG
+  // ===============================================================
+
+  Widget _buildLoadingCard() {
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 13,
+      padding: const EdgeInsets.symmetric(vertical: 36),
+      child: const Column(
+        children: [
+          CircularProgressIndicator(color: Color(0xFFA9583C)),
+          SizedBox(height: 12),
+          Text(
+            'Memuat rekomendasi...',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              color: Color(0xFF493C37),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorCard(String error) {
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 13,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+      child: Column(
+        children: [
+          const Icon(Icons.error_outline, size: 40, color: Colors.red),
+          const SizedBox(height: 12),
+          const Text(
+            'Gagal memuat rekomendasi',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF493C37),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            error,
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+              color: Color(0xFF776C67),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyCard() {
+    return StomachyCard(
+      color: const Color(0xFFFFFCF9),
+      radius: 13,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+      child: const Column(
+        children: [
+          Icon(
+            Icons.directions_run_rounded,
+            size: 45,
+            color: Color(0xFFB9543A),
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Belum ada rekomendasi olahraga',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF493C37),
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Konten akan segera ditambahkan, cek lagi nanti ya!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+              color: Color(0xFF776C67),
             ),
           ),
         ],
