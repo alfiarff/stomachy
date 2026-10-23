@@ -52,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(22, 16, 22, 110),
+          padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
           child: Column(
             children: [
               // =====================================================
@@ -70,9 +70,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const SizedBox(height: 43),
 
-              // =====================================================
-              // TOMBOL KELUAR
-              // =====================================================
               _buildLogoutButton(),
 
               const SizedBox(height: 20),

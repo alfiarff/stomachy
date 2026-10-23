@@ -64,16 +64,17 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
           builder: (context, constraints) {
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(22, 16, 22, 110),
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
-                  child: Column(
+                                    child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildProfileHeader(),
                       const SizedBox(height: 18),
                       _buildProfileMenuList(),
-                      const Spacer(),
+                      const SizedBox(height: 20),
                       _buildLogoutButton(),
                       const SizedBox(height: 20),
                     ],

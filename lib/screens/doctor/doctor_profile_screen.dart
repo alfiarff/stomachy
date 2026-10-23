@@ -51,8 +51,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
 
-          padding: const EdgeInsets.fromLTRB(22, 16, 22, 110),
+          padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
 
+          
           child: Column(
             children: [
               _buildProfileHeader(),
@@ -61,13 +62,14 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
               _buildProfileMenuList(),
 
-              const SizedBox(height: 43),
+              const SizedBox(height: 20),
 
               _buildLogoutButton(),
 
               const SizedBox(height: 20),
             ],
           ),
+
         ),
       ),
 
