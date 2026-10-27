@@ -385,54 +385,138 @@ class _AdminManageMakananScreenState extends State<AdminManageMakananScreen> {
     );
   }
 
+
   void _showDeleteConfirmation(AdminContentItem item) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text(
-          'Hapus Konten?',
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontWeight: FontWeight.w800,
-            color: Color(0xFFB9543A),
-          ),
-        ),
-        content: const Text(
-          'Apakah Anda yakin ingin menghapus konten ini?',
-          style: TextStyle(fontFamily: 'Nunito'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Tidak'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFB05039),
-              foregroundColor: Colors.white,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.65),
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 45),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 25),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
             ),
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await AdminContentService.deleteContent(item.id);
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Konten berhasil dihapus.'),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Hapus Konten?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
                   ),
-                );
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Gagal menghapus: $e')),
-                );
-              }
-            },
-            child: const Text('Ya, Hapus'),
+                ),
+                const SizedBox(height: 7),
+                const Text(
+                  'Apakah Anda yakin ingin menghapus konten ini?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    color: Color(0xFF493C37),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 36,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            side: const BorderSide(
+                              color: Color(0xFFB05039),
+                              width: 0.9,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Batal',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFB05039),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: 36,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            Navigator.pop(dialogContext);
+
+                            try {
+                              await AdminContentService.deleteContent(
+                                item.id,
+                              );
+
+                              if (!mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Konten berhasil dihapus.',
+                                  ),
+                                ),
+                              );
+                            } catch (e) {
+                              if (!mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Gagal menghapus: $e'),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFB05039),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Ya, Hapus',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

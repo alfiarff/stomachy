@@ -479,20 +479,6 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFE7D8),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.delete_outline_rounded,
-                    size: 32,
-                    color: Color(0xFFB9543A),
-                  ),
-                ),
-                const SizedBox(height: 16),
                 const Text(
                   'Hapus Artikel?',
                   textAlign: TextAlign.center,
@@ -500,10 +486,10 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                     fontFamily: 'Nunito',
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFFB9543A),
+                    color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 7),
                 const Text(
                   'Apakah Anda yakin ingin menghapus artikel ini?',
                   textAlign: TextAlign.center,
@@ -513,14 +499,16 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                     color: Color(0xFF493C37),
                   ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: SizedBox(
-                        height: 38,
+                        height: 36,
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(dialogContext),
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                          },
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.zero,
                             side: const BorderSide(
@@ -532,7 +520,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                             ),
                           ),
                           child: const Text(
-                            'Tidak',
+                            'Batal',
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontSize: 12,
@@ -546,26 +534,30 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: SizedBox(
-                        height: 38,
+                        height: 36,
                         child: ElevatedButton(
                           onPressed: () async {
                             Navigator.pop(dialogContext);
+
                             try {
-                              await AdminContentService.deleteArticle(
+                              await AdminContentService.deleteContent(
                                 article.id,
                               );
+
                               if (!mounted) return;
+
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  behavior: SnackBarBehavior.floating,
-                                  content: Text('Artikel berhasil dihapus.'),
+                                  content: Text(
+                                    'Konten berhasil dihapus.',
+                                  ),
                                 ),
                               );
                             } catch (e) {
                               if (!mounted) return;
+
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  behavior: SnackBarBehavior.floating,
                                   content: Text('Gagal menghapus: $e'),
                                 ),
                               );
