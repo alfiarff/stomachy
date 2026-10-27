@@ -77,7 +77,6 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
               Padding(
                 padding: const EdgeInsets.only(left: 2),
                 child: Text(
-                  'Pilih jenis konten yang ingin dikelola.',
                   style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 11,
