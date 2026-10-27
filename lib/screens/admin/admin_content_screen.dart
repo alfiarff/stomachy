@@ -73,18 +73,6 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader('Kelola Konten'),
-              const SizedBox(height: 6),
-                Padding(
-                padding: const EdgeInsets.only(left: 2),
-                child: const Text(
-                  'Kelola konten edukasi dan rekomendasi untuk pengguna',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 11,
-                    color: Color(0xFF6B5147),
-                  ),
-                ),
-              ),
               const SizedBox(height: 18),
               _buildMenuCard(
                 icon: Icons.article_outlined,
