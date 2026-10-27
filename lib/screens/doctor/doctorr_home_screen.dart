@@ -280,54 +280,57 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     );
   }
 
-  Widget _buildHeaderContent({
-    required String? photoBase64,
-    required String googlePhotoUrl,
-  }) {
-    return SizedBox(
-      height: 75,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Image.asset(
-                'assets/images/logo_beranda_baru.png',
-                height: 72,
-                fit: BoxFit.contain,
-              ),
+
+Widget _buildHeaderContent({
+  required String? photoBase64,
+  required String googlePhotoUrl,
+}) {
+  return SizedBox(
+    height: 75,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Image.asset(
+              'assets/images/logo_beranda_baru.png',
+              height: 72,
+              fit: BoxFit.contain,
             ),
           ),
-          const _DoctorNotificationBell(),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DoctorProfileScreen()),
-              );
-              if (!mounted) return;
-              setState(() {});
-            },
-            child: Container(
-              width: 42,
-              height: 42,
-              clipBehavior: Clip.antiAlias,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFE5D8),
-                shape: BoxShape.circle,
+        ),
+        const _DoctorNotificationBell(),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const DoctorProfileScreen(),
               ),
-              child: _buildDoctorProfilePhoto(
-                photoBase64: photoBase64,
-                googlePhotoUrl: googlePhotoUrl,
-              ),
+            );
+            if (!mounted) return;
+            setState(() {});
+          },
+          child: Container(
+            width: 42,
+            height: 42,
+            clipBehavior: Clip.antiAlias,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFE5D8),
+              shape: BoxShape.circle,
+            ),
+            child: _buildDoctorProfilePhoto(
+              photoBase64: photoBase64,
+              googlePhotoUrl: googlePhotoUrl,
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildDoctorProfilePhoto({
     required String? photoBase64,
@@ -585,43 +588,54 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Pesan Terbaru',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              GestureDetector(
-                onTap: _openNotifications,
-                child: const Row(
-                  children: [
-                    Text(
-                      'Lihat Semua',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFAA4E39),
-                      ),
-                    ),
-                    SizedBox(width: 2),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 19,
-                      color: Color(0xFFAA4E39),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+
+
+Row(
+  children: [
+    const Expanded(
+      child: Text(
+        'Pesan Terbaru',
+        style: TextStyle(
+          fontFamily: 'Nunito',
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          color: Colors.black,
+        ),
+      ),
+    ),
+    GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => const DoctorChatScreen(),
           ),
+        );
+      },
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Lihat Semua',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFAA4E39),
+            ),
+          ),
+          SizedBox(width: 2),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 19,
+            color: Color(0xFFAA4E39),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
+
           const SizedBox(height: 8),
           if (limitedChats.isEmpty)
             const Padding(
