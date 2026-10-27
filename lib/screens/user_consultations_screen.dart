@@ -254,6 +254,7 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
     );
   }
 
+ 
   Widget _buildCard(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     final status = (data['status'] ?? 'booked').toString().toLowerCase();
@@ -261,21 +262,37 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
     final canChat = status == 'active' || (status == 'booked' && due);
 
     final doctorName = (data['doctorName'] ?? 'Dokter').toString();
+    final message = (data['lastMessage'] ?? '').toString().trim();
     final specialty = (data['specialty'] ?? 'Dokter Umum').toString();
-    final day = (data['consultationDay'] ?? '-').toString();
-    final time = (data['consultationTime'] ?? '-').toString();
-    final statusText = _statusText(status, due);
-    final statusColor = _statusColor(status, due);
+    final day = (data['consultationDay'] ?? '').toString().trim();
+    final time = (data['consultationTime'] ?? '').toString().trim();
+
+    final statusText = status == 'completed'
+        ? 'Selesai'
+        : canChat
+            ? 'Aktif'
+            : 'Belum waktunya';
+
+    final statusColor = status == 'completed'
+        ? const Color(0xFF77716E)
+        : canChat
+            ? const Color(0xFF188447)
+            : const Color(0xFFB8860B);
+
+    final dateText = [
+      if (day.isNotEmpty && day != '-') day,
+      if (time.isNotEmpty && time != '-') time,
+    ].join(', ');
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => _openChat(data, doc.id),
       child: Container(
-        height: 128,
+        height: 100,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(19),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -286,7 +303,9 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
         ),
         child: Row(
           children: [
-            _buildDoctorAvatar((data['doctorImage'] ?? '').toString()),
+            _buildDoctorAvatar(
+              (data['doctorImage'] ?? '').toString(),
+            ),
             const SizedBox(width: 13),
             Expanded(
               child: Column(
@@ -304,27 +323,27 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   Text(
-                    specialty,
+                    message.isNotEmpty ? message : specialty,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 11,
+                      fontSize: 10.5,
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
                   Row(
                     children: [
                       Icon(
                         status == 'completed'
                             ? Icons.done_all_rounded
                             : canChat
-                            ? Icons.chat_bubble_rounded
-                            : Icons.schedule_rounded,
-                        size: 14,
+                                ? Icons.chat_bubble_rounded
+                                : Icons.schedule_rounded,
+                        size: 13,
                         color: statusColor,
                       ),
                       const SizedBox(width: 4),
@@ -332,24 +351,34 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
                         statusText,
                         style: TextStyle(
                           fontFamily: 'Nunito',
-                          fontSize: 10.5,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w700,
                           color: statusColor,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '$day, $time WIB',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 10,
+                      if (dateText.isNotEmpty) ...[
+                        const SizedBox(width: 7),
+                        const Text(
+                          '•',
+                          style: TextStyle(
+                            fontSize: 9,
                             color: Colors.black,
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            dateText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 9,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],
@@ -365,6 +394,7 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
       ),
     );
   }
+
 
   Widget _buildEmpty() {
     return const Center(
@@ -413,6 +443,7 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
