@@ -74,10 +74,11 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
             children: [
               _buildHeader('Kelola Konten'),
               const SizedBox(height: 6),
-              Padding(
+                Padding(
                 padding: const EdgeInsets.only(left: 2),
-                child: Text(
-                  style: const TextStyle(
+                child: const Text(
+                  'Kelola konten edukasi dan rekomendasi untuk pengguna',
+                  style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 11,
                     color: Color(0xFF6B5147),
