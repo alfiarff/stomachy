@@ -6,11 +6,20 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+
 class AdminAddAccountScreen extends StatefulWidget {
-  const AdminAddAccountScreen({super.key});
+  final String accountRole;
+  final String pageTitle;
+
+  const AdminAddAccountScreen({
+    super.key,
+    this.accountRole = 'dokter',
+    this.pageTitle = 'Tambah Dokter',
+  });
 
   @override
-  State<AdminAddAccountScreen> createState() => _AdminAddAccountScreenState();
+  State<AdminAddAccountScreen> createState() =>
+      _AdminAddAccountScreenState();
 }
 
 class _AdminAddAccountScreenState extends State<AdminAddAccountScreen> {
@@ -333,7 +342,11 @@ class _AdminAddAccountScreenState extends State<AdminAddAccountScreen> {
                     textInputAction: TextInputAction.next,
                     autocorrect: false,
                     style: _inputTextStyle(),
-                    decoration: _inputDecoration('Masukkan email dokter'),
+                    decoration: _inputDecoration(
+                      widget.accountRole == 'dokter'
+                          ? 'Masukkan email dokter'
+                          : 'Masukkan email pengguna',
+                    ),
                     onChanged: (_) {
                       if (_emailError != null) {
                         setState(() {
@@ -426,10 +439,10 @@ class _AdminAddAccountScreenState extends State<AdminAddAccountScreen> {
             ),
           ),
 
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
-                'Tambah Dokter',
+                widget.pageTitle,
                 style: TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,

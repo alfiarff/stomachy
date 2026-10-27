@@ -1,10 +1,11 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'admin_add_account_screen.dart';
+import 'admin_add_user_screen.dart';
 
 // ===============================================================
 // MANAJEMEN AKUN (ADMIN)
@@ -709,6 +710,8 @@ Future<void> _toggleAccountStatus({
   // ===============================================================
 
   Widget _buildAddButton() {
+    final bool isDoctorTab = _selectedTab == 'dokter';
+
     return SizedBox(
       width: 56,
       height: 56,
@@ -718,13 +721,23 @@ Future<void> _toggleAccountStatus({
         elevation: 4,
         shape: const CircleBorder(),
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  const AdminAddAccountScreen(),
-            ),
-          );
+          if (isDoctorTab) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    const AdminAddAccountScreen(),
+              ),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    const AdminAddUserScreen(),
+              ),
+            );
+          }
         },
         child: const Icon(
           Icons.add_rounded,
