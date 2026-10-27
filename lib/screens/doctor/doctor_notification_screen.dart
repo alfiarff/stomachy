@@ -1,21 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
-import '../../services/notification_service.dart';
 import '../notification_screen.dart';
-
-// ===============================================================
-// HALAMAN NOTIFIKASI DOKTER
-//
-// Sengaja dibuat seragam dengan halaman notifikasi user:
-// - Sumber data  : AppNotification (penyimpanan lokal per-uid)
-// - Struktur     : "Belum Dibaca" (< 24 jam) + "Sebelumnya"
-// - Badge beranda: dihitung dari sumber yang sama
-//                  (getRecentUnreadCount)
-//
-// Dengan begitu angka badge di beranda dokter selalu konsisten
-// dengan isi halaman ini.
-// ===============================================================
 
 class DoctorNotificationScreen extends StatefulWidget {
   const DoctorNotificationScreen({super.key});
@@ -30,55 +18,89 @@ class _DoctorNotificationScreenState extends State<DoctorNotificationScreen> {
   final Color accentBrown = const Color(0xFFB9543A);
 
   bool _isLoading = true;
+  bool _markedAsReadOnOpen = false;
 
   List<LocalNotification> _unread = [];
   List<LocalNotification> _read = [];
 
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _notificationSubscription;
+
   @override
   void initState() {
     super.initState();
-    _loadNotifications();
+    _listenToNotifications();
   }
 
   // ===============================================================
-  // LOAD NOTIFIKASI + TANDAI SEMUA DIBACA
+  // DENGARKAN NOTIFIKASI SECARA REALTIME
   // ===============================================================
 
-  Future<void> _loadNotifications() async {
+  void _listenToNotifications() {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() => _isLoading = false);
       return;
     }
 
-    final items = await AppNotification.getAll(user.uid);
+    _notificationSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .listen(
+      (snapshot) async {
+        final items = snapshot.docs
+            .map((doc) => LocalNotification.fromMap({
+                  ...doc.data(),
+                  'id': doc.id,
+                }))
+            .toList();
 
-    // Belum dibaca DAN belum lewat 24 jam
-    final List<LocalNotification> unread = items
-        .where((item) => !item.isRead && AppNotification.isFresh(item))
-        .toList();
+        final unread = items
+            .where((item) =>
+                !item.isRead && AppNotification.isFresh(item))
+            .toList();
 
-    // Sudah dibaca ATAU sudah lewat 24 jam
-    final List<LocalNotification> read = items
-        .where((item) => item.isRead || !AppNotification.isFresh(item))
-        .toList();
+        final read = items
+            .where((item) =>
+                item.isRead || !AppNotification.isFresh(item))
+            .toList();
 
-    if (!mounted) return;
+        if (!mounted) return;
+        setState(() {
+          _unread = unread;
+          _read = read;
+          _isLoading = false;
+        });
 
-    setState(() {
-      _unread = unread;
-      _read = read;
-      _isLoading = false;
-    });
+        // Tandai notifikasi yang sudah ada sebagai dibaca saat halaman dibuka.
+        // Flag mencegah proses ini berjalan berulang setiap snapshot berubah.
+        if (!_markedAsReadOnOpen) {
+          _markedAsReadOnOpen = true;
+          try {
+            await AppNotification.markAllAsRead(user.uid);
+          } catch (e) {
+            debugPrint('GAGAL MENANDAI NOTIFIKASI DIBACA: $e');
+            _markedAsReadOnOpen = false;
+          }
+        }
+      },
+      onError: (Object error) {
+        debugPrint('NOTIFIKASI DOKTER REALTIME ERROR: $error');
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+      },
+    );
+  }
 
-    // Tandai semua sebagai dibaca
-    // -> badge di beranda dokter otomatis hilang
-    await AppNotification.markAllAsRead(user.uid);
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
   }
 
   // ===============================================================
@@ -254,13 +276,6 @@ class _DoctorNotificationScreenState extends State<DoctorNotificationScreen> {
             ],
           ],
 
-          const SizedBox(height: 26),
-
-          // ================================================
-          // TOMBOL TES (SELALU TERLIHAT)
-          // ================================================
-          _buildTestButtons(),
-
           const SizedBox(height: 20),
         ],
       ),
@@ -299,8 +314,8 @@ class _DoctorNotificationScreenState extends State<DoctorNotificationScreen> {
               child: Text(
                 'Notifikasi',
                 style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 24,
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: Colors.black,
                 ),
@@ -451,214 +466,10 @@ class _DoctorNotificationScreenState extends State<DoctorNotificationScreen> {
               ),
             ),
 
-            const SizedBox(height: 26),
-
-            _buildTestButtons(),
           ],
         ),
       ),
     );
   }
 
-  // ===============================================================
-  // ⚠️ TOMBOL TES SEMENTARA — HAPUS SETELAH SELESAI TES!
-  // ===============================================================
-
-  Widget _buildTestButtons() {
-    return Column(
-      children: [
-        // NOTIFIKASI BARU (SEKARANG)
-        SizedBox(
-          width: 210,
-          height: 46,
-          child: ElevatedButton(
-            onPressed: () async {
-              final user = FirebaseAuth.instance.currentUser;
-
-              if (user == null) return;
-
-              await AppNotification.create(
-                uid: user.uid,
-                type: 'chat',
-                title: 'Pasien Rina mengirim pesan',
-                body: '"Dok, perut saya sakit setelah makan..."',
-              );
-
-              if (!mounted) return;
-
-              // Reload supaya langsung kelihatan
-              setState(() {
-                _isLoading = true;
-              });
-
-              _loadNotifications();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8068D3),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: const Text(
-              'Buat Notifikasi Baru 🧪',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        // TEST NOTIFIKASI ANDROID
-        SizedBox(
-          width: 210,
-          height: 46,
-          child: ElevatedButton(
-            onPressed: () async {
-              try {
-                await NotificationService.showPatientMessage(
-                  messageId: 'test-${DateTime.now().millisecondsSinceEpoch}',
-                  patientName: 'Test Pasien',
-                  message: 'Tes notif pasien dari HP dokter',
-                );
-
-                if (!mounted) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    behavior: SnackBarBehavior.floating,
-                    content: Text('Notifikasi Android berhasil dipanggil 🔔'),
-                  ),
-                );
-              } catch (e) {
-                if (!mounted) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    behavior: SnackBarBehavior.floating,
-                    content: Text('Gagal membuat notif: $e'),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFB9543A),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: const Text(
-              'TEST NOTIF ANDROID 🔔',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        // NOTIFIKASI LAMA (2 HARI)
-        SizedBox(
-          width: 210,
-          height: 46,
-          child: ElevatedButton(
-            onPressed: () async {
-              final user = FirebaseAuth.instance.currentUser;
-
-              if (user == null) return;
-
-              await AppNotification.create(
-                uid: user.uid,
-                type: 'chat',
-                title: 'Pasien Budi mengirim pesan',
-                body: 'Mau tanya soal pola makan, Dok',
-                createdAt: DateTime.now().subtract(const Duration(days: 2)),
-              );
-
-              if (!mounted) return;
-
-              setState(() {
-                _isLoading = true;
-              });
-
-              _loadNotifications();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4E8D6E),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: const Text(
-              'Buat Notifikasi Lama 🕐',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        // HAPUS SEMUA (RESET)
-        SizedBox(
-          width: 210,
-          height: 46,
-          child: ElevatedButton(
-            onPressed: () async {
-              final user = FirebaseAuth.instance.currentUser;
-
-              if (user == null) return;
-
-              await AppNotification.clearAll(user.uid);
-
-              if (!mounted) return;
-
-              setState(() {
-                _unread = [];
-                _read = [];
-              });
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  content: Text('Semua notifikasi dihapus.'),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFB8B0AC),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: const Text(
-              'Hapus Semua 🗑️',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

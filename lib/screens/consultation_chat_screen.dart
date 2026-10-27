@@ -76,17 +76,99 @@ class _ConsultationChatScreenState extends State<ConsultationChatScreen> {
   // MARK CHAT AS READ
   // ===============================================================
 
-  Future<void> _markAsRead() async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('consultations')
-          .doc(widget.consultationId)
-          .set({
-            'unreadForUser': 0,
-            'lastReadByUserAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-    } catch (_) {}
+
+Future<void> _markAsRead() async {
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+
+  if (currentUser == null) return;
+
+  try {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+
+    // 1. Tandai pesan konsultasi user sudah dibaca.
+    final DocumentReference<Map<String, dynamic>> consultationRef =
+        db.collection('consultations').doc(widget.consultationId);
+
+    await consultationRef.set({
+      'unreadForUser': 0,
+      'lastReadByUserAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    // 2. Ambil semua pesan dalam konsultasi ini.
+    final QuerySnapshot<Map<String, dynamic>> messagesSnapshot =
+        await consultationRef.collection('messages').get();
+
+    // 3. Cari notifikasi balasan dokter yang terkait dengan pesan.
+    final CollectionReference<Map<String, dynamic>> notificationsRef =
+        db
+            .collection('users')
+            .doc(currentUser.uid)
+            .collection('notifications');
+
+    WriteBatch batch = db.batch();
+    int batchCount = 0;
+
+    for (final messageDoc in messagesSnapshot.docs) {
+      final Map<String, dynamic> messageData = messageDoc.data();
+
+      final String senderId =
+          (messageData['senderId'] ?? '').toString();
+
+      final String senderRole = (messageData['senderRole'] ?? '')
+          .toString()
+          .trim()
+          .toLowerCase();
+
+      // Hanya tandai notifikasi dari pesan dokter,
+      // bukan pesan yang dikirim oleh user sendiri.
+      final bool isDoctorMessage =
+          (senderRole == 'doctor' || senderRole == 'dokter') &&
+          senderId != currentUser.uid;
+
+      if (!isDoctorMessage) continue;
+
+      // Sesuai format ID notifikasi pada kode chat user:
+      // chat_<messageId>
+      final DocumentReference<Map<String, dynamic>> notificationRef =
+          notificationsRef.doc('chat_${messageDoc.id}');
+
+      final notificationSnapshot = await notificationRef.get();
+
+      if (!notificationSnapshot.exists) continue;
+
+      final notificationData = notificationSnapshot.data();
+
+      if (notificationData == null ||
+          notificationData['isRead'] == true) {
+        continue;
+      }
+
+      batch.update(notificationRef, {
+        'isRead': true,
+      });
+
+      batchCount++;
+
+      // Firestore membatasi maksimal 500 operasi per batch.
+      if (batchCount == 450) {
+        await batch.commit();
+        batch = db.batch();
+        batchCount = 0;
+      }
+    }
+
+    // Simpan sisa perubahan notifikasi.
+    if (batchCount > 0) {
+      await batch.commit();
+    }
+
+    debugPrint(
+      'Chat dibaca. Notifikasi balasan dokter berhasil diperbarui.',
+    );
+  } catch (e) {
+    debugPrint('Gagal menandai chat sebagai dibaca: $e');
   }
+}
 
   // ===============================================================
   // CEK CHAT AKTIF

@@ -169,22 +169,90 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
     }
   }
 
-  Future<void> _markAsRead() async {
-    if (!_isActive || _consultationId.isEmpty) {
-      return;
+
+Future<void> _markAsRead() async {
+  if (!_isActive || _consultationId.isEmpty) {
+    return;
+  }
+
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+
+  if (currentUser == null) {
+    return;
+  }
+
+  try {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+
+    // Tandai percakapan sebagai sudah dibaca.
+    await db
+        .collection('consultations')
+        .doc(_consultationId)
+        .set({
+          'unreadForDoctor': 0,
+          'lastReadByDoctorAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+    // Ambil semua pesan dari percakapan yang sedang dibuka.
+    final messagesSnapshot = await db
+        .collection('consultations')
+        .doc(_consultationId)
+        .collection('messages')
+        .get();
+
+    // Ambil koleksi notifikasi milik dokter yang login.
+    final notificationsRef = db
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('notifications');
+
+    final batch = db.batch();
+    bool hasChanges = false;
+
+    for (final messageDoc in messagesSnapshot.docs) {
+      final data = messageDoc.data();
+
+      final String senderId = (data['senderId'] ?? '').toString();
+      final String senderRole = (data['senderRole'] ?? '')
+          .toString()
+          .trim()
+          .toLowerCase();
+
+      // Hanya proses pesan yang berasal dari pasien.
+      if (senderId == currentUser.uid ||
+          (senderRole != 'user' &&
+              senderRole != 'patient' &&
+              senderRole != 'pasien')) {
+        continue;
+      }
+
+      // ID notifikasi mengikuti format chat_<ID pesan>.
+      final notificationRef =
+          notificationsRef.doc('chat_${messageDoc.id}');
+
+      final notificationDoc = await notificationRef.get();
+
+      if (notificationDoc.exists &&
+          notificationDoc.data()?['isRead'] != true) {
+        batch.update(notificationRef, {
+          'isRead': true,
+        });
+
+        hasChanges = true;
+      }
     }
 
-    try {
-      await FirebaseFirestore.instance
-          .collection('consultations')
-          .doc(_consultationId)
-          .set({
-            'unreadForDoctor': 0,
+    // Simpan perubahan status notifikasi.
+    if (hasChanges) {
+      await batch.commit();
+    }
 
-            'lastReadByDoctorAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-    } catch (_) {}
+    // Perbarui badge lonceng agar jumlahnya dihitung ulang.
+    NotificationService.badgeSignal.value++;
+  } catch (e) {
+    debugPrint('GAGAL MENANDAI CHAT SEBAGAI DIBACA: $e');
   }
+}
 
   Future<List<Map<String, dynamic>>> _loadPreviousConsultations() async {
     final User? doctor = FirebaseAuth.instance.currentUser;

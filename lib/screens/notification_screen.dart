@@ -1,28 +1,46 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../services/notification_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
 // ===============================================================
-// PENYIMPANAN NOTIFIKASI LOKAL (SharedPreferences)
-//
-// Sementara memakai penyimpanan lokal di dalam HP karena
-// akses Firestore terblokir aturan keamanan (permission-denied).
-// Tidak butuh internet & tidak butuh Firebase Console.
+// PENYIMPANAN NOTIFIKASI DI FIRESTORE
+// Path: users/{uid}/notifications/{notificationId}
 // ===============================================================
 
 class AppNotification {
-  static const String _keyPrefix = 'stomachy_notifications_';
+  static final FirebaseFirestore _db = FirebaseFirestore.instance;
+  static const Duration freshWindow = Duration(hours: 24);
 
-  static String _key(String uid) => '$_keyPrefix$uid';
-  static Future<void> _createQueue = Future<void>.value();
+  static const Map<String, String> _settingKeys = {
+    'chat': 'notifBalasanDokter',
+    'edukasi': 'notifEdukasi',
+    'artikel': 'notifArtikel',
+    'makanan': 'notifMakanan',
+    'olahraga': 'notifOlahraga',
+  };
 
-  // -------------------------------------------------------------
-  // BUAT NOTIFIKASI BARU
-  // -------------------------------------------------------------
+  static CollectionReference<Map<String, dynamic>> _notifications(String uid) {
+    return _db.collection('users').doc(uid).collection('notifications');
+  }
+
+  static Future<bool> isCategoryEnabled(String uid, String type) async {
+    // Notifikasi pesan pasien untuk akun dokter bukan kategori preferensi pasien.
+    if (type == 'pesan_pasien') return true;
+
+    final key = _settingKeys[type];
+    if (key == null) return false;
+
+    final userDoc = await _db.collection('users').doc(uid).get();
+    final settings = userDoc.data()?['settings'];
+
+    if (settings is Map && settings.containsKey(key)) {
+      return settings[key] == true;
+    }
+
+    // Default sesuai nilai awal pada SettingsScreen.
+    return type != 'chat';
+  }
 
   static Future<void> create({
     required String uid,
@@ -31,136 +49,90 @@ class AppNotification {
     required String body,
     DateTime? createdAt,
     String? notificationId,
-  }) {
-    final operation = _createQueue.then((_) async {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final items = await getAll(uid);
-
-        // Cegah notifikasi dengan ID yang sama tersimpan dua kali.
-        if (notificationId != null &&
-            items.any((item) => item.id == notificationId)) {
-          return;
-        }
-
-        items.insert(
-          0,
-          LocalNotification(
-            id:
-                notificationId ??
-                DateTime.now().microsecondsSinceEpoch.toString(),
-            type: type,
-            title: title,
-            body: body,
-            createdAt: createdAt ?? DateTime.now(),
-            isRead: false,
-          ),
-        );
-
-        await prefs.setString(
-          _key(uid),
-          jsonEncode(items.take(50).map((item) => item.toMap()).toList()),
-        );
-
-        debugPrint('NOTIFIKASI TERSIMPAN: $title');
-      } catch (e) {
-        debugPrint('NOTIFIKASI CREATE ERROR: $e');
-      }
-    });
-
-    // Tunggu operasi penyimpanan sebelumnya selesai.
-    _createQueue = operation;
-    return operation;
-  }
-
-  // -------------------------------------------------------------
-  // AMBIL SEMUA NOTIFIKASI (TERBARU DI ATAS)
-  // -------------------------------------------------------------
-
-  static Future<List<LocalNotification>> getAll(String uid) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    final String? raw = prefs.getString(_key(uid));
-
-    if (raw == null || raw.isEmpty) {
-      return [];
-    }
+  }) async {
+    if (uid.isEmpty || title.trim().isEmpty) return;
 
     try {
-      final List decoded = jsonDecode(raw) as List;
+      if (!await isCategoryEnabled(uid, type)) {
+        debugPrint('Notifikasi $type dilewati karena kategori nonaktif.');
+        return;
+      }
 
-      return decoded.map((item) {
-        return LocalNotification.fromMap(
-          Map<String, dynamic>.from(item as Map),
-        );
-      }).toList();
+      final collection = _notifications(uid);
+      final doc = notificationId != null && notificationId.trim().isNotEmpty
+          ? collection.doc(notificationId)
+          : collection.doc();
+
+      if (notificationId != null && notificationId.trim().isNotEmpty) {
+        if ((await doc.get()).exists) return;
+      }
+
+      await doc.set({
+        'id': doc.id,
+        'type': type,
+        'title': title,
+        'body': body,
+        'createdAt': Timestamp.fromDate(createdAt ?? DateTime.now()),
+        'isRead': false,
+      });
+
+      debugPrint('NOTIFIKASI TERSIMPAN DI FIRESTORE: $title');
     } catch (e) {
-      debugPrint('NOTIFIKASI PARSE ERROR: $e');
-      return [];
+      debugPrint('NOTIFIKASI CREATE ERROR: $e');
+      rethrow;
     }
   }
 
-  // -------------------------------------------------------------
-  // BATAS WAKTU "BELUM DIBACA"
-  //
-  // Notifikasi berumur lebih dari 24 jam otomatis pindah
-  // ke bagian "Sebelumnya" meskipun belum dibaca.
-  // -------------------------------------------------------------
+  static Future<List<LocalNotification>> getAll(String uid) async {
+    final snapshot = await _notifications(uid)
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .get();
 
-  static const Duration freshWindow = Duration(hours: 24);
-
-  static bool isFresh(LocalNotification item) {
-    final DateTime cutoff = DateTime.now().subtract(freshWindow);
-
-    return item.createdAt.isAfter(cutoff);
+    return snapshot.docs
+        .map((doc) => LocalNotification.fromMap({...doc.data(), 'id': doc.id}))
+        .toList();
   }
 
-  // -------------------------------------------------------------
-  // JUMLAH BELUM DIBACA YANG MASIH < 24 JAM
-  //
-  // Dipakai badge lonceng di beranda supaya angkanya
-  // konsisten dengan isi halaman notifikasi.
-  // -------------------------------------------------------------
+  static bool isFresh(LocalNotification item) =>
+      item.createdAt.isAfter(DateTime.now().subtract(freshWindow));
 
   static Future<int> getRecentUnreadCount(String uid) async {
     final items = await getAll(uid);
-
     return items.where((item) => !item.isRead && isFresh(item)).length;
   }
 
-  // -------------------------------------------------------------
-  // TANDAI SEMUA SEBAGAI DIBACA
-  // -------------------------------------------------------------
-
   static Future<void> markAllAsRead(String uid) async {
-    final items = await getAll(uid);
+    final snapshot = await _notifications(uid)
+        .where('isRead', isEqualTo: false)
+        .get();
 
-    if (items.isEmpty) return;
-
-    final updated = items.map((item) => item.copyWith(isRead: true)).toList();
-
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setString(
-      _key(uid),
-      jsonEncode(updated.map((item) => item.toMap()).toList()),
-    );
+    for (var start = 0; start < snapshot.docs.length; start += 450) {
+      final batch = _db.batch();
+      final end = (start + 450 < snapshot.docs.length)
+          ? start + 450
+          : snapshot.docs.length;
+      for (var i = start; i < end; i++) {
+        batch.update(snapshot.docs[i].reference, {'isRead': true});
+      }
+      await batch.commit();
+    }
   }
-
-  // -------------------------------------------------------------
-  // HAPUS SEMUA (UNTUK TES)
-  // -------------------------------------------------------------
 
   static Future<void> clearAll(String uid) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.remove(_key(uid));
+    final snapshot = await _notifications(uid).get();
+    for (var start = 0; start < snapshot.docs.length; start += 450) {
+      final batch = _db.batch();
+      final end = (start + 450 < snapshot.docs.length)
+          ? start + 450
+          : snapshot.docs.length;
+      for (var i = start; i < end; i++) {
+        batch.delete(snapshot.docs[i].reference);
+      }
+      await batch.commit();
+    }
   }
 }
-
-// ===============================================================
-// MODEL NOTIFIKASI
-// ===============================================================
 
 class LocalNotification {
   final String id;
@@ -179,40 +151,37 @@ class LocalNotification {
     required this.isRead,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'type': type,
-      'title': title,
-      'body': body,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'isRead': isRead,
-    };
-  }
-
   factory LocalNotification.fromMap(Map<String, dynamic> map) {
+    final rawDate = map['createdAt'];
+    DateTime date;
+    if (rawDate is Timestamp) {
+      date = rawDate.toDate();
+    } else if (rawDate is DateTime) {
+      date = rawDate;
+    } else if (rawDate is num) {
+      date = DateTime.fromMillisecondsSinceEpoch(rawDate.toInt());
+    } else {
+      date = DateTime.now();
+    }
+
     return LocalNotification(
       id: map['id']?.toString() ?? '',
       type: map['type']?.toString() ?? 'info',
       title: map['title']?.toString() ?? '',
       body: map['body']?.toString() ?? '',
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        (map['createdAt'] as num?)?.toInt() ?? 0,
-      ),
+      createdAt: date,
       isRead: map['isRead'] == true,
     );
   }
 
-  LocalNotification copyWith({bool? isRead}) {
-    return LocalNotification(
-      id: id,
-      type: type,
-      title: title,
-      body: body,
-      createdAt: createdAt,
-      isRead: isRead ?? this.isRead,
-    );
-  }
+  LocalNotification copyWith({bool? isRead}) => LocalNotification(
+        id: id,
+        type: type,
+        title: title,
+        body: body,
+        createdAt: createdAt,
+        isRead: isRead ?? this.isRead,
+      );
 }
 
 // ===============================================================
@@ -230,16 +199,86 @@ class _NotificationScreenState extends State<NotificationScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color accentBrown = const Color(0xFFB9543A);
 
-  bool _isLoading = true;
 
-  List<LocalNotification> _unread = [];
-  List<LocalNotification> _read = [];
+bool _isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadNotifications();
+List<LocalNotification> _unread = [];
+List<LocalNotification> _read = [];
+
+StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+    _notificationSubscription;
+
+
+
+@override
+void initState() {
+  super.initState();
+  _listenToNotifications();
+}
+
+void _listenToNotifications() {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) {
+    setState(() => _isLoading = false);
+    return;
   }
+
+  _notificationSubscription = FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .collection('notifications')
+      .orderBy('createdAt', descending: true)
+      .limit(100)
+      .snapshots()
+      .listen(
+    (snapshot) {
+      final items = snapshot.docs
+          .map(
+            (doc) => LocalNotification.fromMap({
+              ...doc.data(),
+              'id': doc.id,
+            }),
+          )
+          .toList();
+
+      final unread = items
+          .where(
+            (item) =>
+                !item.isRead && AppNotification.isFresh(item),
+          )
+          .toList();
+
+      final read = items
+          .where(
+            (item) =>
+                item.isRead || !AppNotification.isFresh(item),
+          )
+          .toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        _unread = unread;
+        _read = read;
+        _isLoading = false;
+      });
+    },
+    onError: (Object error) {
+      debugPrint('NOTIFIKASI REALTIME ERROR: $error');
+
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+    },
+  );
+}
+
+@override
+void dispose() {
+  _notificationSubscription?.cancel();
+  super.dispose();
+}
 
   // ===============================================================
   // LOAD NOTIFIKASI + TANDAI SEMUA DIBACA
@@ -249,37 +288,36 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
       return;
     }
 
-    final items = await AppNotification.getAll(user.uid);
+    try {
+      final items = await AppNotification.getAll(user.uid);
+      final unread = items
+          .where((item) => !item.isRead && AppNotification.isFresh(item))
+          .toList();
+      final read = items
+          .where((item) => item.isRead || !AppNotification.isFresh(item))
+          .toList();
 
-    // Belum dibaca DAN belum lewat 24 jam
-    final List<LocalNotification> unread = items
-        .where((item) => !item.isRead && AppNotification.isFresh(item))
-        .toList();
+      if (!mounted) return;
+      setState(() {
+        _unread = unread;
+        _read = read;
+        _isLoading = false;
+      });
 
-    // Sudah dibaca ATAU sudah lewat 24 jam
-    final List<LocalNotification> read = items
-        .where((item) => item.isRead || !AppNotification.isFresh(item))
-        .toList();
-
-    if (!mounted) return;
-
-    setState(() {
-      _unread = unread;
-      _read = read;
-      _isLoading = false;
-    });
-
-    // Tandai semua sebagai dibaca
-    // -> badge di beranda otomatis hilang
-    await AppNotification.markAllAsRead(user.uid);
+      // Dipertahankan sesuai perilaku kode asli: tandai dibaca saat halaman dibuka.
+      await AppNotification.markAllAsRead(user.uid);
+    } catch (e) {
+      debugPrint('NOTIFIKASI LOAD ERROR: $e');
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Notifikasi gagal dimuat. Periksa koneksi dan aturan Firestore.')),
+      );
+    }
   }
 
   // ===============================================================
@@ -455,13 +493,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ],
           ],
 
-          const SizedBox(height: 26),
-
-          // ================================================
-          // TOMBOL TES (SELALU TERLIHAT)
-          // ================================================
-          _buildTestButtons(),
-
           const SizedBox(height: 20),
         ],
       ),
@@ -500,8 +531,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Text(
                 'Notifikasi',
                 style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 24,
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: Colors.black,
                 ),
@@ -571,8 +602,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
                 const SizedBox(height: 3),
 
+
                 Text(
-                  item.body,
+                  item.type == 'chat' &&
+                          item.title == 'Dokter Membalas Pesanmu' &&
+                          item.body.trim().isNotEmpty &&
+                          !item.body.trim().toLowerCase().startsWith('dr.')
+                      ? 'dr. ${item.body.trim()}'
+                      : item.body,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -652,218 +689,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
               ),
             ),
 
-            const SizedBox(height: 26),
-
-            _buildTestButtons(),
           ],
         ),
       ),
     );
   }
 
-  // ===============================================================
-  // ⚠️ TOMBOL TES SEMENTARA — HAPUS SETELAH SELESAI TES!
-  //
-  // Selalu tampil (baik di empty state maupun di bawah
-  // daftar notifikasi) supaya bisa membuat notifikasi
-  // baru kapan saja untuk pengujian.
-  // ===============================================================
-
-  Widget _buildTestButtons() {
-    return Column(
-      children: [
-        // NOTIFIKASI BARU (SEKARANG)
-        SizedBox(
-          width: 210,
-          height: 46,
-          child: ElevatedButton(
-            onPressed: () async {
-              final user = FirebaseAuth.instance.currentUser;
-
-              if (user == null) return;
-
-              await AppNotification.create(
-                uid: user.uid,
-                type: 'chat',
-                title: 'dr. Sarah Amelia membalas pesanmu',
-                body: '"Baik, coba hindari makanan asam & pedas dulu..."',
-              );
-
-              if (!mounted) return;
-
-              // Reload supaya langsung kelihatan
-              setState(() {
-                _isLoading = true;
-              });
-
-              _loadNotifications();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8068D3),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: const Text(
-              'Buat Notifikasi Baru 🧪',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        // TEST NOTIFIKASI ANDROID
-        SizedBox(
-          width: 210,
-          height: 46,
-          child: ElevatedButton(
-            onPressed: () async {
-              try {
-                await NotificationService.showPatientMessage(
-                  messageId: 'test-${DateTime.now().millisecondsSinceEpoch}',
-                  patientName: 'Test Pasien',
-                  message: 'Tes notif dokter dari Samsung A04',
-                );
-
-                if (!mounted) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    behavior: SnackBarBehavior.floating,
-                    content: Text('Notifikasi Android berhasil dipanggil 🔔'),
-                  ),
-                );
-              } catch (e) {
-                if (!mounted) return;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    behavior: SnackBarBehavior.floating,
-                    content: Text('Gagal membuat notif: $e'),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFB9543A),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: const Text(
-              'TEST NOTIF ANDROID 🔔',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        // NOTIFIKASI LAMA (2 HARI)
-        SizedBox(
-          width: 210,
-          height: 46,
-          child: ElevatedButton(
-            onPressed: () async {
-              final user = FirebaseAuth.instance.currentUser;
-
-              if (user == null) return;
-
-              await AppNotification.create(
-                uid: user.uid,
-                type: 'skrining',
-                title: 'Saatnya Skrining Mingguan',
-                body: 'Pantau perkembangan lambungmu minggu ini',
-                createdAt: DateTime.now().subtract(const Duration(days: 2)),
-              );
-
-              if (!mounted) return;
-
-              setState(() {
-                _isLoading = true;
-              });
-
-              _loadNotifications();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4E8D6E),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: const Text(
-              'Buat Notifikasi Lama 🕐',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        // HAPUS SEMUA (RESET)
-        SizedBox(
-          width: 210,
-          height: 46,
-          child: ElevatedButton(
-            onPressed: () async {
-              final user = FirebaseAuth.instance.currentUser;
-
-              if (user == null) return;
-
-              await AppNotification.clearAll(user.uid);
-
-              if (!mounted) return;
-
-              setState(() {
-                _unread = [];
-                _read = [];
-              });
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  content: Text('Semua notifikasi dihapus.'),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFB8B0AC),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: const Text(
-              'Hapus Semua 🗑️',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
