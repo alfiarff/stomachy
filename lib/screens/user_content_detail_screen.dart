@@ -25,7 +25,6 @@ class _UserContentDetailScreenState
   static const Color _accent = Color(0xFFA9583C);
 
   List<_ContentSection> _getSections(AdminContentItem item) {
-    // Prioritaskan struktur sections dari Firestore.
     if (item.sections.isNotEmpty) {
       return item.sections.map((section) {
         final rawPoints = section['points'];
@@ -45,7 +44,6 @@ class _UserContentDetailScreenState
       }).toList();
     }
 
-    // Fallback untuk edukasi lama yang hanya menyimpan content.
     return _parseLegacyContent(item.content);
   }
 
@@ -97,7 +95,6 @@ class _UserContentDetailScreenState
 
     saveSection();
 
-    // Konten tanpa heading tetap ditampilkan sebagai satu card.
     if (sections.isEmpty && introLines.isNotEmpty) {
       sections.add(_ContentSection(
         title: 'Materi',
@@ -163,23 +160,30 @@ class _UserContentDetailScreenState
       body: SafeArea(
         child: Column(
           children: [
+            // HEADER ATAS: bagian yang dirapikan
             Container(
-              color: Colors.white,
+              width: double.infinity,
+              color: const Color(0xFFFFF5EF),
               padding: const EdgeInsets.symmetric(
-                horizontal: 15,
-                vertical: 8,
+                horizontal: 20,
+                vertical: 4,
               ),
               child: SizedBox(
-                height: 48,
+                height: 52,
                 child: Row(
                   children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const SizedBox(
-                        width: 42,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Icon(
+                    SizedBox(
+                      width: 42,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 40,
+                          ),
+                          icon: const Icon(
                             Icons.arrow_back_rounded,
                             size: 29,
                             color: Color(0xFF171310),
@@ -197,6 +201,7 @@ class _UserContentDetailScreenState
                                   : item.type == 'olahraga'
                                       ? 'Rekomendasi Olahraga'
                                       : 'Detail Konten',
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'Fredoka',
                             fontSize: 22,
@@ -211,6 +216,8 @@ class _UserContentDetailScreenState
                 ),
               ),
             ),
+
+            // ISI MATERI: tetap seperti sebelumnya
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
