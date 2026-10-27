@@ -1,3 +1,4 @@
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -22,12 +23,6 @@ class NotificationService {
 
   // =============================================================
   // SINYAL PEMBARUAN BADGE LONCENG
-  //
-  // Setiap kali watcher menemukan pesan baru dan membuat
-  // notifikasi in-app, sinyal ini dinaikkan. Lonceng di beranda
-  // (user & dokter) mendengarkan sinyal ini lalu memuat ulang
-  // angka badge-nya, sehingga angka langsung muncul tanpa perlu
-  // pindah halaman atau buka-tutup aplikasi.
   // =============================================================
 
   static final ValueNotifier<int> badgeSignal = ValueNotifier<int>(0);
@@ -38,42 +33,20 @@ class NotificationService {
 
   // =============================================================
   // GLOBAL CHAT WATCHER
-  //
-  // Mendengarkan koleksi 'consultations' selama user sedang login.
-  // Bekerja di SEMUA halaman (beranda, edukasi, profil, dll),
-  // baik untuk role user maupun dokter.
-  //
-  // Cara kerja:
-  // 1. Saat konsultasi pertama kali terlihat -> baseline
-  //    (pesan lama tidak memunculkan notifikasi).
-  // 2. Jika lastMessageId berubah dan pesan terakhir BUKAN dari
-  //    akun ini -> tampilkan notifikasi HP + simpan notifikasi
-  //    in-app.
-  //
-  // PENTING: lastMessageId ditulis oleh kedua layar chat saat
-  // mengirim pesan (wajib, lihat file perbaikan chat screens).
   // =============================================================
 
   static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
-  _watcherSubAsPatient;
+      _watcherSubAsPatient;
 
   static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
-  _watcherSubAsDoctor;
+      _watcherSubAsDoctor;
 
   static String? _watcherUid;
 
-  // Konsultasi yang sudah pernah terlihat watcher pada sesi ini.
   static final Set<String> _knownConsultationIds = <String>{};
 
-  // Registri bersama: ID pesan yang sudah diproses sebagai
-  // notifikasi. Dipakai juga oleh halaman chat supaya satu pesan
-  // tidak pernah membuat dua notifikasi.
   static final Set<String> _shownChatMessageIds = <String>{};
 
-  /// Coba klaim sebuah pesan untuk diproses sebagai notifikasi.
-  /// Mengembalikan true jika pemanggil berhak membuat notifikasi,
-  /// false jika pesan sudah pernah diproses (oleh watcher atau
-  /// oleh halaman chat).
   static bool registerChatMessageIfNew(String messageId) {
     if (messageId.isEmpty) return false;
 
@@ -96,10 +69,6 @@ class NotificationService {
     _shownChatMessageIds.add(messageId);
   }
 
-  /// Mulai mendengarkan notifikasi chat untuk user yang sedang
-  /// login. Aman dipanggil berkali-kali: jika sudah berjalan untuk
-  /// user yang sama, tidak akan dobel. Jika berganti akun, watcher
-  /// lama otomatis dihentikan lalu dipasang ulang.
   static Future<void> startChatWatcher() async {
     final User? user = FirebaseAuth.instance.currentUser;
 
@@ -107,7 +76,8 @@ class NotificationService {
 
     final bool alreadyRunning =
         _watcherUid == user.uid &&
-        (_watcherSubAsPatient != null || _watcherSubAsDoctor != null);
+        (_watcherSubAsPatient != null ||
+            _watcherSubAsDoctor != null);
 
     if (alreadyRunning) return;
 
@@ -117,14 +87,12 @@ class NotificationService {
 
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    // Dengarkan konsultasi di posisi PASIEN (untuk akun user).
     _watcherSubAsPatient = firestore
         .collection('consultations')
         .where('userId', isEqualTo: user.uid)
         .snapshots()
         .listen(_handleConsultationSnapshot);
 
-    // Dengarkan konsultasi di posisi DOKTER (untuk akun dokter).
     _watcherSubAsDoctor = firestore
         .collection('consultations')
         .where('doctorId', isEqualTo: user.uid)
@@ -134,7 +102,6 @@ class NotificationService {
     debugPrint('WATCHER: aktif untuk user ${user.uid}');
   }
 
-  /// Hentikan watcher (dipakai saat logout).
   static Future<void> stopChatWatcher() async {
     await _watcherSubAsPatient?.cancel();
     await _watcherSubAsDoctor?.cancel();
@@ -157,59 +124,38 @@ class NotificationService {
     for (final doc in snapshot.docs) {
       final data = doc.data();
 
-      final String lastMessage = (data['lastMessage'] ?? '').toString().trim();
+      final String lastMessage =
+          (data['lastMessage'] ?? '').toString().trim();
 
-      final String lastSenderId = (data['lastSenderId'] ?? '').toString();
+      final String lastSenderId =
+          (data['lastSenderId'] ?? '').toString();
 
-      final String lastMessageId = (data['lastMessageId'] ?? '').toString();
+      final String lastMessageId =
+          (data['lastMessageId'] ?? '').toString();
 
-      // ---------------------------------------------------------
       // BASELINE PER KONSULTASI
-      //
-      // Konsultasi yang baru pertama kali terlihat watcher pada
-      // sesi ini dianggap kondisi awal. Pesan yang sudah ada di
-      // dalamnya tidak memunculkan notifikasi.
-      // ---------------------------------------------------------
-
       if (!_knownConsultationIds.contains(doc.id)) {
         _knownConsultationIds.add(doc.id);
 
-        // Konsultasi belum memiliki pesan yang bisa diberi notifikasi.
         if (lastMessage.isEmpty || lastMessageId.isEmpty) {
           continue;
         }
 
-        // Jangan membuat notifikasi untuk pesan yang dikirim akun sendiri.
         if (lastSenderId == user.uid) {
           _shownChatMessageIds.add(lastMessageId);
           continue;
         }
-
-        // Pesan dari lawan bicara tetap boleh diproses pada awal watcher.
-        // Pemeriksaan dokumen notifikasi di bawah mencegah notifikasi lama
-        // yang sudah pernah disimpan muncul kembali setelah aplikasi dibuka.
       }
 
       if (lastMessage.isEmpty) continue;
-
-      // Pesan lama (dikirim dari build sebelum pembaruan ini)
-      // tidak memiliki lastMessageId -> tidak bisa diproses.
       if (lastMessageId.isEmpty) continue;
 
-      // Pesan terakhir berasal dari akun ini sendiri.
       if (lastSenderId == user.uid) {
         _shownChatMessageIds.add(lastMessageId);
         continue;
       }
 
-      // Sudah pernah diproses selama sesi aplikasi ini.
-      if (_shownChatMessageIds.contains(lastMessageId)) continue;
-
-      // CEGAH NOTIFIKASI MUNCUL ULANG SETELAH APLIKASI DIBUKA KEMBALI.
-      // Set lokal akan kosong saat aplikasi dimulai ulang, jadi periksa
-      // ID notifikasi yang tersimpan permanen di Firestore terlebih dahulu.
-      // Jika dokumennya sudah ada (baik sudah dibaca maupun belum), jangan
-      // tampilkan ulang notifikasi Android atau membuat notifikasi duplikat.
+      // Cegah notifikasi duplikat dari Firestore.
       final existingNotification = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -222,13 +168,20 @@ class NotificationService {
         continue;
       }
 
+      // Cegah pemrosesan berulang dalam sesi aplikasi.
+      if (_shownChatMessageIds.contains(lastMessageId)) continue;
+
       _shownChatMessageIds.add(lastMessageId);
 
-      final String doctorId = (data['doctorId'] ?? '').toString();
+      final String doctorId =
+          (data['doctorId'] ?? '').toString();
+
       final bool iAmDoctor = doctorId == user.uid;
 
       String counterpartName = iAmDoctor
-          ? (data['userName'] ?? data['name'] ?? '').toString().trim()
+          ? (data['userName'] ?? data['name'] ?? '')
+              .toString()
+              .trim()
           : (data['doctorName'] ?? '').toString().trim();
 
       if (counterpartName.isEmpty) {
@@ -243,15 +196,8 @@ class NotificationService {
       }
 
       try {
-        // Pengaturan Balasan Dokter berlaku untuk pasien saja.
-        // Jika pasien mematikan switch, jangan tampilkan push maupun simpan notifikasi.
-        if (!iAmDoctor &&
-            !await AppNotification.isCategoryEnabled(user.uid, 'chat')) {
-          debugPrint('WATCHER: balasan dokter dilewati karena pengaturan OFF.');
-          continue;
-        }
-
         if (iAmDoctor) {
+          // Notifikasi untuk dokter saat pasien mengirim pesan.
           await showPatientMessage(
             messageId: lastMessageId,
             patientName: counterpartName,
@@ -266,26 +212,29 @@ class NotificationService {
             notificationId: 'chat_$lastMessageId',
           );
         } else {
+          // Popup HP tetap mengikuti pengaturan Balasan Dokter.
           await showDoctorReply(
             messageId: lastMessageId,
             doctorName: counterpartName,
             message: lastMessage,
           );
 
+          // Notifikasi in-app tetap disimpan meskipun pengaturan OFF.
           await AppNotification.create(
             uid: user.uid,
             type: 'chat',
             title: 'Pesan baru dari Dokter',
             body: '$counterpartName: "$lastMessage"',
             notificationId: 'chat_$lastMessageId',
+            respectSetting: false,
           );
         }
 
-        // Beri tahu semua lonceng badge bahwa ada notifikasi baru.
         _notifyBadgeChanged();
 
         debugPrint(
-          'WATCHER: notifikasi chat dibuat (messageId: $lastMessageId)',
+          'WATCHER: notifikasi chat dibuat '
+          '(messageId: $lastMessageId)',
         );
       } catch (e) {
         debugPrint('WATCHER: gagal membuat notifikasi chat = $e');
@@ -305,13 +254,15 @@ class NotificationService {
     const AndroidInitializationSettings androidInit =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const DarwinInitializationSettings iosInit = DarwinInitializationSettings(
+    const DarwinInitializationSettings iosInit =
+        DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
 
-    const InitializationSettings initSettings = InitializationSettings(
+    const InitializationSettings initSettings =
+        InitializationSettings(
       android: androidInit,
       iOS: iosInit,
     );
@@ -320,8 +271,7 @@ class NotificationService {
 
     final AndroidFlutterLocalNotificationsPlugin? android = _plugin
         .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
+            AndroidFlutterLocalNotificationsPlugin>();
 
     await android?.requestNotificationsPermission();
   }
@@ -330,15 +280,19 @@ class NotificationService {
     try {
       final FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-      final NotificationSettings settings = await messaging.requestPermission(
+      final NotificationSettings settings =
+          await messaging.requestPermission(
         alert: true,
         badge: true,
         sound: true,
       );
 
-      debugPrint('FCM: authorizationStatus = ${settings.authorizationStatus}');
+      debugPrint(
+        'FCM: authorizationStatus = ${settings.authorizationStatus}',
+      );
 
-      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+      if (settings.authorizationStatus ==
+          AuthorizationStatus.denied) {
         debugPrint('FCM: izin notifikasi ditolak.');
         return;
       }
@@ -350,31 +304,38 @@ class NotificationService {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user != null && token != null && token.isNotEmpty) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({
           'fcmToken': token,
           'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
-        debugPrint('FCM: token berhasil disimpan untuk user ${user.uid}');
+        debugPrint(
+          'FCM: token berhasil disimpan untuk user ${user.uid}',
+        );
       }
 
-      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
-        final currentUser = FirebaseAuth.instance.currentUser;
+      FirebaseMessaging.instance.onTokenRefresh.listen(
+        (newToken) async {
+          final currentUser = FirebaseAuth.instance.currentUser;
 
-        if (currentUser == null || newToken.isEmpty) {
-          return;
-        }
+          if (currentUser == null || newToken.isEmpty) {
+            return;
+          }
 
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(currentUser.uid)
-            .set({
-              'fcmToken': newToken,
-              'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-            }, SetOptions(merge: true));
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .set({
+            'fcmToken': newToken,
+            'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
 
-        debugPrint('FCM: token diperbarui.');
-      });
+          debugPrint('FCM: token diperbarui.');
+        },
+      );
     } catch (e) {
       debugPrint('FCM: gagal setup messaging: $e');
     }
@@ -394,7 +355,8 @@ class NotificationService {
       android: AndroidNotificationDetails(
         'weekly_screening',
         'Pengingat Skrining Mingguan',
-        channelDescription: 'Pengingat skrining GERD setiap Senin 09.00',
+        channelDescription:
+            'Pengingat skrining GERD setiap Senin 09.00',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -414,7 +376,8 @@ class NotificationService {
     );
 
     debugPrint(
-      'NOTIFIKASI: Pengingat skrining dijadwalkan pertama kali pada $scheduled',
+      'NOTIFIKASI: Pengingat skrining dijadwalkan pertama kali '
+      'pada $scheduled',
     );
 
     return scheduled;
@@ -474,7 +437,8 @@ class NotificationService {
       android: AndroidNotificationDetails(
         'consultation_reminder',
         'Pengingat Konsultasi',
-        channelDescription: 'Pengingat saat konsultasi dengan dokter dimulai',
+        channelDescription:
+            'Pengingat saat konsultasi dengan dokter dimulai',
         importance: Importance.max,
         priority: Priority.high,
       ),
@@ -493,7 +457,9 @@ class NotificationService {
     );
   }
 
-  static Future<void> cancelConsultationReminder(String consultationId) async {
+  static Future<void> cancelConsultationReminder(
+    String consultationId,
+  ) async {
     if (consultationId.isEmpty) return;
     await _plugin.cancel(_consultationId(consultationId));
   }
@@ -502,60 +468,53 @@ class NotificationService {
   // NOTIFIKASI CHAT LANGSUNG
   // =============================================================
 
-  
-static Future<void> showDoctorReply({
-  required String messageId,
-  required String doctorName,
-  required String message,
-}) async {
-  if (messageId.isEmpty || message.trim().isEmpty) {
-    return;
-  }
-
-  // Periksa akun pasien yang sedang login.
-  final User? user = FirebaseAuth.instance.currentUser;
-
-  if (user == null) {
-    return;
-  }
-
-  try {
-    // Cek pengaturan Balasan Dokter di Firestore.
-    final bool enabled =
-        await AppNotification.isCategoryEnabled(user.uid, 'chat');
-
-    // Jika OFF, jangan tampilkan popup notifikasi HP.
-    if (!enabled) {
-      debugPrint(
-        'NOTIFIKASI BALASAN DOKTER DILEWATI: pengaturan OFF.',
-      );
+  static Future<void> showDoctorReply({
+    required String messageId,
+    required String doctorName,
+    required String message,
+  }) async {
+    if (messageId.isEmpty || message.trim().isEmpty) {
       return;
     }
 
-    const NotificationDetails details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'doctor_reply',
-        'Balasan Dokter',
-        channelDescription:
-            'Notifikasi saat dokter membalas pesan konsultasi',
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
-      iOS: DarwinNotificationDetails(),
-    );
+    final User? user = FirebaseAuth.instance.currentUser;
 
-    await _plugin.show(
-      _doctorReplyId(messageId),
-      'Pesan baru dari Dokter',
-      '$doctorName: ${message.trim()}',
-      details,
-    );
-  } catch (e) {
-    debugPrint(
-      'NOTIFIKASI BALASAN DOKTER ERROR: $e',
-    );
+    if (user == null) return;
+
+    try {
+      final bool enabled =
+          await AppNotification.isCategoryEnabled(user.uid, 'chat');
+
+      // OFF hanya menghentikan popup HP, bukan penyimpanan in-app.
+      if (!enabled) {
+        debugPrint(
+          'NOTIFIKASI BALASAN DOKTER DILEWATI: pengaturan OFF.',
+        );
+        return;
+      }
+
+      const NotificationDetails details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          'doctor_reply',
+          'Balasan Dokter',
+          channelDescription:
+              'Notifikasi saat dokter membalas pesan konsultasi',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      );
+
+      await _plugin.show(
+        _doctorReplyId(messageId),
+        'Pesan baru dari Dokter',
+        '$doctorName: ${message.trim()}',
+        details,
+      );
+    } catch (e) {
+      debugPrint('NOTIFIKASI BALASAN DOKTER ERROR: $e');
+    }
   }
-}
 
   static Future<void> showPatientMessage({
     required String messageId,
@@ -568,7 +527,8 @@ static Future<void> showDoctorReply({
       android: AndroidNotificationDetails(
         'patient_message',
         'Pesan Baru dari Pasien',
-        channelDescription: 'Notifikasi saat pasien mengirim pesan konsultasi',
+        channelDescription:
+            'Notifikasi saat pasien mengirim pesan konsultasi',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -595,7 +555,8 @@ static Future<void> showDoctorReply({
       android: AndroidNotificationDetails(
         'consultation_booking',
         'Booking Konsultasi',
-        channelDescription: 'Notifikasi saat booking konsultasi berhasil',
+        channelDescription:
+            'Notifikasi saat booking konsultasi berhasil',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -675,7 +636,8 @@ static Future<void> showDoctorReply({
       0,
     );
 
-    while (scheduled.weekday != DateTime.monday || !scheduled.isAfter(now)) {
+    while (scheduled.weekday != DateTime.monday ||
+        !scheduled.isAfter(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
 

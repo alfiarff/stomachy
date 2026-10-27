@@ -42,46 +42,59 @@ class AppNotification {
     return type != 'chat';
   }
 
-  static Future<void> create({
-    required String uid,
-    required String type,
-    required String title,
-    required String body,
-    DateTime? createdAt,
-    String? notificationId,
-  }) async {
-    if (uid.isEmpty || title.trim().isEmpty) return;
 
-    try {
-      if (!await isCategoryEnabled(uid, type)) {
-        debugPrint('Notifikasi $type dilewati karena kategori nonaktif.');
-        return;
-      }
+static Future<void> create({
+  required String uid,
+  required String type,
+  required String title,
+  required String body,
+  DateTime? createdAt,
+  String? notificationId,
+  bool respectSetting = true,
+}) async {
+  if (uid.isEmpty || title.trim().isEmpty) return;
 
-      final collection = _notifications(uid);
-      final doc = notificationId != null && notificationId.trim().isNotEmpty
-          ? collection.doc(notificationId)
-          : collection.doc();
-
-      if (notificationId != null && notificationId.trim().isNotEmpty) {
-        if ((await doc.get()).exists) return;
-      }
-
-      await doc.set({
-        'id': doc.id,
-        'type': type,
-        'title': title,
-        'body': body,
-        'createdAt': Timestamp.fromDate(createdAt ?? DateTime.now()),
-        'isRead': false,
-      });
-
-      debugPrint('NOTIFIKASI TERSIMPAN DI FIRESTORE: $title');
-    } catch (e) {
-      debugPrint('NOTIFIKASI CREATE ERROR: $e');
-      rethrow;
+  try {
+    // Periksa pengaturan hanya jika respectSetting bernilai true.
+    if (respectSetting &&
+        !await isCategoryEnabled(uid, type)) {
+      debugPrint(
+        'Notifikasi $type dilewati karena kategori nonaktif.',
+      );
+      return;
     }
+
+    final collection = _notifications(uid);
+
+    final doc =
+        notificationId != null &&
+                notificationId.trim().isNotEmpty
+            ? collection.doc(notificationId)
+            : collection.doc();
+
+    // Hindari menyimpan notifikasi yang sama dua kali.
+    if (notificationId != null &&
+        notificationId.trim().isNotEmpty) {
+      if ((await doc.get()).exists) return;
+    }
+
+    await doc.set({
+      'id': doc.id,
+      'type': type,
+      'title': title,
+      'body': body,
+      'createdAt': Timestamp.fromDate(
+        createdAt ?? DateTime.now(),
+      ),
+      'isRead': false,
+    });
+
+    debugPrint('NOTIFIKASI TERSIMPAN DI FIRESTORE: $title');
+  } catch (e) {
+    debugPrint('NOTIFIKASI CREATE ERROR: $e');
+    rethrow;
   }
+}
 
   static Future<List<LocalNotification>> getAll(String uid) async {
     final snapshot = await _notifications(uid)
