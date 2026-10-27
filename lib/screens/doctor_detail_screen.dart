@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -32,6 +33,8 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   Map<String, dynamic>? _doctorData;
   bool _isLoadingDoctor = true;
   bool _isCreatingConsultation = false;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    _doctorDataSubscription;
   final List<String> _days = [
     'Senin',
     'Selasa',
@@ -43,6 +46,11 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   ];
   String? _selectedDay;
   String? _selectedTime;
+  @override
+void dispose() {
+  _doctorDataSubscription?.cancel();
+  super.dispose();
+}
   List<DoctorScheduleSlot> _scheduleSlots = [];
   @override
   void initState() {
@@ -53,19 +61,26 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   // ===============================================================
   // LOAD DATA DOKTER
   // ===============================================================
-  Future<void> _loadDoctorData() async {
-    try {
-      final document = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.doctor.id)
-          .get();
+ 
+Future<void> _loadDoctorData() async {
+  await _doctorDataSubscription?.cancel();
+
+  _doctorDataSubscription = FirebaseFirestore.instance
+      .collection('users')
+      .doc(widget.doctor.id)
+      .snapshots()
+      .listen(
+    (document) {
       if (!mounted) return;
+
       if (document.exists) {
         final data = document.data() ?? {};
+
         setState(() {
           _doctorData = data;
           _isLoadingDoctor = false;
         });
+
         _loadDoctorSchedule(data);
       } else {
         setState(() {
@@ -79,25 +94,26 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
             'photoUrl': widget.doctor.photoUrl,
           };
           _isLoadingDoctor = false;
+          _scheduleSlots = [];
+          _selectedDay = null;
+          _selectedTime = null;
         });
       }
-    } catch (_) {
+    },
+    onError: (Object error) {
+      debugPrint('Gagal memantau jadwal dokter: $error');
+
       if (!mounted) return;
+
       setState(() {
-        _doctorData = {
-          'name': widget.doctor.name,
-          'specialization': widget.doctor.specialty,
-          'experience': widget.doctor.experience,
-          'education': widget.doctor.education,
-          'location': widget.doctor.location,
-          'photoBase64': widget.doctor.photoBase64,
-          'photoUrl': widget.doctor.photoUrl,
-        };
         _isLoadingDoctor = false;
       });
-      _showMessage('Data dokter tidak dapat dimuat.');
-    }
-  }
+
+      _showMessage('Data jadwal dokter gagal diperbarui.');
+    },
+  );
+}
+
 
   // ===============================================================
   // LOAD JADWAL DOKTER
@@ -122,8 +138,29 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
         slots.add(DoctorScheduleSlot(day: day, time: time));
       }
     }
-    if (!mounted) return;
-    setState(() => _scheduleSlots = slots);
+if (!mounted) return;
+
+setState(() {
+  _scheduleSlots = slots;
+
+  // Hapus pilihan hari jika dokter sudah menonaktifkannya.
+  if (_selectedDay != null &&
+      !slots.any((slot) => slot.day == _selectedDay)) {
+    _selectedDay = null;
+    _selectedTime = null;
+  }
+
+  // Hapus pilihan jam jika jam tersebut sudah tidak tersedia.
+  if (_selectedDay != null &&
+      _selectedTime != null &&
+      !slots.any(
+        (slot) =>
+            slot.day == _selectedDay &&
+            slot.time == _selectedTime,
+      )) {
+    _selectedTime = null;
+  }
+});
   }
 
   List<String> _generateTimeSlots(String start, String end) {
