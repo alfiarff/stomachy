@@ -594,6 +594,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ===============================================================
 
   
+
 void _showLogoutDialog() {
   showDialog(
     context: context,
@@ -624,9 +625,7 @@ void _showLogoutDialog() {
                   color: Colors.black,
                 ),
               ),
-
               const SizedBox(height: 7),
-
               const Text(
                 'Apakah anda yakin ingin keluar dari sistem?',
                 textAlign: TextAlign.center,
@@ -636,9 +635,7 @@ void _showLogoutDialog() {
                   color: Color(0xFF493C37),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Row(
                 children: [
                   Expanded(
@@ -670,15 +667,14 @@ void _showLogoutDialog() {
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 10),
-
                   Expanded(
                     child: SizedBox(
                       height: 36,
                       child: ElevatedButton(
                         onPressed: () async {
                           await NotificationService.stopChatWatcher();
+                          await NotificationService.stopContentWatcher();
                           await FirebaseAuth.instance.signOut();
 
                           if (!dialogContext.mounted) return;
@@ -722,4 +718,5 @@ void _showLogoutDialog() {
     },
   );
 }
+
 }

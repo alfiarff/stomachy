@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -15,11 +14,48 @@ import '../screens/notification_screen.dart';
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+      
+  static Future<void> init() async {
+    // Inisialisasi data zona waktu.
+    tzdata.initializeTimeZones();
+
+    // Pengaturan ikon notifikasi Android.
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    // Pengaturan notifikasi iOS.
+    const DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings();
+
+    const InitializationSettings settings =
+        InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+
+    // Inisialisasi plugin notifikasi lokal.
+    await _plugin.initialize(settings);
+
+    // Setup Firebase Cloud Messaging.
+    await _setupFirebaseMessaging();
+
+    // Sinkronkan pengaturan screening mingguan.
+    await syncWeeklyScreeningFromSettings();
+
+    debugPrint('NotificationService berhasil diinisialisasi.');
+  }
+
 
   static const int kWeeklyScreeningId = 1001;
   static const int _consultationReminderBaseId = 200000;
   static const int _doctorReplyBaseId = 300000;
   static const int _patientMessageBaseId = 400000;
+
+  // =============================================================
+  // ID BASE UNTUK NOTIFIKASI KONTEN (BARU)
+  // =============================================================
+  static const int _contentNotifBaseId = 500000;
+  static const int _articleNotifBaseId = 550000;
 
   // =============================================================
   // SINYAL PEMBARUAN BADGE LONCENG
@@ -243,43 +279,372 @@ class NotificationService {
   }
 
   // =============================================================
-  // INISIALISASI
+  // GLOBAL CONTENT WATCHER (BARU)
+  // Memantau koleksi `contents` dan `articles` untuk dokumen baru.
   // =============================================================
 
-  static Future<void> init() async {
-    tzdata.initializeTimeZones();
+  static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _contentWatcherSub;
 
-    await _setupFirebaseMessaging();
+  static StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _articlesWatcherSub;
 
-    const AndroidInitializationSettings androidInit =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+  // Flag baseline: snapshot pertama dianggap sebagai kondisi awal
+  // sehingga tidak memicu notifikasi untuk konten yang sudah ada.
+  static bool _contentBaselineEstablished = false;
+  static bool _articlesBaselineEstablished = false;
 
-    const DarwinInitializationSettings iosInit =
-        DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+  // Menyimpan ID konten/artikel yang sudah dikenal (baseline).
+  static final Set<String> _knownContentIds = <String>{};
+  static final Set<String> _knownArticleIds = <String>{};
 
-    const InitializationSettings initSettings =
-        InitializationSettings(
-      android: androidInit,
-      iOS: iosInit,
-    );
+  // Tipe konten yang akan memicu notifikasi (selain artikel).
+  static const List<String> _watchedContentTypes = <String>[
+    'edukasi',
+    'makanan',
+    'olahraga',
+  ];
 
-    await _plugin.initialize(initSettings);
+  /// Memulai watcher untuk konten (edukasi/makanan/olahraga) dan artikel.
+  /// Panggil bersamaan dengan startChatWatcher() saat user login.
+  static Future<void> startContentWatcher() async {
+    final User? user = FirebaseAuth.instance.currentUser;
 
-    final AndroidFlutterLocalNotificationsPlugin? android = _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    if (user == null) return;
 
-    await android?.requestNotificationsPermission();
+    // Reset baseline setiap kali watcher dimulai.
+    await stopContentWatcher();
+
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    _contentWatcherSub = firestore
+        .collection('contents')
+        .snapshots()
+        .listen(_handleContentSnapshot);
+
+    _articlesWatcherSub = firestore
+        .collection('articles')
+        .where('isPublished', isEqualTo: true)
+        .snapshots()
+        .listen(_handleArticlesSnapshot);
+
+    debugPrint('CONTENT WATCHER: aktif untuk user ${user.uid}');
   }
+
+  static Future<void> stopContentWatcher() async {
+    await _contentWatcherSub?.cancel();
+    await _articlesWatcherSub?.cancel();
+
+    _contentWatcherSub = null;
+    _articlesWatcherSub = null;
+    _contentBaselineEstablished = false;
+    _articlesBaselineEstablished = false;
+    _knownContentIds.clear();
+    _knownArticleIds.clear();
+
+    debugPrint('CONTENT WATCHER: dihentikan.');
+  }
+
+  /// Menangani snapshot koleksi `contents`.
+  /// Snapshot pertama = baseline (tidak mengirim notifikasi).
+  /// Snapshot berikutnya: dokumen baru = kirim notifikasi.
+  static Future<void> _handleContentSnapshot(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Snapshot pertama: tandai semua dokumen yang sudah ada sebagai baseline.
+    if (!_contentBaselineEstablished) {
+      for (final doc in snapshot.docs) {
+        _knownContentIds.add(doc.id);
+      }
+      _contentBaselineEstablished = true;
+      debugPrint(
+        'CONTENT WATCHER: baseline ${snapshot.docs.length} contents',
+      );
+      return;
+    }
+
+    // Snapshot berikutnya: proses hanya dokumen yang benar-benar baru.
+    for (final doc in snapshot.docs) {
+      if (_knownContentIds.contains(doc.id)) continue;
+      _knownContentIds.add(doc.id);
+
+      await _processNewContent(doc, user.uid);
+    }
+  }
+
+  /// Menangani snapshot koleksi `articles` (hanya yang isPublished = true).
+  static Future<void> _handleArticlesSnapshot(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    if (!_articlesBaselineEstablished) {
+      for (final doc in snapshot.docs) {
+        _knownArticleIds.add(doc.id);
+      }
+      _articlesBaselineEstablished = true;
+      debugPrint(
+        'ARTICLES WATCHER: baseline ${snapshot.docs.length} articles',
+      );
+      return;
+    }
+
+    for (final doc in snapshot.docs) {
+      if (_knownArticleIds.contains(doc.id)) continue;
+      _knownArticleIds.add(doc.id);
+
+      await _processNewArticle(doc, user.uid);
+    }
+  }
+
+  /// Membuat notifikasi untuk dokumen `contents` baru.
+  static Future<void> _processNewContent(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+    String uid,
+  ) async {
+    final data = doc.data();
+
+    final String type =
+        (data['type'] ?? '').toString().toLowerCase().trim();
+
+    // Hanya tipe edukasi, makanan, olahraga yang diproses.
+    if (!_watchedContentTypes.contains(type)) return;
+
+    // Ambil judul konten — coba beberapa field yang umum dipakai.
+    final String contentTitle = _pickTitle(data);
+    if (contentTitle.isEmpty) return;
+
+    // Tentukan metadata notifikasi berdasarkan tipe konten.
+    final ({String notifType, String notifTitle}) meta =
+        _contentMeta(type, contentTitle);
+
+    final String notifId = 'content_${type}_${doc.id}';
+
+    // Cek apakah notifikasi sudah pernah dibuat (anti-duplikat).
+    final existingNotif = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .doc(notifId)
+        .get();
+
+    if (existingNotif.exists) {
+      debugPrint('CONTENT WATCHER: notifikasi sudah ada untuk ${doc.id}');
+      return;
+    }
+
+    try {
+      // Notifikasi in-app selalu disimpan supaya muncul di halaman
+      // notifikasi meskipun pengaturan kategori sedang OFF.
+      await AppNotification.create(
+        uid: uid,
+        type: meta.notifType,
+        title: meta.notifTitle,
+        body: contentTitle,
+        notificationId: notifId,
+        respectSetting: false,
+      );
+
+      // Notifikasi popup (HP) tetap mengikuti pengaturan kategori.
+      await _showContentLocalNotification(
+        notifType: meta.notifType,
+        title: meta.notifTitle,
+        body: contentTitle,
+        contentId: doc.id,
+      );
+
+      _notifyBadgeChanged();
+
+      debugPrint(
+        'CONTENT WATCHER: notifikasi $type dibuat (${doc.id})',
+      );
+    } catch (e) {
+      debugPrint('CONTENT WATCHER: gagal membuat notifikasi = $e');
+    }
+  }
+
+  /// Membuat notifikasi untuk dokumen `articles` baru (isPublished = true).
+  static Future<void> _processNewArticle(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+    String uid,
+  ) async {
+    final data = doc.data();
+
+    // Pastikan artikel memang sudah dipublikasikan.
+    if (data['isPublished'] != true) return;
+
+    final String articleTitle = _pickTitle(data);
+    if (articleTitle.isEmpty) return;
+
+    final String notifId = 'article_${doc.id}';
+
+    final existingNotif = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .doc(notifId)
+        .get();
+
+    if (existingNotif.exists) {
+      debugPrint('ARTICLES WATCHER: notifikasi sudah ada untuk ${doc.id}');
+      return;
+    }
+
+    try {
+      await AppNotification.create(
+        uid: uid,
+        type: 'artikel',
+        title: 'Artikel Baru Tersedia',
+        body: articleTitle,
+        notificationId: notifId,
+        respectSetting: false,
+      );
+
+      await _showContentLocalNotification(
+        notifType: 'artikel',
+        title: 'Artikel Baru Tersedia',
+        body: articleTitle,
+        contentId: doc.id,
+      );
+
+      _notifyBadgeChanged();
+
+      debugPrint(
+        'ARTICLES WATCHER: notifikasi artikel dibuat (${doc.id})',
+      );
+    } catch (e) {
+      debugPrint('ARTICLES WATCHER: gagal membuat notifikasi = $e');
+    }
+  }
+
+  /// Menampilkan notifikasi popup (HP) untuk konten/artikel baru.
+  /// Mengikuti pengaturan kategori pengguna.
+  static Future<void> _showContentLocalNotification({
+    required String notifType,
+    required String title,
+    required String body,
+    required String contentId,
+  }) async {
+    if (contentId.isEmpty || body.trim().isEmpty) return;
+
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final bool enabled =
+          await AppNotification.isCategoryEnabled(user.uid, notifType);
+
+      // OFF hanya menghentikan popup HP, in-app notif tetap tersimpan.
+      if (!enabled) {
+        debugPrint(
+          'NOTIFIKASI KONTEN $notifType DILEWATI: pengaturan OFF.',
+        );
+        return;
+      }
+
+      const NotificationDetails details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          'content_updates',
+          'Pembaruan Konten',
+          channelDescription:
+              'Notifikasi artikel, edukasi, makanan, dan olahraga baru',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      );
+
+      final int hash = contentId.hashCode.abs();
+      final int baseId =
+          notifType == 'artikel' ? _articleNotifBaseId : _contentNotifBaseId;
+      final int localId = baseId + (hash % 50000);
+
+      await _plugin.show(
+        localId,
+        title,
+        body,
+        details,
+      );
+    } catch (e) {
+      debugPrint('NOTIFIKASI KONTEN LOCAL ERROR: $e');
+    }
+  }
+
+  /// Mengambil judul dari data dokumen (mencoba beberapa field umum).
+  /// Mengambil judul dari data dokumen (mencoba beberapa field umum).
+  /// Mengambil judul dari data dokumen (mencoba beberapa field umum).
+  static String _pickTitle(Map<String, dynamic> data) {
+    // 1. Cek field top-level yang umum dipakai.
+    final candidates = <String>[
+      'title',
+      'judul',
+      'name',
+      'nama',
+    ];
+    for (final key in candidates) {
+      final value = data[key];
+      if (value != null) {
+        final str = value.toString().trim();
+        if (str.isNotEmpty) return str;
+      }
+    }
+
+    // 2. Cek nested di sections.title (untuk koleksi contents).
+    final sections = data['sections'];
+    if (sections is Map) {
+      final sectionTitle = sections['title'];
+      if (sectionTitle != null) {
+        final str = sectionTitle.toString().trim();
+        if (str.isNotEmpty) return str;
+      }
+    }
+
+    // 3. Fallback ke summary kalau judul tetap kosong.
+    final summary = data['summary'];
+    if (summary != null) {
+      final str = summary.toString().trim();
+      if (str.isNotEmpty) return str;
+    }
+
+    return '';
+  }
+
+  /// Mengembalikan tipe notifikasi + judul header sesuai tipe konten.
+static ({String notifType, String notifTitle}) _contentMeta(
+  String type,
+  String contentTitle,
+) {
+  switch (type) {
+    case 'edukasi':
+      return (
+        notifType: 'edukasi',
+        notifTitle: 'Edukasi Baru Tersedia',
+      );
+    case 'makanan':
+      return (
+        notifType: 'makanan',
+        notifTitle: 'Rekomendasi Makanan Baru',
+      );
+    case 'olahraga':
+      return (
+        notifType: 'olahraga',
+        notifTitle: 'Rekomendasi Olahraga Baru',
+      );
+    default:
+      return (
+        notifType: type,
+        notifTitle: contentTitle,
+      );
+  }
+}
 
   static Future<void> _setupFirebaseMessaging() async {
     try {
       final FirebaseMessaging messaging = FirebaseMessaging.instance;
-
       final NotificationSettings settings =
           await messaging.requestPermission(
         alert: true,
