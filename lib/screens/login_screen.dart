@@ -104,6 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!userDoc.exists) {
         await NotificationService.stopChatWatcher();
+        await NotificationService.stopContentWatcher();
         await FirebaseAuth.instance.signOut();
 
         if (!mounted) return;
@@ -117,6 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             if (data == null) {
         await NotificationService.stopChatWatcher();
+        await NotificationService.stopContentWatcher();
         await FirebaseAuth.instance.signOut();
 
         if (!mounted) return;
@@ -127,6 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (data['isActive'] == false) {
         await NotificationService.stopChatWatcher();
+        await NotificationService.stopContentWatcher();
         await FirebaseAuth.instance.signOut();
 
         if (!mounted) return;
@@ -224,6 +227,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     await NotificationService.startChatWatcher();
 
+    // Content watcher hanya untuk user biasa (pasien),
+    // bukan admin (yang menambah konten) atau dokter.
+    if (role == 'user' || role == 'pengguna' || role.isEmpty) {
+      await NotificationService.startContentWatcher();
+    }
+
     // =============================================================
     // ROLE ADMIN
     // =============================================================
@@ -275,6 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // =============================================================
 
     await NotificationService.stopChatWatcher();
+    await NotificationService.stopContentWatcher();
     await FirebaseAuth.instance.signOut();
 
     if (!mounted) return;
@@ -320,6 +330,7 @@ final existingDoc = await userRef.get();
 // CEK APAKAH AKUN ADA
 if (!existingDoc.exists) {
   await NotificationService.stopChatWatcher();
+  await NotificationService.stopContentWatcher();
   await FirebaseAuth.instance.signOut();
 
   if (!mounted) return;
@@ -334,6 +345,7 @@ final existingData = existingDoc.data();
 if (existingData == null ||
     existingData['isActive'] == false) {
   await NotificationService.stopChatWatcher();
+  await NotificationService.stopContentWatcher();
   await FirebaseAuth.instance.signOut();
 
   if (!mounted) return;
@@ -1060,4 +1072,3 @@ if (existingData == null ||
     );
   }
 }
-
