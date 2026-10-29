@@ -775,7 +775,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.manage_accounts_outlined,
+                Icons.manage_accounts_rounded,
                 size: 30,
                 color: Color(0xFFB05039),
               ),
