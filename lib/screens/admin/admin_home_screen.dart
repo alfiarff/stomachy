@@ -633,7 +633,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         children: [
           Expanded(
             child: _buildContentCard(
-              icon: BootstrapIcons.book,
+              icon: Icons.article_outlined,
               title: 'Edukasi',
               onTap: () {
                 Navigator.push(
@@ -648,7 +648,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: _buildContentCard(
-              icon: BootstrapIcons.egg_fried,
+              icon: Icons.restaurant_outlined,
               title: 'Rekomendasi\nMakanan',
               onTap: () {
                 Navigator.push(
@@ -663,7 +663,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: _buildContentCard(
-              icon: BootstrapIcons.activity,
+              icon: Icons.directions_run_rounded,
               title: 'Rekomendasi\nOlahraga',
               onTap: () {
                 Navigator.push(
