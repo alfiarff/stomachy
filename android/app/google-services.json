@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "132280576015-sf524pdig1sa1h78fsilq0hve6l8sk1b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.stomachy",
+            "certificate_hash": "18493d2f6840adabec8df16f33db2dac280c5554"
+          }
+        },
+        {
           "client_id": "132280576015-t2l30v89jor9cg0ft66f0gu6g0alngi3.apps.googleusercontent.com",
           "client_type": 3
         }
