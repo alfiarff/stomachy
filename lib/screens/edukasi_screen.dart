@@ -253,7 +253,6 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFFFFFCFA),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor, width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.10),
