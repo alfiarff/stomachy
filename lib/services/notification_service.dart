@@ -1,50 +1,191 @@
 import 'dart:async';
+import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import '../screens/notification_screen.dart';
+import '../services/admin_content_service.dart';
+import '../screens/user_content_detail_screen.dart';
+import '../screens/admin/admin_article_detail_screen.dart';
 
 class NotificationService {
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
+  static Map<String, dynamic>? _pendingContentPayload;
+  static bool _contentNavigationReady = false;
+  static bool _handlingContentTap = false;
+
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
-      
+
   static Future<void> init() async {
-    // Inisialisasi data zona waktu.
     tzdata.initializeTimeZones();
 
-    // Pengaturan ikon notifikasi Android.
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // Pengaturan notifikasi iOS.
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings();
 
-    const InitializationSettings settings =
-        InitializationSettings(
+    const InitializationSettings settings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
     );
 
-    // Inisialisasi plugin notifikasi lokal.
-    await _plugin.initialize(settings);
+    await _plugin.initialize(
+      settings,
+      onDidReceiveNotificationResponse: (
+        NotificationResponse response,
+      ) {
+        _handleNotificationTap(response.payload);
+      },
+    );
 
-    // Setup Firebase Cloud Messaging.
+    // Tangani notifikasi yang membuka aplikasi dari kondisi tertutup.
+    final launchDetails =
+        await _plugin.getNotificationAppLaunchDetails();
+
+    if (launchDetails?.didNotificationLaunchApp == true) {
+      _handleNotificationTap(
+        launchDetails?.notificationResponse?.payload,
+      );
+    }
+
     await _setupFirebaseMessaging();
-
-    // Sinkronkan pengaturan screening mingguan.
     await syncWeeklyScreeningFromSettings();
 
     debugPrint('NotificationService berhasil diinisialisasi.');
   }
 
+  static void _handleNotificationTap(String? payload) {
+    if (payload == null || payload.trim().isEmpty) return;
+
+    try {
+      final decoded = jsonDecode(payload);
+
+      if (decoded is! Map) {
+        debugPrint('NOTIFIKASI: format payload tidak valid.');
+        return;
+      }
+
+      final type = decoded['type']
+          ?.toString()
+          .trim()
+          .toLowerCase();
+
+      final contentId = decoded['contentId']?.toString().trim();
+
+      const supportedTypes = <String>{
+        'artikel',
+        'edukasi',
+        'makanan',
+        'olahraga',
+      };
+
+      if (type == null ||
+          contentId == null ||
+          contentId.isEmpty ||
+          !supportedTypes.contains(type)) {
+        debugPrint('NOTIFIKASI: payload konten tidak valid.');
+        return;
+      }
+
+      // Simpan payload jika Navigator belum siap atau sedang bernavigasi.
+      _pendingContentPayload = <String, dynamic>{
+        'type': type,
+        'contentId': contentId,
+      };
+
+      _openPendingContentNotification();
+    } catch (e) {
+      debugPrint('NOTIFIKASI: payload gagal dibaca: $e');
+    }
+  }
+
+  /// Panggil setelah aplikasi dan Navigator siap digunakan.
+  static void markContentNavigationReady() {
+    _contentNavigationReady = true;
+    _openPendingContentNotification();
+  }
+
+  static Future<void> _openPendingContentNotification() async {
+    if (!_contentNavigationReady ||
+        _handlingContentTap ||
+        _pendingContentPayload == null) {
+      return;
+    }
+
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) return;
+
+    final payload = _pendingContentPayload!;
+    _pendingContentPayload = null;
+    _handlingContentTap = true;
+
+    try {
+      final type = payload['type'] as String;
+      final contentId = payload['contentId'] as String;
+
+      if (type == 'artikel') {
+        final doc = await FirebaseFirestore.instance
+            .collection('articles')
+            .doc(contentId)
+            .get();
+
+        if (!doc.exists) {
+          debugPrint('NOTIFIKASI: artikel tidak ditemukan: $contentId');
+          return;
+        }
+
+        final article = AdminArticle.fromFirestore(doc);
+
+        await navigator.push(
+          MaterialPageRoute(
+            builder: (_) =>
+                AdminArticleDetailScreen(article: article),
+          ),
+        );
+
+        return;
+      }
+
+      final doc = await FirebaseFirestore.instance
+          .collection('contents')
+          .doc(contentId)
+          .get();
+
+      if (!doc.exists) {
+        debugPrint('NOTIFIKASI: konten tidak ditemukan: $contentId');
+        return;
+      }
+
+      final content = AdminContentItem.fromFirestore(doc);
+
+      await navigator.push(
+        MaterialPageRoute(
+          builder: (_) => UserContentDetailScreen(item: content),
+        ),
+      );
+    } catch (e) {
+      debugPrint(
+        'NOTIFIKASI: gagal membuka detail dari popup: $e',
+      );
+    } finally {
+      _handlingContentTap = false;
+
+      // Proses ketukan berikutnya jika ada.
+      if (_pendingContentPayload != null) {
+        _openPendingContentNotification();
+      }
+    }
+  }
 
   static const int kWeeklyScreeningId = 1001;
   static const int _consultationReminderBaseId = 200000;
@@ -246,6 +387,7 @@ class NotificationService {
             title: 'Pesan Baru dari $counterpartName',
             body: lastMessage,
             notificationId: 'chat_$lastMessageId',
+            contentId: doc.id,
           );
         } else {
           // Popup HP tetap mengikuti pengaturan Balasan Dokter.
@@ -263,6 +405,7 @@ class NotificationService {
             body: '$counterpartName: "$lastMessage"',
             notificationId: 'chat_$lastMessageId',
             respectSetting: false,
+            contentId: doc.id,
           );
         }
 
@@ -447,6 +590,7 @@ class NotificationService {
         body: contentTitle,
         notificationId: notifId,
         respectSetting: false,
+        contentId: doc.id,
       );
 
       // Notifikasi popup (HP) tetap mengikuti pengaturan kategori.
@@ -502,6 +646,7 @@ class NotificationService {
         body: articleTitle,
         notificationId: notifId,
         respectSetting: false,
+        contentId: doc.id,
       );
 
       await _showContentLocalNotification(
@@ -568,6 +713,10 @@ class NotificationService {
         title,
         body,
         details,
+        payload: jsonEncode({
+          'type': notifType,
+          'contentId': contentId,
+        }),
       );
     } catch (e) {
       debugPrint('NOTIFIKASI KONTEN LOCAL ERROR: $e');

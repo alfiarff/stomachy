@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -31,15 +31,14 @@ class StomachyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: NotificationService.navigatorKey,
       debugShowCheckedModeBanner: true,
       title: 'Stomachy',
-
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: 'Nunito',
         scaffoldBackgroundColor: const Color(0xFFFFF5ED),
       ),
-
       home: const SplashScreen(),
     );
   }
@@ -172,6 +171,12 @@ class _SplashScreenState extends State<SplashScreen> {
         context,
         MaterialPageRoute(builder: (context) => target),
       );
+
+      if (role == 'user' || role == 'pengguna' || role.isEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          NotificationService.markContentNavigationReady();
+        });
+      }
     } catch (e) {
       debugPrint('SPLASH: gagal memeriksa akun = $e');
 

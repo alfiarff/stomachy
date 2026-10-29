@@ -3,6 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
+import '../services/notification_service.dart';
+import '../services/admin_content_service.dart';
+import 'user_content_detail_screen.dart';
+import 'admin/admin_article_detail_screen.dart';
+
 // ===============================================================
 // PENYIMPANAN NOTIFIKASI DI FIRESTORE
 // Path: users/{uid}/notifications/{notificationId}
@@ -48,6 +53,7 @@ static Future<void> create({
   required String type,
   required String title,
   required String body,
+  String? contentId,
   DateTime? createdAt,
   String? notificationId,
   bool respectSetting = true,
@@ -83,6 +89,7 @@ static Future<void> create({
       'type': type,
       'title': title,
       'body': body,
+      'contentId': contentId,
       'createdAt': Timestamp.fromDate(
         createdAt ?? DateTime.now(),
       ),
@@ -154,6 +161,7 @@ class LocalNotification {
   final String body;
   final DateTime createdAt;
   final bool isRead;
+  final String? contentId;
 
   const LocalNotification({
     required this.id,
@@ -162,6 +170,7 @@ class LocalNotification {
     required this.body,
     required this.createdAt,
     required this.isRead,
+    required this.contentId,
   });
 
   factory LocalNotification.fromMap(Map<String, dynamic> map) {
@@ -184,6 +193,7 @@ class LocalNotification {
       body: map['body']?.toString() ?? '',
       createdAt: date,
       isRead: map['isRead'] == true,
+      contentId: map['contentId']?.toString(),
     );
   }
 
@@ -194,6 +204,7 @@ class LocalNotification {
         body: body,
         createdAt: createdAt,
         isRead: isRead ?? this.isRead,
+        contentId: contentId,
       );
 }
 
@@ -229,6 +240,66 @@ void initState() {
   super.initState();
   _listenToNotifications();
   _markNotificationsAsReadOnOpen();
+}
+
+
+Future<void> _openNotificationContent(LocalNotification item) async {
+  final contentId = item.contentId;
+
+  if (contentId == null || contentId.isEmpty) {
+    debugPrint('NOTIFIKASI: contentId tidak tersedia.');
+    return;
+  }
+
+  try {
+    if (item.type == 'artikel') {
+      final doc = await FirebaseFirestore.instance
+          .collection('articles')
+          .doc(contentId)
+          .get();
+
+      if (!mounted || !doc.exists) return;
+
+      final article = AdminArticle.fromFirestore(doc);
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AdminArticleDetailScreen(
+            article: article,
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    if (['edukasi', 'makanan', 'olahraga'].contains(item.type)) {
+      final doc = await FirebaseFirestore.instance
+          .collection('contents')
+          .doc(contentId)
+          .get();
+
+      if (!mounted || !doc.exists) return;
+
+      final content = AdminContentItem.fromFirestore(doc);
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UserContentDetailScreen(item: content),
+        ),
+      );
+    }
+  } catch (e) {
+    debugPrint('NOTIFIKASI: gagal membuka konten: $e');
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Konten gagal dibuka.')),
+    );
+  }
 }
 
 Future<void> _markNotificationsAsReadOnOpen() async {
@@ -584,21 +655,27 @@ void dispose() {
   }) {
     final style = _typeStyle(item.type);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
+    return InkWell(
+      onTap: () => _openNotificationContent(item),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 13,
+          vertical: 13,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 5,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
@@ -664,6 +741,7 @@ void dispose() {
             ),
           ),
         ],
+      ),
       ),
     );
   }
