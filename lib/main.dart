@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -120,7 +120,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (!doc.exists || data == null || data['isActive'] == false) {
         await NotificationService.stopChatWatcher();
-        await NotificationService.stopContentWatcher();
         await FirebaseAuth.instance.signOut();
 
         if (!mounted) return;
@@ -146,7 +145,6 @@ class _SplashScreenState extends State<SplashScreen> {
         target = const HomeScreen();
       } else {
         await NotificationService.stopChatWatcher();
-        await NotificationService.stopContentWatcher();
         await FirebaseAuth.instance.signOut();
 
         if (!mounted) return;
@@ -159,12 +157,6 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       await NotificationService.startChatWatcher();
-
-      // Content watcher hanya untuk user biasa (pasien),
-      // bukan admin (yang menambah konten) atau dokter.
-      if (role == 'user' || role == 'pengguna' || role.isEmpty) {
-        await NotificationService.startContentWatcher();
-      }
 
       if (!mounted) return;
 
@@ -203,3 +195,4 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
+

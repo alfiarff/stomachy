@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
+import 'doctor_patient_chat_screen.dart';
 import '../notification_screen.dart';
 
 class DoctorNotificationScreen extends StatefulWidget {
@@ -330,6 +331,115 @@ class _DoctorNotificationScreenState extends State<DoctorNotificationScreen> {
   }
 
   // ===============================================================
+  // BARU(ROUTE): kartu notif dokter -> chat pasien
+  // ===============================================================
+
+  void _showInfoSnack(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 12,
+            color: Colors.white,
+          ),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _handleNotificationTap(LocalNotification item) async {
+    // Notif dokter bisa ber-type 'chat' (dari layar chat) maupun
+    // 'pesan_pasien' (dari global watcher) -> keduanya ke chat.
+    if (item.type == 'chat' || item.type == 'pesan_pasien') {
+      await _openChatAsDoctor(item);
+    }
+  }
+
+  String _messageIdFromChatNotification(LocalNotification item) {
+    final id = item.id;
+
+    if (id.startsWith('chat_') && id.length > 5) {
+      return id.substring(5);
+    }
+
+    return '';
+  }
+
+  Future<String?> _resolveConsultationId(LocalNotification item) async {
+    if (item.consultationId.trim().isNotEmpty) {
+      return item.consultationId.trim();
+    }
+
+    final messageId = _messageIdFromChatNotification(item);
+    if (messageId.isEmpty) return null;
+
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('consultations')
+          .where('lastMessageId', isEqualTo: messageId)
+          .limit(10)
+          .get();
+
+      if (snap.docs.isEmpty) return null;
+
+      final doctor = FirebaseAuth.instance.currentUser;
+
+      if (doctor != null) {
+        for (final doc in snap.docs) {
+          if ((doc.data()['doctorId'] ?? '').toString() == doctor.uid) {
+            return doc.id;
+          }
+        }
+      }
+
+      return snap.docs.first.id;
+    } catch (e) {
+      debugPrint('ROUTE NOTIF: gagal mencari konsultasi = $e');
+      return null;
+    }
+  }
+
+  Future<void> _openChatAsDoctor(LocalNotification item) async {
+    final consultationId = await _resolveConsultationId(item);
+
+    if (consultationId == null || consultationId.isEmpty) {
+      _showInfoSnack('Sesi konsultasi sudah tidak ditemukan.');
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('consultations')
+          .doc(consultationId)
+          .get();
+
+      if (!doc.exists) {
+        _showInfoSnack('Sesi konsultasi sudah tidak ditemukan.');
+        return;
+      }
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DoctorPatientChatScreen(
+            patient: {...doc.data()!, 'consultationId': doc.id},
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('ROUTE NOTIF: gagal membuka chat pasien = $e');
+      _showInfoSnack('Gagal membuka chat. Periksa koneksi.');
+    }
+  }
+
+  // ===============================================================
   // KARTU NOTIFIKASI
   // ===============================================================
 
@@ -339,7 +449,9 @@ class _DoctorNotificationScreenState extends State<DoctorNotificationScreen> {
   }) {
     final style = _typeStyle(item.type);
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _handleNotificationTap(item),
+      child: Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
       decoration: BoxDecoration(
@@ -413,6 +525,7 @@ class _DoctorNotificationScreenState extends State<DoctorNotificationScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

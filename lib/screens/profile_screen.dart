@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -672,10 +672,9 @@ void _showLogoutDialog() {
                     child: SizedBox(
                       height: 36,
                       child: ElevatedButton(
-                        onPressed: () async {
-                          await NotificationService.stopChatWatcher();
-                          await NotificationService.stopContentWatcher();
-                          await FirebaseAuth.instance.signOut();
+                          onPressed: () async {
+                            await NotificationService.stopChatWatcher();
+                            await FirebaseAuth.instance.signOut();
 
                           if (!dialogContext.mounted) return;
 
@@ -720,3 +719,4 @@ void _showLogoutDialog() {
 }
 
 }
+
