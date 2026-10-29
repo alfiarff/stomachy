@@ -3,6 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
+// BARU(ROUTE): import halaman tujuan notifikasi.
+import '../services/admin_content_service.dart';
+import 'user_content_detail_screen.dart';
+import 'admin/admin_article_detail_screen.dart';
+import 'consultation_chat_screen.dart';
+import 'doctor/doctor_patient_chat_screen.dart';
+
 // ===============================================================
 // PENYIMPANAN NOTIFIKASI DI FIRESTORE
 // Path: users/{uid}/notifications/{notificationId}
@@ -42,59 +49,62 @@ class AppNotification {
     return type != 'chat';
   }
 
+  static Future<void> create({
+    required String uid,
+    required String type,
+    required String title,
+    required String body,
+    DateTime? createdAt,
+    String? notificationId,
+    bool respectSetting = true,
+    // BARU(ROUTE): data tambahan opsional (mis. consultationId
+    // untuk notif chat) agar kartu notif bisa di-route.
+    Map<String, dynamic>? extraData,
+  }) async {
+    if (uid.isEmpty || title.trim().isEmpty) return;
 
-static Future<void> create({
-  required String uid,
-  required String type,
-  required String title,
-  required String body,
-  DateTime? createdAt,
-  String? notificationId,
-  bool respectSetting = true,
-}) async {
-  if (uid.isEmpty || title.trim().isEmpty) return;
+    try {
+      // Periksa pengaturan hanya jika respectSetting bernilai true.
+      if (respectSetting &&
+          !await isCategoryEnabled(uid, type)) {
+        debugPrint(
+          'Notifikasi $type dilewati karena kategori nonaktif.',
+        );
+        return;
+      }
 
-  try {
-    // Periksa pengaturan hanya jika respectSetting bernilai true.
-    if (respectSetting &&
-        !await isCategoryEnabled(uid, type)) {
-      debugPrint(
-        'Notifikasi $type dilewati karena kategori nonaktif.',
-      );
-      return;
+      final collection = _notifications(uid);
+
+      final doc =
+          notificationId != null &&
+                  notificationId.trim().isNotEmpty
+              ? collection.doc(notificationId)
+              : collection.doc();
+
+      // Hindari menyimpan notifikasi yang sama dua kali.
+      if (notificationId != null &&
+          notificationId.trim().isNotEmpty) {
+        if ((await doc.get()).exists) return;
+      }
+
+      await doc.set({
+        'id': doc.id,
+        'type': type,
+        'title': title,
+        'body': body,
+        'createdAt': Timestamp.fromDate(
+          createdAt ?? DateTime.now(),
+        ),
+        'isRead': false,
+        ...?extraData,
+      });
+
+      debugPrint('NOTIFIKASI TERSIMPAN DI FIRESTORE: $title');
+    } catch (e) {
+      debugPrint('NOTIFIKASI CREATE ERROR: $e');
+      rethrow;
     }
-
-    final collection = _notifications(uid);
-
-    final doc =
-        notificationId != null &&
-                notificationId.trim().isNotEmpty
-            ? collection.doc(notificationId)
-            : collection.doc();
-
-    // Hindari menyimpan notifikasi yang sama dua kali.
-    if (notificationId != null &&
-        notificationId.trim().isNotEmpty) {
-      if ((await doc.get()).exists) return;
-    }
-
-    await doc.set({
-      'id': doc.id,
-      'type': type,
-      'title': title,
-      'body': body,
-      'createdAt': Timestamp.fromDate(
-        createdAt ?? DateTime.now(),
-      ),
-      'isRead': false,
-    });
-
-    debugPrint('NOTIFIKASI TERSIMPAN DI FIRESTORE: $title');
-  } catch (e) {
-    debugPrint('NOTIFIKASI CREATE ERROR: $e');
-    rethrow;
   }
-}
 
   static Future<List<LocalNotification>> getAll(String uid) async {
     final snapshot = await _notifications(uid)
@@ -155,6 +165,10 @@ class LocalNotification {
   final DateTime createdAt;
   final bool isRead;
 
+  // BARU(ROUTE): ID konsultasi (khusus notif chat / pesan pasien)
+  // agar kartu notif bisa membuka ruang chat yang tepat.
+  final String consultationId;
+
   const LocalNotification({
     required this.id,
     required this.type,
@@ -162,6 +176,7 @@ class LocalNotification {
     required this.body,
     required this.createdAt,
     required this.isRead,
+    this.consultationId = '',
   });
 
   factory LocalNotification.fromMap(Map<String, dynamic> map) {
@@ -184,6 +199,7 @@ class LocalNotification {
       body: map['body']?.toString() ?? '',
       createdAt: date,
       isRead: map['isRead'] == true,
+      consultationId: map['consultationId']?.toString() ?? '',
     );
   }
 
@@ -194,6 +210,7 @@ class LocalNotification {
         body: body,
         createdAt: createdAt,
         isRead: isRead ?? this.isRead,
+        consultationId: consultationId,
       );
 }
 
@@ -212,139 +229,384 @@ class _NotificationScreenState extends State<NotificationScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color accentBrown = const Color(0xFFB9543A);
 
+  bool _isLoading = true;
 
-bool _isLoading = true;
+  List<LocalNotification> _unread = [];
+  List<LocalNotification> _read = [];
 
-List<LocalNotification> _unread = [];
-List<LocalNotification> _read = [];
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _notificationSubscription;
 
-StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
-    _notificationSubscription;
-
-
-
-
-@override
-void initState() {
-  super.initState();
-  _listenToNotifications();
-  _markNotificationsAsReadOnOpen();
-}
-
-Future<void> _markNotificationsAsReadOnOpen() async {
-  final user = FirebaseAuth.instance.currentUser;
-
-  if (user == null) return;
-
-  try {
-    await AppNotification.markAllAsRead(user.uid);
-  } catch (e) {
-    debugPrint('NOTIFIKASI MARK AS READ ERROR: $e');
-  }
-}
-
-
-void _listenToNotifications() {
-  final user = FirebaseAuth.instance.currentUser;
-
-  if (user == null) {
-    setState(() => _isLoading = false);
-    return;
+  @override
+  void initState() {
+    super.initState();
+    _listenToNotifications();
+    _markNotificationsAsReadOnOpen();
   }
 
-  _notificationSubscription = FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.uid)
-      .collection('notifications')
-      .orderBy('createdAt', descending: true)
-      .limit(100)
-      .snapshots()
-      .listen(
-    (snapshot) {
-      final items = snapshot.docs
-          .map(
-            (doc) => LocalNotification.fromMap({
-              ...doc.data(),
-              'id': doc.id,
-            }),
-          )
-          .toList();
+  Future<void> _markNotificationsAsReadOnOpen() async {
+    final user = FirebaseAuth.instance.currentUser;
 
-      final unread = items
-          .where(
-            (item) =>
-                !item.isRead && AppNotification.isFresh(item),
-          )
-          .toList();
+    if (user == null) return;
 
-      final read = items
-          .where(
-            (item) =>
-                item.isRead || !AppNotification.isFresh(item),
-          )
-          .toList();
+    try {
+      await AppNotification.markAllAsRead(user.uid);
+    } catch (e) {
+      debugPrint('NOTIFIKASI MARK AS READ ERROR: $e');
+    }
+  }
 
-      if (!mounted) return;
-
-      setState(() {
-        _unread = unread;
-        _read = read;
-        _isLoading = false;
-      });
-    },
-    onError: (Object error) {
-      debugPrint('NOTIFIKASI REALTIME ERROR: $error');
-
-      if (!mounted) return;
-
-      setState(() => _isLoading = false);
-    },
-  );
-}
-
-@override
-void dispose() {
-  _notificationSubscription?.cancel();
-  super.dispose();
-}
-
-  // ===============================================================
-  // LOAD NOTIFIKASI + TANDAI SEMUA DIBACA
-  // ===============================================================
-
-  Future<void> _loadNotifications() async {
+  void _listenToNotifications() {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      if (mounted) setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    _notificationSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .listen(
+      (snapshot) {
+        final items = snapshot.docs
+            .map(
+              (doc) => LocalNotification.fromMap({
+                ...doc.data(),
+                'id': doc.id,
+              }),
+            )
+            .toList();
+
+        final unread = items
+            .where(
+              (item) =>
+                  !item.isRead && AppNotification.isFresh(item),
+            )
+            .toList();
+
+        final read = items
+            .where(
+              (item) =>
+                  item.isRead || !AppNotification.isFresh(item),
+            )
+            .toList();
+
+        if (!mounted) return;
+
+        setState(() {
+          _unread = unread;
+          _read = read;
+          _isLoading = false;
+        });
+      },
+      onError: (Object error) {
+        debugPrint('NOTIFIKASI REALTIME ERROR: $error');
+
+        if (!mounted) return;
+
+        setState(() => _isLoading = false);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
+  }
+
+  // ===============================================================
+  // BARU(ROUTE): NAVIGASI KARTU NOTIFIKASI
+  //
+  // - edukasi / makanan / olahraga -> detail kontennya
+  // - artikel                      -> detail artikelnya
+  // - chat                         -> ruang chat konsultasi (pasien)
+  // - pesan_pasien                 -> ruang chat pasien (dokter)
+  // ===============================================================
+
+  void _showInfoSnack(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 12,
+            color: Colors.white,
+          ),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _handleNotificationTap(LocalNotification item) async {
+    switch (item.type) {
+      case 'edukasi':
+      case 'makanan':
+      case 'olahraga':
+        await _openContentDetail(item);
+        break;
+
+      case 'artikel':
+        await _openArticleDetail(item);
+        break;
+
+      case 'chat':
+        await _openChatAsPatient(item);
+        break;
+
+      case 'pesan_pasien':
+        await _openChatAsDoctor(item);
+        break;
+
+      default:
+        // Tipe lain (mis. skrining) belum punya halaman tujuan.
+        break;
+    }
+  }
+
+  // Mengambil ID konten dari ID dokumen notifikasi.
+  // Format broadcast admin : '<type>_<contentId>'
+  //   contoh: edukasi_abc123, makanan_abc123, artikel_abc123
+  // Format lain (kompatibilitas):
+  //   content_<type>_<contentId> / article_<contentId>
+  String? _extractContentId(LocalNotification item) {
+    final id = item.id;
+
+    final primaryPrefix = '${item.type}_';
+    if (id.startsWith(primaryPrefix) && id.length > primaryPrefix.length) {
+      return id.substring(primaryPrefix.length);
+    }
+
+    final altPrefix = 'content_${item.type}_';
+    if (id.startsWith(altPrefix) && id.length > altPrefix.length) {
+      return id.substring(altPrefix.length);
+    }
+
+    if (item.type == 'artikel' && id.startsWith('article_')) {
+      return id.substring('article_'.length);
+    }
+
+    return null;
+  }
+
+  String _messageIdFromChatNotification(LocalNotification item) {
+    final id = item.id;
+
+    if (id.startsWith('chat_') && id.length > 5) {
+      return id.substring(5);
+    }
+
+    return '';
+  }
+
+  // Notifikasi baru menyimpan consultationId langsung. Notifikasi
+  // lama (sebelum update) dicari lewat lastMessageId di Firestore.
+  Future<String?> _resolveConsultationId(
+    LocalNotification item, {
+    required bool asDoctor,
+  }) async {
+    if (item.consultationId.trim().isNotEmpty) {
+      return item.consultationId.trim();
+    }
+
+    final messageId = _messageIdFromChatNotification(item);
+    if (messageId.isEmpty) return null;
+
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('consultations')
+          .where('lastMessageId', isEqualTo: messageId)
+          .limit(10)
+          .get();
+
+      if (snap.docs.isEmpty) return null;
+
+      final user = FirebaseAuth.instance.currentUser;
+      final ownerKey = asDoctor ? 'doctorId' : 'userId';
+
+      if (user != null) {
+        for (final doc in snap.docs) {
+          if ((doc.data()[ownerKey] ?? '').toString() == user.uid) {
+            return doc.id;
+          }
+        }
+      }
+
+      return snap.docs.first.id;
+    } catch (e) {
+      debugPrint('ROUTE NOTIF: gagal mencari konsultasi = $e');
+      return null;
+    }
+  }
+
+  Future<void> _openContentDetail(LocalNotification item) async {
+    final contentId = _extractContentId(item);
+
+    if (contentId == null || contentId.isEmpty) {
+      _showInfoSnack('Konten tidak ditemukan.');
       return;
     }
 
     try {
-      final items = await AppNotification.getAll(user.uid);
-      final unread = items
-          .where((item) => !item.isRead && AppNotification.isFresh(item))
-          .toList();
-      final read = items
-          .where((item) => item.isRead || !AppNotification.isFresh(item))
-          .toList();
+      final doc = await FirebaseFirestore.instance
+          .collection('contents')
+          .doc(contentId)
+          .get();
+
+      if (!doc.exists) {
+        _showInfoSnack('Konten sudah tidak tersedia.');
+        return;
+      }
+
+      final contentItem = AdminContentItem.fromFirestore(doc);
 
       if (!mounted) return;
-      setState(() {
-        _unread = unread;
-        _read = read;
-        _isLoading = false;
-      });
 
-      // Dipertahankan sesuai perilaku kode asli: tandai dibaca saat halaman dibuka.
-      await AppNotification.markAllAsRead(user.uid);
-    } catch (e) {
-      debugPrint('NOTIFIKASI LOAD ERROR: $e');
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notifikasi gagal dimuat. Periksa koneksi dan aturan Firestore.')),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UserContentDetailScreen(item: contentItem),
+        ),
       );
+    } catch (e) {
+      debugPrint('ROUTE NOTIF: gagal membuka konten = $e');
+      _showInfoSnack('Gagal membuka konten. Periksa koneksi.');
+    }
+  }
+
+  Future<void> _openArticleDetail(LocalNotification item) async {
+    final articleId = _extractContentId(item);
+
+    if (articleId == null || articleId.isEmpty) {
+      _showInfoSnack('Artikel tidak ditemukan.');
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('articles')
+          .doc(articleId)
+          .get();
+
+      if (!doc.exists) {
+        _showInfoSnack('Artikel sudah tidak tersedia.');
+        return;
+      }
+
+      final article = AdminArticle.fromFirestore(doc);
+
+      if (!article.isPublished) {
+        _showInfoSnack('Artikel ini sudah tidak tayang.');
+        return;
+      }
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AdminArticleDetailScreen(article: article),
+        ),
+      );
+    } catch (e) {
+      debugPrint('ROUTE NOTIF: gagal membuka artikel = $e');
+      _showInfoSnack('Gagal membuka artikel. Periksa koneksi.');
+    }
+  }
+
+  Future<void> _openChatAsPatient(LocalNotification item) async {
+    final consultationId = await _resolveConsultationId(
+      item,
+      asDoctor: false,
+    );
+
+    if (consultationId == null || consultationId.isEmpty) {
+      _showInfoSnack('Sesi konsultasi sudah tidak ditemukan.');
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('consultations')
+          .doc(consultationId)
+          .get();
+
+      final data = doc.data() ?? <String, dynamic>{};
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ConsultationChatScreen(
+            consultationId: consultationId,
+            doctorName:
+                (data['doctorName'] ?? 'Dokter').toString(),
+            specialty: (data['specialty'] ??
+                    data['doctorSpecialty'] ??
+                    '')
+                .toString(),
+            doctorImage: (data['doctorImage'] ??
+                    data['doctorPhoto'] ??
+                    '')
+                .toString(),
+            selectedTime: (data['selectedTime'] ??
+                    data['consultationTime'] ??
+                    '')
+                .toString(),
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('ROUTE NOTIF: gagal membuka chat = $e');
+      _showInfoSnack('Gagal membuka chat. Periksa koneksi.');
+    }
+  }
+
+  Future<void> _openChatAsDoctor(LocalNotification item) async {
+    final consultationId = await _resolveConsultationId(
+      item,
+      asDoctor: true,
+    );
+
+    if (consultationId == null || consultationId.isEmpty) {
+      _showInfoSnack('Sesi konsultasi sudah tidak ditemukan.');
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('consultations')
+          .doc(consultationId)
+          .get();
+
+      if (!doc.exists) {
+        _showInfoSnack('Sesi konsultasi sudah tidak ditemukan.');
+        return;
+      }
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DoctorPatientChatScreen(
+            patient: {...doc.data()!, 'consultationId': doc.id},
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('ROUTE NOTIF: gagal membuka chat pasien = $e');
+      _showInfoSnack('Gagal membuka chat. Periksa koneksi.');
     }
   }
 
@@ -575,7 +837,7 @@ void dispose() {
   }
 
   // ===============================================================
-  // KARTU NOTIFIKASI
+  // KARTU NOTIFIKASI (BARU: BISA DIPENCET -> ROUTE)
   // ===============================================================
 
   Widget _buildNotificationCard({
@@ -584,86 +846,88 @@ void dispose() {
   }) {
     final style = _typeStyle(item.type);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(color: style.bg, shape: BoxShape.circle),
-            child: Center(
-              child: Text(style.emoji, style: const TextStyle(fontSize: 19)),
+    return GestureDetector(
+      onTap: () => _handleNotificationTap(item),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 5,
+              offset: const Offset(0, 3),
             ),
-          ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(color: style.bg, shape: BoxShape.circle),
+              child: Center(
+                child: Text(style.emoji, style: const TextStyle(fontSize: 19)),
+              ),
+            ),
 
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 13,
-                    fontWeight: isUnread ? FontWeight.w800 : FontWeight.w700,
-                    color: const Color(0xFF30221E),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 13,
+                      fontWeight: isUnread ? FontWeight.w800 : FontWeight.w700,
+                      color: const Color(0xFF30221E),
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 3),
+                  const SizedBox(height: 3),
 
-
-                Text(
-                  item.type == 'chat' &&
-                          item.title == 'Dokter Membalas Pesanmu' &&
-                          item.body.trim().isNotEmpty &&
-                          !item.body.trim().toLowerCase().startsWith('dr.')
-                      ? 'dr. ${item.body.trim()}'
-                      : item.body,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 11.5,
-                    height: 1.25,
-                    fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
-                    color: const Color(0xFF675B57),
+                  Text(
+                    item.type == 'chat' &&
+                            item.title == 'Dokter Membalas Pesanmu' &&
+                            item.body.trim().isNotEmpty &&
+                            !item.body.trim().toLowerCase().startsWith('dr.')
+                        ? 'dr. ${item.body.trim()}'
+                        : item.body,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11.5,
+                      height: 1.25,
+                      fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
+                      color: const Color(0xFF675B57),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
-          const SizedBox(width: 10),
+            const SizedBox(width: 10),
 
-          Text(
-            _formatLabel(item.createdAt, isUnread: isUnread),
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF77716E),
+            Text(
+              _formatLabel(item.createdAt, isUnread: isUnread),
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF77716E),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -716,11 +980,9 @@ void dispose() {
                 color: Color(0xFF493C37),
               ),
             ),
-
           ],
         ),
       ),
     );
   }
-
 }
