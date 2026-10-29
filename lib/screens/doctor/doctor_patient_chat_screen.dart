@@ -436,15 +436,11 @@ Future<void> _markAsRead() async {
 
             _buildPatientCard(),
 
+
             const SizedBox(height: 12),
 
-            if (_isActive) ...[_buildStatusCard(), const SizedBox(height: 10)],
-
-            _buildPreviousHistoryButton(),
-
-            const SizedBox(height: 10),
-
             _buildPrivacyWarning(),
+
 
             const SizedBox(height: 10),
 
