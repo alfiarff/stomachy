@@ -223,11 +223,26 @@ StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
 
 
 
+
 @override
 void initState() {
   super.initState();
   _listenToNotifications();
+  _markNotificationsAsReadOnOpen();
 }
+
+Future<void> _markNotificationsAsReadOnOpen() async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) return;
+
+  try {
+    await AppNotification.markAllAsRead(user.uid);
+  } catch (e) {
+    debugPrint('NOTIFIKASI MARK AS READ ERROR: $e');
+  }
+}
+
 
 void _listenToNotifications() {
   final user = FirebaseAuth.instance.currentUser;
