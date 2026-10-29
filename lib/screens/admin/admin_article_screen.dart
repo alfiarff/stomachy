@@ -540,7 +540,7 @@ class _AdminArticleScreenState extends State<AdminArticleScreen> {
                             Navigator.pop(dialogContext);
 
                             try {
-                              await AdminContentService.deleteContent(
+                              await AdminContentService.deleteArticle(
                                 article.id,
                               );
 
