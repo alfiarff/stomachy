@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -135,6 +136,87 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
           .toLowerCase();
       return name.contains(_searchQuery);
     }).toList();
+  }
+
+  Widget _buildPatientPhoto(
+    String userId, {
+    double size = 56,
+  }) {
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        Widget fallback() {
+          return Container(
+            width: size,
+            height: size,
+            decoration: const BoxDecoration(
+              color: softOrange,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.person_rounded,
+              size: size * 0.58,
+              color: primaryBrown,
+            ),
+          );
+        }
+
+        if (userId.isEmpty ||
+            snapshot.hasError ||
+            !snapshot.hasData ||
+            !snapshot.data!.exists) {
+          return fallback();
+        }
+
+        final data = snapshot.data!.data() ?? {};
+
+        final String photoBase64 =
+            (data['photoBase64'] ?? '').toString().trim();
+
+        if (photoBase64.isNotEmpty) {
+          try {
+            final String encodedPhoto = photoBase64.contains(',')
+                ? photoBase64.split(',').last
+                : photoBase64;
+
+            return ClipOval(
+              child: Image.memory(
+                base64Decode(encodedPhoto),
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => fallback(),
+              ),
+            );
+          } catch (_) {
+            return fallback();
+          }
+        }
+
+        final String photoUrl =
+            (data['photoURL'] ?? data['photoUrl'] ?? '')
+                .toString()
+                .trim();
+
+        if (photoUrl.isNotEmpty) {
+          return ClipOval(
+            child: Image.network(
+              photoUrl,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => fallback(),
+            ),
+          );
+        }
+
+        return fallback();
+      },
+    );
   }
 
   // ===============================================================
@@ -643,19 +725,12 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(
-                color: softOrange,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.person_rounded,
-                size: 32,
-                color: primaryBrown,
-              ),
+          ClipOval(
+            child: _buildPatientPhoto(
+              (patient['userId'] ?? '').toString().trim(),
+              size: 56,
             ),
+          ),
             const SizedBox(width: 14),
             Expanded(
               child: FutureBuilder<String>(

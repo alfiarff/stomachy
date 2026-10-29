@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -450,14 +451,10 @@ class _DoctorChatScreenState extends State<DoctorChatScreen> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: const BoxDecoration(
-                color: softOrange,
-                shape: BoxShape.circle,
+            ClipOval(
+              child: _buildPatientPhoto(
+                (chat['userId'] ?? '').toString().trim(),
               ),
-              child: const Icon(Icons.person_rounded, size: 32, color: brown),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -563,6 +560,73 @@ class _DoctorChatScreenState extends State<DoctorChatScreen> {
       ),
     );
   }
+
+
+  Widget _buildPatientPhoto(String userId) {
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        Widget fallback() {
+          return Container(
+            width: 54,
+            height: 54,
+            color: softOrange,
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.person_rounded,
+              size: 32,
+              color: brown,
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return fallback();
+        }
+
+        final data = snapshot.data!.data() ?? {};
+        final String photoBase64 =
+            (data['photoBase64'] ?? '').toString().trim();
+
+        if (photoBase64.isEmpty) {
+          final String photoUrl =
+              (data['photoURL'] ?? data['photoUrl'] ?? '').toString().trim();
+
+          if (photoUrl.isNotEmpty) {
+            return Image.network(
+              photoUrl,
+              width: 54,
+              height: 54,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => fallback(),
+            );
+          }
+
+          return fallback();
+        }
+
+        try {
+          final String encodedPhoto = photoBase64.contains(',')
+              ? photoBase64.split(',').last
+              : photoBase64;
+
+          return Image.memory(
+            base64Decode(encodedPhoto),
+            width: 54,
+            height: 54,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => fallback(),
+          );
+        } catch (_) {
+          return fallback();
+        }
+      },
+    );
+  }
+
 
   Widget _buildEmptyState(IconData icon, String title, String subtitle) {
     return Center(

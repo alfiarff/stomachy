@@ -160,12 +160,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         String email = user.email ?? '';
 
         String googlePhotoUrl = user.photoURL ?? '';
-
         String? photoBase64;
-
-        if (googlePhotoUrl.startsWith('data:')) {
-          googlePhotoUrl = '';
-        }
 
         if (snapshot.hasData && snapshot.data!.exists) {
           final dynamic rawData = snapshot.data!.data();
@@ -175,9 +170,23 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
             final String? firestoreEmail = rawData['email']?.toString().trim();
 
-            final String? firestorePhoto = rawData['photoBase64']
-                ?.toString()
-                .trim();
+        final String? firestorePhoto = rawData['photoBase64']
+    ?.toString()
+    .trim();
+
+final String? firestorePhotoUrl =
+    (rawData['photoURL'] ?? rawData['photoUrl'])
+        ?.toString()
+        .trim();
+
+if (firestorePhoto != null && firestorePhoto.isNotEmpty) {
+  photoBase64 = firestorePhoto;
+}
+
+if (firestorePhotoUrl != null &&
+    firestorePhotoUrl.isNotEmpty) {
+  googlePhotoUrl = firestorePhotoUrl;
+}
 
             if (firestoreName != null && firestoreName.isNotEmpty) {
               name = firestoreName;
@@ -185,10 +194,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
             if (firestoreEmail != null && firestoreEmail.isNotEmpty) {
               email = firestoreEmail;
-            }
-
-            if (firestorePhoto != null && firestorePhoto.isNotEmpty) {
-              photoBase64 = firestorePhoto;
             }
           }
         }
@@ -808,6 +813,81 @@ void _showLogoutDialog() {
 class _DoctorChatHistoryScreen extends StatelessWidget {
   const _DoctorChatHistoryScreen();
 
+    Widget _buildPatientHistoryPhoto(
+    String patientId, {
+    double size = 54,
+  }) {
+    if (patientId.trim().isEmpty) {
+      return _defaultPatientPhoto(size);
+    }
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(patientId.trim())
+          .snapshots(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data();
+
+        if (data == null) {
+          return _defaultPatientPhoto(size);
+        }
+
+        final photoBase64 = (data['photoBase64'] ?? '')
+            .toString()
+            .trim();
+
+        final photoUrl = (
+          data['photoURL'] ??
+          data['photoUrl'] ??
+          ''
+        ).toString().trim();
+
+        if (photoBase64.isNotEmpty) {
+          try {
+            return Image.memory(
+              base64Decode(photoBase64),
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  _defaultPatientPhoto(size),
+            );
+          } catch (_) {
+            // Jika Base64 tidak valid, lanjutkan ke foto URL.
+          }
+        }
+
+        if (photoUrl.startsWith('https://') ||
+            photoUrl.startsWith('http://')) {
+          return Image.network(
+            photoUrl,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) =>
+                _defaultPatientPhoto(size),
+          );
+        }
+
+        return _defaultPatientPhoto(size);
+      },
+    );
+  }
+
+  Widget _defaultPatientPhoto(double size) {
+    return Container(
+      width: size,
+      height: size,
+      color: const Color(0xFFE8E8E8),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.person_rounded,
+        size: size * 0.55,
+        color: brown,
+      ),
+    );
+  }
   String _formatDate(dynamic value) {
     if (value is Timestamp) {
       final DateTime date = value.toDate();
@@ -1017,17 +1097,15 @@ class _DoctorChatHistoryScreen extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              Container(
-                                width: 54,
-                                height: 54,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color(0xFFE8E8E8),
-                                ),
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  size: 30,
-                                  color: brown,
+                                            ClipOval(
+                                child: _buildPatientHistoryPhoto(
+                                  (
+                                    data['userId'] ??
+                                    data['patientId'] ??
+                                    data['uid'] ??
+                                    ''
+                                  ).toString(),
+                                  size: 54,
                                 ),
                               ),
                               const SizedBox(width: 13),

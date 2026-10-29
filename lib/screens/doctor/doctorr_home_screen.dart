@@ -656,6 +656,89 @@ Row(
     );
   }
 
+  
+  Widget _buildPatientPhoto(
+      String userId, {
+      double size = 48,
+    }) {
+      return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .snapshots(),
+        builder: (context, snapshot) {
+          Widget fallback() {
+            return Container(
+              width: size,
+              height: size,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFE5D8),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.person_rounded,
+                size: size * 0.58,
+                color: const Color(0xFFAA4E39),
+              ),
+            );
+          }
+
+          if (userId.isEmpty ||
+              snapshot.hasError ||
+              !snapshot.hasData ||
+              !snapshot.data!.exists) {
+            return fallback();
+          }
+
+          final data = snapshot.data!.data() ?? {};
+
+          final String photoBase64 =
+              (data['photoBase64'] ?? '').toString().trim();
+
+          if (photoBase64.isNotEmpty) {
+            try {
+              final String encodedPhoto = photoBase64.contains(',')
+                  ? photoBase64.split(',').last
+                  : photoBase64;
+
+              return ClipOval(
+                child: Image.memory(
+                  base64Decode(encodedPhoto),
+                  width: size,
+                  height: size,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => fallback(),
+                ),
+              );
+            } catch (_) {
+              return fallback();
+            }
+          }
+
+      final String photoUrl =
+          (data['photoURL'] ?? data['photoUrl'] ?? '')
+              .toString()
+              .trim();
+
+      if (photoUrl.isNotEmpty) {
+        return ClipOval(
+          child: Image.network(
+            photoUrl,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => fallback(),
+          ),
+        );
+      }
+
+      return fallback();
+    },
+  );
+}
+
+
   Widget _buildMessageItem(
     QueryDocumentSnapshot<Map<String, dynamic>> document,
   ) {
@@ -687,19 +770,12 @@ Row(
         ),
         child: Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFE5D8),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.person_rounded,
-                size: 31,
-                color: Color(0xFFAA4E39),
-              ),
-            ),
+        ClipOval(
+          child: _buildPatientPhoto(
+            (data['userId'] ?? '').toString().trim(),
+            size: 48,
+          ),
+        ),
             const SizedBox(width: 11),
             Expanded(
               child: Column(

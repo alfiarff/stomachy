@@ -1,3 +1,5 @@
+
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +46,75 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
 
     return name.isEmpty ? 'Pasien' : name;
   }
+
+
+Widget _buildPatientPhoto({double size = 54}) {
+  return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+    stream: FirebaseFirestore.instance
+        .collection('users')
+        .doc(_patientId)
+        .snapshots(),
+    builder: (context, snapshot) {
+      Widget fallback() {
+        return Container(
+          width: size,
+          height: size,
+          color: softOrange,
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.person_rounded,
+            size: size * 0.58,
+            color: brown,
+          ),
+        );
+      }
+
+      if (snapshot.hasError ||
+          !snapshot.hasData ||
+          !snapshot.data!.exists) {
+        return fallback();
+      }
+
+      final data = snapshot.data!.data() ?? {};
+
+      final String photoBase64 =
+          (data['photoBase64'] ?? '').toString().trim();
+
+      if (photoBase64.isNotEmpty) {
+        try {
+          final String encodedPhoto = photoBase64.contains(',')
+              ? photoBase64.split(',').last
+              : photoBase64;
+
+          return Image.memory(
+            base64Decode(encodedPhoto),
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => fallback(),
+          );
+        } catch (_) {
+          return fallback();
+        }
+      }
+
+      final String photoUrl =
+          (data['photoURL'] ?? data['photoUrl'] ?? '').toString().trim();
+
+      if (photoUrl.isNotEmpty) {
+        return Image.network(
+          photoUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => fallback(),
+        );
+      }
+
+      return fallback();
+    },
+  );
+}
 
   String get _consultationDay =>
       (widget.patient['consultationDay'] ?? '').toString();
@@ -537,20 +608,9 @@ Future<void> _markAsRead() async {
 
       child: Row(
         children: [
-          Container(
-            width: 62,
-
-            height: 62,
-
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-
-              color: softOrange,
-            ),
-
-            child: const Icon(Icons.person_rounded, size: 42, color: brown),
-          ),
-
+ ClipOval(
+  child: _buildPatientPhoto(size: 62),
+),
           const SizedBox(width: 14),
 
           Expanded(
@@ -1179,21 +1239,10 @@ Future<void> _markAsRead() async {
   }
 
   Widget _buildSmallPatientImage() {
-    return Container(
-      width: 36,
-
-      height: 36,
-
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-
-        color: softOrange,
-      ),
-
-      child: const Icon(Icons.person_rounded, size: 25, color: brown),
-    );
-  }
-
+  return ClipOval(
+    child: _buildPatientPhoto(size: 36),
+  );
+}
   Widget _buildMessageInput() {
     return Container(
       margin: const EdgeInsets.fromLTRB(9, 0, 9, 8),
