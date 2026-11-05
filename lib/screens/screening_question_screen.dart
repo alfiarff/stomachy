@@ -47,8 +47,29 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
   // DATA LANGKAH 1
   // ============================================================
 
+  DateTime? birthDate;
   String age = '';
   String? gender;
+
+  // ============================================================
+  // HITUNG USIA OTOMATIS DARI TANGGAL LAHIR
+  // ============================================================
+
+  void _updateBirthDate(DateTime value) {
+    final today = DateTime.now();
+
+    int calculatedAge = today.year - value.year;
+
+    if (today.month < value.month ||
+        (today.month == value.month && today.day < value.day)) {
+      calculatedAge--;
+    }
+
+    setState(() {
+      birthDate = value;
+      age = calculatedAge.toString();
+    });
+  }
 
   // ============================================================
   // DATA LANGKAH 2
@@ -58,7 +79,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
     'Perut terasa penuh': null,
     'Waktu tidur': null,
     'Penggunaan obat': null,
-    'Panas di dada': null,
+    'Sesak napas': null,
     'Asam lambung naik': null,
     'Nyeri dada atau ulu hati': null,
   };
@@ -68,7 +89,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
   // ============================================================
 
   final Map<String, String?> step3Answers = {
-    'Panas di dada': null,
+    'Sesak napas': null,
     'Asam lambung naik': null,
     'Nyeri dada atau ulu hati': null,
   };
@@ -81,7 +102,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
     'Perut terasa penuh': 'assets/images/perut.png',
     'Waktu tidur': 'assets/images/bed.png',
     'Penggunaan obat': 'assets/images/obat.png',
-    'Panas di dada': 'assets/images/api.png',
+    'Sesak napas': 'assets/images/emoji_sesak.png',
     'Asam lambung naik': 'assets/images/asam.png',
     'Nyeri dada atau ulu hati': 'assets/images/nyeri.png',
   };
@@ -141,7 +162,9 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
   // ============================================================
 
   bool get step1Complete {
-    return age.trim().isNotEmpty && gender != null;
+    return birthDate != null &&
+        age.trim().isNotEmpty &&
+        gender != null;
   }
 
   bool get step2Complete {
@@ -161,7 +184,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
     if (currentStep == 1) {
       if (!step1Complete) {
         _showMessage(
-          'Silakan isi usia dan pilih jenis kelamin terlebih dahulu.',
+          'Silahkan pilih tanggal lahir dan jenis kelamin terlebih dahulu.',
         );
         return;
       }
@@ -176,7 +199,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
     // LANGKAH 2 → LANGKAH 3
     if (currentStep == 2) {
       if (!step2Complete) {
-        _showMessage('Silakan jawab semua pertanyaan terlebih dahulu.');
+        _showMessage('Silahkan jawab semua pertanyaan terlebih dahulu.');
         return;
       }
 
@@ -280,15 +303,12 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
                     // ==================================================
                     if (currentStep == 1)
                       ScreeningDataDiri(
+                        birthDate: birthDate,
                         age: age,
                         gender: gender,
                         brown: brown,
                         cardColor: cardColor,
-                        onAgeChanged: (value) {
-                          setState(() {
-                            age = value;
-                          });
-                        },
+                        onBirthDateChanged: _updateBirthDate,
                         onGenderChanged: (value) {
                           setState(() {
                             gender = value;
@@ -534,6 +554,14 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
     return _buildSummaryCard(
       title: 'Data Diri',
       children: [
+        _buildSummaryRow(
+          'Tanggal lahir',
+          birthDate == null
+              ? '-'
+              : '${birthDate!.day.toString().padLeft(2, '0')}/'
+                  '${birthDate!.month.toString().padLeft(2, '0')}/'
+                  '${birthDate!.year}',
+        ),
         _buildSummaryRow('Usia', '$age Tahun'),
         _buildSummaryRow('Jenis kelamin', gender),
       ],
@@ -572,7 +600,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
     return _buildSummaryCard(
       title: 'Gejala dan Frekuensi',
       children: [
-        _buildSummaryRow('Panas di dada', step3Answers['Panas di dada'] ?? '-'),
+        _buildSummaryRow('Sesak napas', step3Answers['Sesak napas'] ?? '-'),
         _buildSummaryRow(
           'Asam lambung naik',
           step3Answers['Asam lambung naik'] ?? '-',

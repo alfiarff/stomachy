@@ -165,8 +165,8 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
     final answers = widget.step2Answers;
 
     if (answers != null) {
-      if (answers['Panas di dada'] == true) {
-        complaints.add('Panas di dada');
+      if (answers['Sesak napas'] == true) {
+        complaints.add('Sesak napas');
       }
 
       if (answers['Asam lambung naik'] == true) {
@@ -195,7 +195,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
     final answers = widget.step2Answers;
 
     if (answers != null) {
-      if (answers['Panas di dada'] == true) count++;
+      if (answers['Sesak napas'] == true) count++;
       if (answers['Asam lambung naik'] == true) count++;
       if (answers['Nyeri dada atau ulu hati'] == true) {
         count++;
@@ -543,20 +543,6 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
 
           _buildResultTitle(),
 
-          const SizedBox(height: 2),
-
-          Text(
-            'GERD',
-            textAlign: TextAlign.center,
-
-            style: TextStyle(
-              fontFamily: 'Fredoka',
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              color: resultTheme.accent,
-            ),
-          ),
-
           const SizedBox(height: 8),
 
           Text(
@@ -583,42 +569,32 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
   Widget _buildResultTitle() {
     const baseStyle = TextStyle(
       fontFamily: 'Nunito',
-      fontSize: 20,
+      fontSize: 16,
       fontWeight: FontWeight.w600,
       color: primaryBrown,
     );
 
-    if (isRiskResult) {
-      return const Text(
-        'Kamu berisiko mengalami',
-        textAlign: TextAlign.center,
-        style: baseStyle,
-      );
-    }
-
     return Text.rich(
       TextSpan(
-        text: 'Kamu ',
-
         style: baseStyle,
-
         children: [
+          const TextSpan(text: 'Kamu '),
           TextSpan(
-            text: 'tidak',
-
+            text: isRiskResult ? 'BERISIKO' : 'TIDAK BERISIKO',
             style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 20,
+              fontFamily: 'Fredoka',
+              fontSize: 19,
               fontWeight: FontWeight.w700,
               color: resultTheme.accent,
             ),
           ),
-
-          const TextSpan(text: ' berisiko mengalami'),
+          const TextSpan(text: ' mengalami GERD'),
         ],
       ),
-
       textAlign: TextAlign.center,
+      maxLines: 1,
+      softWrap: false,
+      overflow: TextOverflow.visible,
     );
   }
 

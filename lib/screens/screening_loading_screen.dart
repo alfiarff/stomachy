@@ -97,13 +97,13 @@ class _ScreeningLoadingScreenState extends State<ScreeningLoadingScreen> {
       // -----------------------------------------------------------
 
       final String heartBurn = _mapSymptom(
-        step2Value: widget.step2Answers['Panas di dada'],
-        frequency: widget.step3Answers['Panas di dada'],
+        step2Value: widget.step2Answers['Sesak napas'],
+        frequency: widget.step3Answers['Sesak napas'],
       );
 
       final String hbFrequency = _mapFrequency(
-        step2Value: widget.step2Answers['Panas di dada'],
-        frequency: widget.step3Answers['Panas di dada'],
+        step2Value: widget.step2Answers['Sesak napas'],
+        frequency: widget.step3Answers['Sesak napas'],
       );
 
       // -----------------------------------------------------------

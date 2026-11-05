@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:stomachy/widgets/stomachy_card.dart';
 
@@ -26,37 +27,27 @@ class ScreeningKondisi extends StatelessWidget {
           title: 'Perut terasa penuh',
           question: 'Apakah kamu sering merasa perut penuh setelah makan?',
         ),
-
         const SizedBox(height: 15),
-
         _buildYesNoCard(
           title: 'Waktu tidur',
-          question: 'Apakah kamu mendapatkan waktu tidur yang cukup?',
+          question: 'Apakah waktu tidurmu sudah cukup? (7-9 jam sehari)',
         ),
-
         const SizedBox(height: 15),
-
         _buildYesNoCard(
           title: 'Penggunaan obat',
           question: 'Apakah kamu sedang mengonsumsi obat tertentu saat ini?',
         ),
-
         const SizedBox(height: 15),
-
         _buildYesNoCard(
-          title: 'Panas di dada',
-          question: 'Apakah kamu sering merasakan sensasi panas atau terbakar di dada?',
+          title: 'Sesak napas',
+          question: 'Apakah kamu sering mengalami sesak atau kesulitan bernapas?',
         ),
-
         const SizedBox(height: 15),
-
         _buildYesNoCard(
           title: 'Asam lambung naik',
           question: 'Apakah kamu pernah merasakan asam atau rasa pahit naik ke tenggorokan?',
         ),
-
         const SizedBox(height: 15),
-
         _buildYesNoCard(
           title: 'Nyeri dada atau ulu hati',
           question: 'Apakah kamu sering merasakan nyeri atau tidak nyaman di dada atau ulu hati?',
@@ -65,11 +56,11 @@ class ScreeningKondisi extends StatelessWidget {
     );
   }
 
-  // ============================================================
-  // KARTU YA / TIDAK
-  // ============================================================
-
-  Widget _buildYesNoCard({required String title, required String question}) {
+  Widget _buildYesNoCard({
+    required String title,
+    required String question,
+    String? note,
+  }) {
     return StomachyCard(
       color: cardColor,
       radius: 17,
@@ -84,7 +75,7 @@ class ScreeningKondisi extends StatelessWidget {
               height: 62,
               alignment: Alignment.center,
               child: Image.asset(
-                symptomImages[title]!,
+                symptomImages[title] ?? 'assets/images/emoji_sesak.png',
                 width: 57,
                 height: 57,
                 fit: BoxFit.contain,
@@ -97,17 +88,12 @@ class ScreeningKondisi extends StatelessWidget {
                 },
               ),
             ),
-
             const SizedBox(width: 10),
-
             Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ==================================================
-                  // JUDUL CARD
-                  // ==================================================
-
                   Text(
                     title,
                     style: const TextStyle(
@@ -117,16 +103,9 @@ class ScreeningKondisi extends StatelessWidget {
                       color: Colors.black,
                     ),
                   ),
-
                   const SizedBox(height: 3),
-
-                  // ==================================================
-                  // ISI / PENJELASAN
-                  // ==================================================
                   Text(
                     question,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 11,
@@ -136,14 +115,53 @@ class ScreeningKondisi extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 7),
+                  // Keterangan tambahan jika tersedia
+                  if (note != null) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF0E8),
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.info_outline_rounded,
+                            size: 13,
+                            color: Color(0xFFB05039),
+                          ),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              note,
+                              style: const TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 10,
+                                height: 1.2,
+                                color: Color(0xFF766D68),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
+                  const SizedBox(height: 7),
                   Row(
                     children: [
-                      _buildYesNoButton(title: title, value: true, label: 'Ya'),
-
+                      _buildYesNoButton(
+                        title: title,
+                        value: true,
+                        label: 'Ya',
+                      ),
                       const SizedBox(width: 18),
-
                       _buildYesNoButton(
                         title: title,
                         value: false,
@@ -160,10 +178,6 @@ class ScreeningKondisi extends StatelessWidget {
     );
   }
 
-  // ============================================================
-  // TOMBOL YA / TIDAK
-  // ============================================================
-
   Widget _buildYesNoButton({
     required String title,
     required bool value,
@@ -172,9 +186,7 @@ class ScreeningKondisi extends StatelessWidget {
     final bool selected = answers[title] == value;
 
     return GestureDetector(
-      onTap: () {
-        onAnswer(MapEntry(title, value));
-      },
+      onTap: () => onAnswer(MapEntry(title, value)),
       child: Container(
         width: 70,
         height: 21,
@@ -182,16 +194,13 @@ class ScreeningKondisi extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFFFE0D5) : Colors.white,
           borderRadius: BorderRadius.circular(15),
-
-          // BORDER TOMBOL TETAP
           border: Border.all(
             color: selected ? brown : const Color(0xFFFF765B),
             width: 1,
           ),
-
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 2,
               offset: const Offset(0, 2),
             ),

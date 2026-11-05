@@ -261,7 +261,7 @@ class ScreeningConfirmationScreen extends StatelessWidget {
     return _buildSummaryCard(
       title: 'Gejala dan Frekuensi',
       children: [
-        _buildSummaryRow('Panas di dada', step3Answers['Panas di dada'] ?? '-'),
+        _buildSummaryRow('Sesak napas', step3Answers['Sesak napas'] ?? '-'),
         _buildSummaryRow(
           'Asam lambung naik',
           step3Answers['Asam lambung naik'] ?? '-',

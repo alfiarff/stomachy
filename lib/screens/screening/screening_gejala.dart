@@ -23,8 +23,8 @@ class ScreeningGejala extends StatelessWidget {
     return Column(
       children: [
         _buildFrequencyCard(
-          title: 'Panas di dada',
-          question: 'Seberapa sering kamu merasakan sensasi panas atau terbakar di dada?',
+          title: 'Sesak napas',
+          question: 'Seberapa sering kamu merasakan sesak napas atau kesulitan saat bernapas?',
         ),
 
         const SizedBox(height: 15),
@@ -64,19 +64,25 @@ class ScreeningGejala extends StatelessWidget {
               width: 62,
               height: 62,
               alignment: Alignment.center,
-              child: Image.asset(
-                symptomImages[title]!,
-                width: 57,
-                height: 57,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
-                    Icons.image_not_supported_outlined,
-                    color: Color(0xFFB05039),
-                    size: 35,
-                  );
-                },
-              ),
+              child: symptomImages[title] != null
+                  ? Image.asset(
+                      symptomImages[title]!,
+                      width: 57,
+                      height: 57,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Color(0xFFB05039),
+                          size: 35,
+                        );
+                      },
+                    )
+                  : const Icon(
+                      Icons.image_not_supported_outlined,
+                      color: Color(0xFFB05039),
+                      size: 35,
+                    ),
             ),
 
             const SizedBox(width: 10),
@@ -122,6 +128,10 @@ class ScreeningGejala extends StatelessWidget {
                   Row(
                     children: [
                       _buildFrequencyButton(title: title, value: 'Tidak Ada'),
+
+                      const SizedBox(width: 7),
+
+                      _buildFrequencyButton(title: title, value: 'Harian'),
 
                       const SizedBox(width: 7),
 
