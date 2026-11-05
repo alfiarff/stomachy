@@ -218,7 +218,7 @@ class _AdminAddAccountScreenState extends State<AdminAddAccountScreen> {
         {
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim().toLowerCase(),
-          'role': 'dokter',
+          'role': widget.accountRole,
           'photoBase64': _photoBase64 ?? '',
           'isActive': true,
           'createdAt': FieldValue.serverTimestamp(),
@@ -345,7 +345,9 @@ class _AdminAddAccountScreenState extends State<AdminAddAccountScreen> {
                     decoration: _inputDecoration(
                       widget.accountRole == 'dokter'
                           ? 'Masukkan email dokter'
-                          : 'Masukkan email pengguna',
+                          : widget.accountRole == 'admin'
+                              ? 'Masukkan email admin'
+                              : 'Masukkan email pengguna',
                     ),
                     onChanged: (_) {
                       if (_emailError != null) {

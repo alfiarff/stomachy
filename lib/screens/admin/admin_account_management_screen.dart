@@ -1,11 +1,11 @@
 ﻿import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'admin_add_account_screen.dart';
-import 'admin_add_user_screen.dart';
+import 'admin_add_admin_screen.dart' as add_admin;
+import 'admin_add_user_screen.dart' as add_user;
 
 // ===============================================================
 // MANAJEMEN AKUN (ADMIN)
@@ -85,52 +85,49 @@ class _AdminAccountManagementScreenState
     return 'dr. $name';
   }
 
-  List<QueryDocumentSnapshot<Map<String, dynamic>>>
-      _filterAccounts(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
-  ) {
-    final filtered =
-        docs.where((doc) {
-          final data = doc.data();
-          final String role =
-              (data['role'] ?? '').toString();
+List<QueryDocumentSnapshot<Map<String, dynamic>>>
+    _filterAccounts(
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+) {
+  final filtered = docs.where((doc) {
+    final data = doc.data();
 
-          // Akun admin tidak ditampilkan di daftar ini.
-          if (role.trim().toLowerCase() == 'admin') {
-            return false;
-          }
+    final String role = (data['role'] ?? '')
+        .toString()
+        .trim()
+        .toLowerCase();
 
-          if (_selectedTab == 'dokter') {
-            if (!_isDoctorRole(role)) return false;
-          } else {
-            if (_isDoctorRole(role)) return false;
-          }
+    // Filter berdasarkan tab yang dipilih.
+    if (_selectedTab == 'dokter') {
+      if (!_isDoctorRole(role)) return false;
+    } else if (_selectedTab == 'pengguna') {
+      if (role != 'user') return false;
+    } else if (_selectedTab == 'admin') {
+      if (role != 'admin') return false;
+    }
 
-          if (_searchQuery.isNotEmpty) {
-            final String name =
-                _accountName(data).toLowerCase();
-            final String email =
-                _accountEmail(data).toLowerCase();
+    // Filter pencarian nama atau email.
+    if (_searchQuery.isNotEmpty) {
+      final String name = _accountName(data).toLowerCase();
+      final String email = _accountEmail(data).toLowerCase();
 
-            if (!name.contains(_searchQuery) &&
-                !email.contains(_searchQuery)) {
-              return false;
-            }
-          }
+      if (!name.contains(_searchQuery) &&
+          !email.contains(_searchQuery)) {
+        return false;
+      }
+    }
 
-          return true;
-        }).toList();
+    return true;
+  }).toList();
 
-    filtered.sort((a, b) {
-      final String nameA =
-          _accountName(a.data()).toLowerCase();
-      final String nameB =
-          _accountName(b.data()).toLowerCase();
-      return nameA.compareTo(nameB);
-    });
+  filtered.sort((a, b) {
+    final String nameA = _accountName(a.data()).toLowerCase();
+    final String nameB = _accountName(b.data()).toLowerCase();
+    return nameA.compareTo(nameB);
+  });
 
-    return filtered;
-  }
+  return filtered;
+}
 
   // ===============================================================
   // AKTIF / NONAKTIFKAN AKUN
@@ -297,9 +294,9 @@ Future<void> _toggleAccountStatus({
         borderRadius: BorderRadius.circular(21),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 7,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -349,12 +346,21 @@ Future<void> _toggleAccountStatus({
           ),
         ),
 
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
 
         Expanded(
           child: _buildTabButton(
             label: 'Pengguna',
             value: 'pengguna',
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        Expanded(
+          child: _buildTabButton(
+            label: 'Admin',
+            value: 'admin',
           ),
         ),
       ],
@@ -382,10 +388,9 @@ Future<void> _toggleAccountStatus({
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black
-                  .withOpacity(selected ? 0.15 : 0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.07),
+              blurRadius: 7,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -517,7 +522,7 @@ Future<void> _toggleAccountStatus({
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.07),
             blurRadius: 7,
             offset: const Offset(0, 3),
           ),
@@ -690,7 +695,9 @@ Future<void> _toggleAccountStatus({
                   ? 'Coba kata kunci lain untuk mencari akun.'
                   : _selectedTab == 'dokter'
                       ? 'Belum ada akun dokter. Tambahkan lewat tombol + di bawah.'
-                      : 'Belum ada pengguna terdaftar.',
+                      : _selectedTab == 'admin'
+                          ? 'Belum ada akun admin. Tambahkan lewat tombol + di bawah.'
+                          : 'Belum ada pengguna terdaftar.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Nunito',
@@ -710,8 +717,6 @@ Future<void> _toggleAccountStatus({
   // ===============================================================
 
   Widget _buildAddButton() {
-    final bool isDoctorTab = _selectedTab == 'dokter';
-
     return SizedBox(
       width: 56,
       height: 56,
@@ -721,7 +726,7 @@ Future<void> _toggleAccountStatus({
         elevation: 4,
         shape: const CircleBorder(),
         onPressed: () {
-          if (isDoctorTab) {
+          if (_selectedTab == 'dokter') {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -729,12 +734,20 @@ Future<void> _toggleAccountStatus({
                     const AdminAddAccountScreen(),
               ),
             );
-          } else {
+          } else if (_selectedTab == 'pengguna') {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    const AdminAddUserScreen(),
+                  const add_user.AdminAddUserScreen(),
+              ),
+            );
+          } else if (_selectedTab == 'admin') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                  const add_admin.AdminAddAdminScreen(),
               ),
             );
           }
