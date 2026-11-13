@@ -347,10 +347,10 @@ class _AboutStomachyScreenState extends State<AboutStomachyScreen> {
           width: 36,
           height: 36,
           decoration: const BoxDecoration(
-            color: Color(0xFFFFE1C8),
+            color: Color(0xFFFFE3D1),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, size: 20, color: const Color(0xFF705044)),
+          child: Icon(icon, size: 20, color: const Color(0xFFB05039)),
         ),
 
         const SizedBox(width: 10),

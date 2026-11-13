@@ -1339,32 +1339,24 @@ class _DoctorNotificationScreenState extends State<_DoctorNotificationScreen> {
 
               const SizedBox(height: 22),
 
-              _buildNotificationCard(
-                icon: Icons.chat_bubble_outline_rounded,
+_buildNotificationCard(
+  icon: Icons.chat_bubble_outline_rounded,
+  title: 'Notifikasi Chat',
+  value: _chatNotification,
+  onChanged: (value) {
+    setState(() {
+      _chatNotification = value;
+    });
 
-                title: 'Notifikasi Chat',
-
-                subtitle: 'Dapatkan pemberitahuan saat pasien mengirim chat.',
-
-                value: _chatNotification,
-
-                onChanged: (value) {
-                  setState(() {
-                    _chatNotification = value;
-                  });
-
-                  _saveSetting('chatNotification', value);
-                },
-              ),
-
+    _saveSetting('chatNotification', value);
+  },
+),
               const SizedBox(height: 12),
 
               _buildNotificationCard(
                 icon: Icons.calendar_month_outlined,
 
                 title: 'Notifikasi Jadwal',
-
-                subtitle: 'Dapatkan pengingat terkait jadwal dokter.',
 
                 value: _scheduleNotification,
 
@@ -1383,121 +1375,102 @@ class _DoctorNotificationScreenState extends State<_DoctorNotificationScreen> {
     );
   }
 
-  Widget _buildNotificationCard({
-    required IconData icon,
+Widget _buildNotificationCard({
+  required IconData icon,
+  required String title,
+  required bool value,
+  required ValueChanged<bool> onChanged,
+}) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(
+      horizontal: 15,
+      vertical: 12,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFE3D1),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(
+            icon,
+            size: 21,
+            color: brown,
+          ),
+        ),
 
-    required String title,
+        const SizedBox(width: 12),
 
-    required String subtitle,
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+        ),
 
-    required bool value,
+        _buildNotificationSwitch(
+          value: value,
+          onChanged: onChanged,
+        ),
+      ],
+    ),
+  );
+}
 
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Container(
-      width: double.infinity,
-
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-
+  Widget _buildNotificationSwitch({
+  required bool value,
+  required ValueChanged<bool> onChanged,
+}) {
+  return GestureDetector(
+    onTap: () {
+      onChanged(!value);
+    },
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      width: 44,
+      height: 25,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white,
-
-        borderRadius: BorderRadius.circular(16),
-
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-
-            blurRadius: 6,
-
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: value ? brown : const Color(0xFFE5DDD8),
+        borderRadius: BorderRadius.circular(20),
       ),
-
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-
-            height: 38,
-
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFE3D1),
-
-              borderRadius: BorderRadius.circular(9),
-            ),
-
-            child: Icon(icon, size: 21, color: brown),
+      child: AnimatedAlign(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        alignment: value
+            ? Alignment.centerRight
+            : Alignment.centerLeft,
+        child: Container(
+          width: 19,
+          height: 19,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
           ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                Text(
-                  title,
-
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-
-                    fontSize: 12,
-
-                    fontWeight: FontWeight.w600,
-
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                Text(
-                  subtitle,
-
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-
-                    fontSize: 10.5,
-
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Switch(
-            value: value,
-
-            onChanged: onChanged,
-
-            thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.selected)) {
-                return Colors.white;
-              }
-
-              return const Color(0xFFB8B0AC);
-            }),
-
-            trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.selected)) {
-                return const Color(0xFFB9543A);
-              }
-
-              return const Color(0xFFE5DDD8);
-            }),
-
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-
-            thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
-              return null;
-            }),
-          ),
-        ],
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

@@ -432,15 +432,11 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
                   ),
                 ),
               ),
-              Switch(
+              _buildCustomSwitch(
                 value: active,
                 onChanged: (bool value) {
                   _toggleDay(day, value);
                 },
-                activeColor: const Color(0xFF54C467),
-                activeTrackColor: const Color(0xFFCDEFD2),
-                inactiveThumbColor: const Color(0xFF9E9E9E),
-                inactiveTrackColor: const Color(0xFFE5E2E0),
               ),
             ],
           ),
@@ -589,4 +585,50 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
       ),
     );
   }
+  // ===============================================================
+  // CUSTOM SWITCH
+  // ===============================================================
+
+  Widget _buildCustomSwitch({
+    required bool value,
+    required ValueChanged<bool>? onChanged,
+  }) {
+    final bool enabled = onChanged != null;
+
+    return GestureDetector(
+      onTap: enabled
+          ? () {
+              onChanged(!value);
+            }
+          : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        width: 44,
+        height: 25,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: value ? brown : const Color(0xFFE5DDD8),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          alignment: value
+              ? Alignment.centerRight
+              : Alignment.centerLeft,
+          child: Container(
+            width: 19,
+            height: 19,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
+
+
