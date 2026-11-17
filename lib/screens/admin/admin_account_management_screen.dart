@@ -19,7 +19,12 @@ import 'admin_add_user_screen.dart' as add_user;
 // ===============================================================
 
 class AdminAccountManagementScreen extends StatefulWidget {
-  const AdminAccountManagementScreen({super.key});
+  final String initialTab;
+
+  const AdminAccountManagementScreen({
+    super.key,
+    this.initialTab = 'dokter',
+  });
 
   @override
   State<AdminAccountManagementScreen> createState() =>
@@ -44,6 +49,13 @@ class _AdminAccountManagementScreenState
   @override
   void initState() {
     super.initState();
+
+    // Pilih tab sesuai kartu yang ditekan dari Home Admin.
+    const validTabs = ['pengguna', 'dokter', 'admin'];
+    _selectedTab = validTabs.contains(widget.initialTab)
+        ? widget.initialTab
+        : 'dokter';
+
     _searchController.addListener(_onSearchChanged);
   }
 

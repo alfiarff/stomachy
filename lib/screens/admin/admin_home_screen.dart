@@ -147,8 +147,22 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               ),
               const SizedBox(height: 12),
               _buildContentManagement(),
-              const SizedBox(height: 15),
-              _buildAccountManagementCard(),
+              const SizedBox(height: 25),
+
+              const Text(
+                'Manajemen Akun',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: headingDark,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              _buildAccountManagement(),
+
               const SizedBox(height: 15),
             ],
           ),
@@ -741,89 +755,66 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   // ACCOUNT MANAGEMENT CARD
   // ===============================================================
 
-  Widget _buildAccountManagementCard() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const AdminAccountManagementScreen(),
+  Widget _buildAccountManagement() {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _buildContentCard(
+              icon: Icons.medical_services_rounded,
+              title: 'Dokter',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminAccountManagementScreen(
+                      initialTab: 'dokter',
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFE1C8),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.manage_accounts_rounded,
-                size: 30,
-                color: Color(0xFFB05039),
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Manajemen Akun',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF251814),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: _buildContentCard(
+              icon: Icons.people_alt_rounded, 
+              title: 'Pengguna',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminAccountManagementScreen(
+                      initialTab: 'pengguna',
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Kelola data admin, profil, dan pengaturan akun',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 13,
-                      height: 1,
-                      color: Color(0xFF6B5147),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: _buildContentCard(
+              icon: Icons.admin_panel_settings_rounded,
+              title: 'Admin',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminAccountManagementScreen(
+                      initialTab: 'admin',
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
-            const SizedBox(width: 8),
-            Container(
-              width: 33,
-              height: 33,
-              decoration: const BoxDecoration(
-                color: Color(0xFFB05039),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.chevron_right_rounded,
-                size: 22,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
