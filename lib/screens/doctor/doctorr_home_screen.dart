@@ -10,6 +10,7 @@ import 'doctor_notification_screen.dart';
 import 'doctor_patient_chat_screen.dart';
 import 'doctor_patients_screen.dart';
 import 'doctor_profile_screen.dart';
+import 'doctor_schedule_screen.dart';
 
 import '../notification_screen.dart';
 
@@ -224,6 +225,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                   const SizedBox(height: 18),
                   _buildGreeting(unreadCount),
                   const SizedBox(height: 18),
+                  _buildPracticeSchedule(),
+                  const SizedBox(height: 18),
                   _buildStatistics(consultations, unreadCount),
                   const SizedBox(height: 25),
                   _buildRecentMessages(consultations),
@@ -240,6 +243,309 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       ),
     );
   }
+
+
+
+Widget _buildPracticeSchedule() {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) return const SizedBox.shrink();
+
+  const List<String> dayNames = [
+    'Senin',
+    'Selasa',
+    'Rabu',
+    'Kamis',
+    'Jumat',
+    'Sabtu',
+    'Minggu',
+  ];
+
+  const List<String> monthNames = [
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
+  ];
+
+  final now = DateTime.now();
+  final String today = dayNames[now.weekday - 1];
+
+  final String formattedDate =
+      '${now.day} ${monthNames[now.month - 1]} ${now.year}';
+
+  return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+    stream: FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .snapshots(),
+    builder: (context, snapshot) {
+      final data = snapshot.data?.data() ?? {};
+      final scheduleData = data['doctorSchedule'];
+
+      String practiceTime = 'Belum diatur';
+      String duration = '30 Menit';
+      bool hasSchedule = false;
+
+      if (scheduleData is Map) {
+        final todayData = scheduleData[today];
+
+        if (todayData is Map && todayData['active'] == true) {
+          final String start =
+              (todayData['start'] ?? '').toString();
+
+          final String end =
+              (todayData['end'] ?? '').toString();
+
+          final dynamic durationValue =
+              todayData['durationMinutes'] ??
+              scheduleData['durationMinutes'] ??
+              data['durationMinutes'];
+
+          if (start.isNotEmpty && end.isNotEmpty) {
+            practiceTime =
+                '${start.replaceAll(':', '.')} - '
+                '${end.replaceAll(':', '.')}';
+
+            if (durationValue != null) {
+              duration = '$durationValue Menit';
+            }
+
+            hasSchedule = true;
+          }
+        }
+      }
+
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFE9DE),
+          borderRadius: BorderRadius.circular(27),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 7,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // HEADER JADWAL PRAKTIK
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 15),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFFB05039),
+                    Color(0xFFD1846B),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(27),
+                  topRight: Radius.circular(27),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_month_rounded,
+                    color: Colors.white,
+                    size: 25,
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Jadwal Praktik',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const DoctorScheduleScreen(),
+                        ),
+                      );
+                    },
+                    child: const Row(
+                      children: [
+                        Text(
+                          'Lihat Semua',
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: Colors.white,
+                          size: 21,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // KARTU HARI DAN JAM PRAKTIK
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 17,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFCFA),
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 7,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // HARI DAN TANGGAL
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      children: [
+                        Text(
+                          today,
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 19,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF2F211D),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          formattedDate,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF77706C),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // GARIS PEMBATAS
+                  Container(
+                    width: 1,
+                    height: 65,
+                    color: const Color(0xFFE5DAD4),
+                  ),
+
+                  // JAM DAN DURASI
+                  Expanded(
+                    flex: 6,
+                    child: Column(
+                      children: [
+                        Text(
+                          hasSchedule
+                              ? practiceTime
+                              : 'Tidak ada jadwal',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF30231F),
+                          ),
+                        ),
+                        const SizedBox(height: 9),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 9,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFE1D2),
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: Text(
+                            hasSchedule
+                                ? duration
+                                : 'Belum tersedia',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFFB05039),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // KETERANGAN BAGIAN BAWAH
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 13),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 19,
+                    color: Color(0xFFB05039),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      hasSchedule
+                          ? 'Hari lainnya belum diatur'
+                          : 'Jadwal praktik hari ini belum diatur',
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF493C37),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   // ===============================================================
   // HEADER

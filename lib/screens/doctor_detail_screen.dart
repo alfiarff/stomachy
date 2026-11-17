@@ -202,7 +202,7 @@ void _watchBookedSlots() {
   _bookingSubscription?.cancel();
 
   _bookingSubscription = FirebaseFirestore.instance
-      .collection('consultations')
+      .collection('consultation_slots')
       .where('doctorId', isEqualTo: widget.doctor.id)
       .snapshots()
       .listen(
@@ -943,122 +943,100 @@ Widget _buildTimeGrid() {
   // ===============================================================
   // BUAT BOOKING DENGAN STATUS BOOKED DAN CEK SLOT TANPA COMPOSITE INDEX
 
-  Future<void> _createBooking() async {
-    if (_selectedDay == null || _selectedTime == null) return;
-    if (_bookedSlots.contains('$_selectedDay|$_selectedTime')) {
-  _showMessage('Jadwal ini sudah dibooking pasien lain.');
-  setState(() {
-    _selectedTime = null;
-  });
-  return;
-}
-    final User? user = FirebaseAuth.instance.currentUser;
+  
+Future<void> _createBooking() async {
+  if (_selectedDay == null || _selectedTime == null) return;
+  if (_isCreatingConsultation) return;
 
-    if (user == null) {
-      _showMessage('Silakan login terlebih dahulu.');
-      return;
-    }
+  final String selectedDay = _selectedDay!;
+  final String selectedTime = _selectedTime!;
 
-    if (_isCreatingConsultation) return;
-
-    setState(() => _isCreatingConsultation = true);
-
-    try {
-      final DateTime consultationDate = _getNextOccurrence(
-        _selectedDay!,
-        _selectedTime!,
-      );
-      final Timestamp selectedTimestamp = Timestamp.fromDate(consultationDate);
-
-      final firestore = FirebaseFirestore.instance;
-
-      // Cek booking milik pengguna yang sedang login.
-      final userBookings = await firestore
-          .collection('consultations')
-          .where('userId', isEqualTo: user.uid)
-          .get();
-
-      final bool duplicate = userBookings.docs.any((doc) {
-        final data = doc.data();
-        final status = (data['status'] ?? '').toString().toLowerCase();
-        final ts = data['consultationTimestamp'];
-
-        return data['doctorId']?.toString() == widget.doctor.id &&
-            (status == 'booked' || status == 'active') &&
-            ts is Timestamp &&
-            ts.toDate().isAtSameMomentAs(consultationDate);
-      });
-
-      if (duplicate) {
-        if (!mounted) return;
-        setState(() => _isCreatingConsultation = false);
-        _showMessage('Kamu sudah memiliki booking pada jadwal ini.');
-        return;
-      }
-
-      // Ambil data pengguna.
-      final userDocument = await firestore
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      final userData = userDocument.data() ?? {};
-
-      final String userName = (userData['name'] ?? user.displayName ?? 'Pasien')
-          .toString()
-          .trim();
-
-      final String doctorName = _getDoctorValue('name', widget.doctor.name);
-      final String specialty = _getDoctorValue(
-        'specialization',
-        widget.doctor.specialty,
-      );
-      final String doctorImage =
-          widget.doctor.photoBase64 ?? widget.doctor.photoUrl ?? '';
-          // Cek apakah jadwal dokter sudah dibooking pasien lain.
-final existingDoctorBookings = await firestore
-    .collection('consultations')
-    .where('doctorId', isEqualTo: widget.doctor.id)
-    .get();
-
-final bool slotAlreadyTaken = existingDoctorBookings.docs.any((doc) {
-  final data = doc.data();
-  final status = (data['status'] ?? '').toString().toLowerCase();
-  final timestamp = data['consultationTimestamp'];
-
-  return (status == 'booked' || status == 'active') &&
-      timestamp is Timestamp &&
-      timestamp.toDate().isAtSameMomentAs(consultationDate);
-});
-
-if (slotAlreadyTaken) {
-  if (mounted) {
-    setState(() {
-      _isCreatingConsultation = false;
-      _selectedTime = null;
-    });
+  if (_bookedSlots.contains('$selectedDay|$selectedTime')) {
+    _showMessage('Jadwal ini sudah dibooking pasien lain.');
+    setState(() => _selectedTime = null);
+    return;
   }
 
-  _showMessage('Maaf, jadwal ini sudah dibooking pasien lain.');
-  _watchBookedSlots();
-  return;
-}
+  final User? user = FirebaseAuth.instance.currentUser;
 
-      // Simpan booking.
-      final consultationReference = firestore.collection('consultations').doc();
+  if (user == null) {
+    _showMessage('Silakan login terlebih dahulu.');
+    return;
+  }
 
-      await consultationReference.set({
+  setState(() => _isCreatingConsultation = true);
+
+  try {
+    final DateTime consultationDate =
+        _getNextOccurrence(selectedDay, selectedTime);
+
+    final String date =
+        '${consultationDate.year.toString().padLeft(4, '0')}-'
+        '${consultationDate.month.toString().padLeft(2, '0')}-'
+        '${consultationDate.day.toString().padLeft(2, '0')}';
+
+    final Timestamp selectedTimestamp =
+        Timestamp.fromDate(consultationDate);
+
+    final firestore = FirebaseFirestore.instance;
+
+    final userDocument = await firestore
+        .collection('users')
+        .doc(user.uid)
+        .get();
+
+    final userData = userDocument.data() ?? {};
+
+    final String userName =
+        (userData['name'] ?? user.displayName ?? 'Pasien')
+            .toString()
+            .trim();
+
+    final String doctorName =
+        _getDoctorValue('name', widget.doctor.name);
+
+    final String specialty = _getDoctorValue(
+      'specialization',
+      widget.doctor.specialty,
+    );
+
+    final String doctorImage =
+        widget.doctor.photoBase64 ??
+        widget.doctor.photoUrl ??
+        '';
+
+    // Referensi dokumen konsultasi.
+    final consultationReference =
+        firestore.collection('consultations').doc();
+
+    // ID unik berdasarkan dokter, tanggal, dan jam.
+    final String slotId =
+        '${widget.doctor.id}_${date}_'
+        '${selectedTime.replaceAll('.', '-')}';
+
+    final slotReference =
+        firestore.collection('consultation_slots').doc(slotId);
+
+    // Transaksi untuk mengunci slot dan menyimpan booking.
+    await firestore.runTransaction((transaction) async {
+      final slotSnapshot = await transaction.get(slotReference);
+
+      // Jika slot sudah ada, booking ditolak.
+      if (slotSnapshot.exists) {
+        throw StateError('SLOT_ALREADY_BOOKED');
+      }
+
+      // Simpan data konsultasi.
+      transaction.set(consultationReference, {
         'userId': user.uid,
         'doctorId': widget.doctor.id,
         'userName': userName.isEmpty ? 'Pasien' : userName,
         'doctorName': doctorName,
         'specialty': specialty,
         'doctorImage': doctorImage,
-        'consultationDay': _selectedDay,
-        'consultationTime': _selectedTime,
-        'consultationDate':
-            '${consultationDate.year.toString().padLeft(4, '0')}-'
-            '${consultationDate.month.toString().padLeft(2, '0')}-'
-            '${consultationDate.day.toString().padLeft(2, '0')}',
+        'consultationDay': selectedDay,
+        'consultationTime': selectedTime,
+        'consultationDate': date,
         'consultationTimestamp': selectedTimestamp,
         'status': 'booked',
         'createdAt': FieldValue.serverTimestamp(),
@@ -1069,31 +1047,71 @@ if (slotAlreadyTaken) {
         'unreadForUser': 0,
       });
 
-      // Buat notifikasi.
-      try {
-        await AppNotification.create(
-          uid: user.uid,
-          type: 'consultation',
-          title: 'Booking Berhasil',
-          body:
-              'Konsultasi dengan $doctorName pada $_selectedDay, $_selectedTime WIB berhasil dibuat.',
-        );
-      } catch (e) {
-        debugPrint('Notifikasi booking gagal: $e');
+      // Kunci slot agar tidak dapat dipesan pasien lain.
+      transaction.set(slotReference, {
+        'doctorId': widget.doctor.id,
+        'consultationDay': selectedDay,
+        'consultationTime': selectedTime,
+        'consultationDate': date,
+        'consultationTimestamp': selectedTimestamp,
+        'consultationId': consultationReference.id,
+        'status': 'booked',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
+
+    // Buat notifikasi setelah transaksi berhasil.
+    try {
+      await AppNotification.create(
+        uid: user.uid,
+        type: 'consultation',
+        title: 'Booking Berhasil',
+        body:
+            'Konsultasi dengan $doctorName pada '
+            '$selectedDay, $selectedTime WIB berhasil dibuat.',
+      );
+    } catch (e) {
+      debugPrint('Notifikasi booking gagal: $e');
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _isCreatingConsultation = false;
+    });
+
+    _showBookingSuccessDialog();
+
+  } catch (e, stackTrace) {
+    debugPrint('ERROR BOOKING: $e');
+    debugPrintStack(stackTrace: stackTrace);
+
+    if (!mounted) return;
+
+    final bool alreadyBooked =
+        e.toString().contains('SLOT_ALREADY_BOOKED');
+
+    setState(() {
+      _isCreatingConsultation = false;
+
+      if (alreadyBooked) {
+        _selectedTime = null;
       }
+    });
 
-      if (!mounted) return;
-      setState(() => _isCreatingConsultation = false);
-      _showBookingSuccessDialog();
-    } catch (e, stackTrace) {
-      debugPrint('ERROR BOOKING: $e');
-      debugPrintStack(stackTrace: stackTrace);
-
-      if (!mounted) return;
-      setState(() => _isCreatingConsultation = false);
+    if (alreadyBooked) {
+      _showMessage(
+        'Maaf, jadwal ini sudah dibooking pasien lain.',
+      );
+      _watchBookedSlots();
+    } else if (e is FirebaseException &&
+        e.code == 'permission-denied') {
+      _showMessage('Akses Firebase ditolak.');
+    } else {
       _showMessage('Booking gagal: $e');
     }
   }
+}
 
   DateTime _getNextOccurrence(String dayName, String timeStr) {
     final now = DateTime.now();

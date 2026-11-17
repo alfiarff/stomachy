@@ -336,7 +336,7 @@ setState(() {
           ),
           const Center(
             child: Text(
-              'Jadwal Konsultasi',
+              'Jadwal Praktik',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Fredoka',
