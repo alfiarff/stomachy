@@ -63,10 +63,11 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
             final dynamic rawDay = rawSchedule[day];
 
             if (rawDay is Map) {
-              loadedSchedule[day] = {
+                loadedSchedule[day] = {
                 'active': rawDay['active'] == true,
                 'start': rawDay['start']?.toString() ?? '08:00',
                 'end': rawDay['end']?.toString() ?? '16:00',
+                'durationMinutes': rawDay['durationMinutes'] ?? 60,
               };
             }
           }
@@ -181,7 +182,12 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
 
   Map<String, dynamic> _getDayData(String day) {
     return _schedule[day] ??
-        {'active': false, 'start': '08:00', 'end': '16:00'};
+        {
+          'active': false,
+          'start': '08:00',
+          'end': '16:00',
+          'durationMinutes': 60,
+        };
   }
 
   void _toggleDay(String day, bool value) {
@@ -231,15 +237,40 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
 
     final String minute = selectedTime.minute.toString().padLeft(2, '0');
 
-    final Map<String, dynamic> updated = Map<String, dynamic>.from(current);
+   final Map<String, dynamic> updated =
+    Map<String, dynamic>.from(current);
 
-    updated[isStart ? 'start' : 'end'] = '$hour:$minute';
+updated[isStart ? 'start' : 'end'] = '$hour:$minute';
 
-    setState(() {
-      _schedule[day] = updated;
-    });
-  }
+int toMinutes(String time) {
+  final parts = time.split(':');
 
+  return (int.parse(parts[0]) * 60) +
+      int.parse(parts[1]);
+}
+
+final int startMinutes = toMinutes(updated['start']);
+final int endMinutes = toMinutes(updated['end']);
+
+if (endMinutes <= startMinutes) {
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        'Jam selesai harus lebih besar dari jam mulai.',
+      ),
+    ),
+  );
+
+  return;
+}
+
+setState(() {
+  _schedule[day] = updated;
+});
+
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -389,6 +420,9 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
     final String start = data['start']?.toString() ?? '08:00';
     final String end = data['end']?.toString() ?? '16:00';
 
+    final int durationMinutes =
+    (data['durationMinutes'] as num?)?.toInt() ?? 60;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 13),
@@ -465,6 +499,13 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
                 ),
               ],
             ),
+
+                      const SizedBox(height: 14),
+
+          _buildDurationSelector(
+            day: day,
+            selectedDuration: durationMinutes,
+          ),
           ] else ...[
             const SizedBox(height: 2),
             const Align(
@@ -483,6 +524,86 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
       ),
     );
   }
+
+Widget _buildDurationSelector({
+  required String day,
+  required int selectedDuration,
+}) {
+  const List<int> durations = [60, 30, 15];
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Durasi Konsultasi',
+        style: TextStyle(
+          fontFamily: 'Nunito',
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: Colors.black,
+        ),
+      ),
+      const SizedBox(height: 9),
+      Row(
+        children: durations.map((int duration) {
+          final bool isSelected = selectedDuration == duration;
+
+          final String label =
+              duration == 60 ? '1 Jam' : '$duration Menit';
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 7),
+              child: GestureDetector(
+                onTap: () {
+                  final Map<String, dynamic> updated =
+                      Map<String, dynamic>.from(_getDayData(day));
+
+                  updated['durationMinutes'] = duration;
+
+                  setState(() {
+                    _schedule[day] = updated;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 11,
+                    horizontal: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? brown
+                        : const Color(0xFFFFF8F4),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isSelected
+                          ? brown
+                          : const Color(0xFFF0D9CC),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    ],
+  );
+}
 
   Widget _buildTimeButton({
     required String label,

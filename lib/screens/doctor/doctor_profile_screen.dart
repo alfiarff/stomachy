@@ -615,7 +615,7 @@ if (firestorePhotoUrl != null &&
 
               const SizedBox(width: 5),
 
-              const Icon(Icons.chevron_right_rounded, size: 23, color: brown),
+              const Icon(Icons.chevron_right_rounded, size: 23, color: Colors.black,),
             ],
           ),
         ),

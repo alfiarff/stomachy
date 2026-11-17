@@ -46,12 +46,18 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   ];
   String? _selectedDay;
   String? _selectedTime;
-  @override
+ @override
 void dispose() {
   _doctorDataSubscription?.cancel();
+  _bookingSubscription?.cancel();
   super.dispose();
 }
   List<DoctorScheduleSlot> _scheduleSlots = [];
+  Set<String> _bookedSlots = {};
+
+StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+    _bookingSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -118,89 +124,191 @@ Future<void> _loadDoctorData() async {
   // ===============================================================
   // LOAD JADWAL DOKTER
   // ===============================================================
-  void _loadDoctorSchedule(Map<String, dynamic> data) {
-    final dynamic scheduleData = data['doctorSchedule'];
-    if (scheduleData is! Map) {
-      setState(() => _scheduleSlots = []);
-      return;
-    }
-    final List<DoctorScheduleSlot> slots = [];
-    for (final String day in _days) {
-      final dynamic dayData = scheduleData[day];
-      if (dayData is! Map) continue;
-      final bool active = dayData['active'] == true;
-      if (!active) continue;
-      final String start = (dayData['start'] ?? '').toString().trim();
-      final String end = (dayData['end'] ?? '').toString().trim();
-      if (start.isEmpty || end.isEmpty) continue;
-      final List<String> times = _generateTimeSlots(start, end);
-      for (final String time in times) {
-        slots.add(DoctorScheduleSlot(day: day, time: time));
-      }
-    }
-if (!mounted) return;
+void _loadDoctorSchedule(Map<String, dynamic> data) {
+  final dynamic scheduleData = data['doctorSchedule'];
 
-setState(() {
-  _scheduleSlots = slots;
+ if (scheduleData is! Map) {
+  _bookingSubscription?.cancel();
 
-  // Hapus pilihan hari jika dokter sudah menonaktifkannya.
-  if (_selectedDay != null &&
-      !slots.any((slot) => slot.day == _selectedDay)) {
+  setState(() {
+    _scheduleSlots = [];
+    _bookedSlots = {};
     _selectedDay = null;
     _selectedTime = null;
-  }
+  });
 
-  // Hapus pilihan jam jika jam tersebut sudah tidak tersedia.
-  if (_selectedDay != null &&
-      _selectedTime != null &&
-      !slots.any(
-        (slot) =>
-            slot.day == _selectedDay &&
-            slot.time == _selectedTime,
-      )) {
-    _selectedTime = null;
-  }
-});
-  }
+  return;
+}
 
-  List<String> _generateTimeSlots(String start, String end) {
-    final int? startMinutes = _timeToMinutes(start);
-    final int? endMinutes = _timeToMinutes(end);
-    if (startMinutes == null ||
-        endMinutes == null ||
-        startMinutes >= endMinutes)
-      return [];
-    final List<String> slots = [];
-    int current = startMinutes;
-    while (current < endMinutes) {
-      slots.add(_minutesToTime(current));
-      current += 60;
+  final List<DoctorScheduleSlot> slots = [];
+
+  for (final String day in _days) {
+    final dynamic dayData = scheduleData[day];
+
+    if (dayData is! Map) continue;
+
+    final bool active = dayData['active'] == true;
+    if (!active) continue;
+
+    final String start = (dayData['start'] ?? '').toString().trim();
+    final String end = (dayData['end'] ?? '').toString().trim();
+
+    final int durationMinutes =
+        (dayData['durationMinutes'] as num?)?.toInt() ?? 60;
+
+    if (start.isEmpty || end.isEmpty) continue;
+
+    final List<String> times = _generateTimeSlots(
+      start,
+      end,
+      durationMinutes,
+    );
+
+    for (final String time in times) {
+      slots.add(DoctorScheduleSlot(
+        day: day,
+        time: time,
+      ));
     }
-    return slots;
   }
 
-  int? _timeToMinutes(String value) {
-    final normalized = value.replaceAll('.', ':');
-    final parts = normalized.split(':');
-    if (parts.length != 2) return null;
-    final int? hour = int.tryParse(parts[0]);
-    final int? minute = int.tryParse(parts[1]);
-    if (hour == null ||
-        minute == null ||
-        hour < 0 ||
-        hour > 23 ||
-        minute < 0 ||
-        minute > 59)
-      return null;
-    return (hour * 60) + minute;
+  if (!mounted) return;
+
+  setState(() {
+    _scheduleSlots = slots;
+
+    if (_selectedDay != null &&
+        !slots.any((slot) => slot.day == _selectedDay)) {
+      _selectedDay = null;
+      _selectedTime = null;
+    }
+
+    if (_selectedDay != null &&
+        _selectedTime != null &&
+        !slots.any(
+          (slot) =>
+              slot.day == _selectedDay &&
+              slot.time == _selectedTime,
+        )) {
+      _selectedTime = null;
+    }
+  });
+
+  _watchBookedSlots();
+}
+
+void _watchBookedSlots() {
+  _bookingSubscription?.cancel();
+
+  _bookingSubscription = FirebaseFirestore.instance
+      .collection('consultations')
+      .where('doctorId', isEqualTo: widget.doctor.id)
+      .snapshots()
+      .listen(
+    (snapshot) {
+      final Set<String> booked = {};
+
+      for (final slot in _scheduleSlots) {
+        final DateTime consultationDate = _getNextOccurrence(
+          slot.day,
+          slot.time,
+        );
+
+        final String date =
+            '${consultationDate.year.toString().padLeft(4, '0')}-'
+            '${consultationDate.month.toString().padLeft(2, '0')}-'
+            '${consultationDate.day.toString().padLeft(2, '0')}';
+
+        for (final doc in snapshot.docs) {
+          final data = doc.data();
+
+          final String status =
+              (data['status'] ?? '').toString().toLowerCase();
+
+          final bool isBooked =
+              status == 'booked' || status == 'active';
+
+          if (isBooked &&
+              data['consultationDay'] == slot.day &&
+              data['consultationTime'] == slot.time &&
+              data['consultationDate'] == date) {
+            booked.add('${slot.day}|${slot.time}');
+            break;
+          }
+        }
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _bookedSlots = booked;
+
+        if (_selectedDay != null && _selectedTime != null) {
+          if (_bookedSlots.contains('$_selectedDay|$_selectedTime')) {
+            _selectedTime = null;
+          }
+        }
+      });
+    },
+    onError: (error) {
+      debugPrint('Gagal memantau booking: $error');
+    },
+  );
+}
+
+int? _timeToMinutes(String time) {
+  final parts = time.replaceAll('.', ':').split(':');
+
+  if (parts.length != 2) return null;
+
+  final int? hour = int.tryParse(parts[0]);
+  final int? minute = int.tryParse(parts[1]);
+
+  if (hour == null ||
+      minute == null ||
+      hour < 0 ||
+      hour > 23 ||
+      minute < 0 ||
+      minute > 59) {
+    return null;
   }
 
-  String _minutesToTime(int minutes) {
-    final int hour = minutes ~/ 60;
-    final int minute = minutes % 60;
-    return '${hour.toString().padLeft(2, '0')}.${minute.toString().padLeft(2, '0')}';
+  return hour * 60 + minute;
+}
+
+String _minutesToTime(int minutes) {
+  final int hour = minutes ~/ 60;
+  final int minute = minutes % 60;
+
+  return '${hour.toString().padLeft(2, '0')}.'
+      '${minute.toString().padLeft(2, '0')}';
+}
+
+List<String> _generateTimeSlots(
+  String start,
+  String end,
+  int durationMinutes,
+) {
+  final int? startMinutes = _timeToMinutes(start);
+  final int? endMinutes = _timeToMinutes(end);
+
+  if (startMinutes == null ||
+      endMinutes == null ||
+      startMinutes >= endMinutes ||
+      durationMinutes <= 0) {
+    return [];
   }
 
+  final List<String> slots = [];
+  int current = startMinutes;
+
+  while (current + durationMinutes <= endMinutes) {
+    slots.add(_minutesToTime(current));
+    current += durationMinutes;
+  }
+
+  return slots;
+}
   // ===============================================================
   // NAVIGATION
   // ===============================================================
@@ -699,66 +807,92 @@ setState(() {
     );
   }
 
-  Widget _buildTimeGrid() {
-    final daySlots = _scheduleSlots
-        .where((slot) => slot.day == _selectedDay)
-        .toList();
-    if (daySlots.isEmpty) {
-      return const Text(
-        'Tidak ada jadwal pada hari ini.',
-        style: TextStyle(
-          fontFamily: 'Nunito',
-          fontSize: 11,
-          color: Color(0xFF777777),
-        ),
-      );
-    }
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: daySlots.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 10,
-        childAspectRatio: 2.7,
+Widget _buildTimeGrid() {
+  final daySlots = _scheduleSlots
+      .where((slot) => slot.day == _selectedDay)
+      .toList();
+
+  if (daySlots.isEmpty) {
+    return const Text(
+      'Tidak ada jadwal pada hari ini.',
+      style: TextStyle(
+        fontFamily: 'Nunito',
+        fontSize: 11,
+        color: Color(0xFF777777),
       ),
-      itemBuilder: (context, index) {
-        final String time = daySlots[index].time;
-        final bool isSelected = _selectedTime == time;
-        return GestureDetector(
-          onTap: () => setState(() => _selectedTime = time),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            decoration: BoxDecoration(
-              color: isSelected ? primaryBrown : const Color(0xFFFFFCFA),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: borderBrown, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                time,
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : Colors.black,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 
+  return GridView.builder(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    itemCount: daySlots.length,
+    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 3,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 10,
+      childAspectRatio: 2.7,
+    ),
+    itemBuilder: (context, index) {
+      final String time = daySlots[index].time;
+      final bool isSelected = _selectedTime == time;
+
+      final bool isBooked =
+          _bookedSlots.contains('$_selectedDay|$time');
+
+      return GestureDetector(
+        onTap: isBooked
+            ? null
+            : () {
+                setState(() {
+                  _selectedTime = time;
+                });
+              },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          decoration: BoxDecoration(
+            color: isBooked
+                ? const Color(0xFFE5E1DE)
+                : isSelected
+                    ? primaryBrown
+                    : const Color(0xFFFFFCFA),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isBooked
+                  ? const Color(0xFFD2CCC7)
+                  : borderBrown,
+              width: 1,
+            ),
+            boxShadow: isBooked
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+          ),
+          child: Center(
+            child: Text(
+              time,
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isBooked
+                    ? const Color(0xFF88817C)
+                    : isSelected
+                        ? Colors.white
+                        : Colors.black,
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
   // ===============================================================
   // BUTTON BOOKING
   // ===============================================================
@@ -793,21 +927,15 @@ setState(() {
                     color: Colors.white,
                   ),
                 )
-              : const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Booking',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(Icons.calendar_today_rounded, size: 18),
-                  ],
-                ),
+              : const Text(
+    'Booking',
+    textAlign: TextAlign.center,
+    style: TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+    ),
+  ),
         ),
       ),
     );
@@ -819,7 +947,13 @@ setState(() {
 
   Future<void> _createBooking() async {
     if (_selectedDay == null || _selectedTime == null) return;
-
+    if (_bookedSlots.contains('$_selectedDay|$_selectedTime')) {
+  _showMessage('Jadwal ini sudah dibooking pasien lain.');
+  setState(() {
+    _selectedTime = null;
+  });
+  return;
+}
     final User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
