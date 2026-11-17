@@ -245,7 +245,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   }
 
 
-
 Widget _buildPracticeSchedule() {
   final user = FirebaseAuth.instance.currentUser;
 
@@ -326,13 +325,14 @@ Widget _buildPracticeSchedule() {
 
       return Container(
         width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFE9DE),
+          color: const Color(0xFFFFEEE5),
           borderRadius: BorderRadius.circular(27),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 7,
+              color: Colors.black.withOpacity(0.07),
+              blurRadius: 8,
               offset: const Offset(0, 3),
             ),
           ],
@@ -340,90 +340,67 @@ Widget _buildPracticeSchedule() {
         child: Column(
           children: [
             // HEADER JADWAL PRAKTIK
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(18, 14, 18, 15),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFB05039),
-                    Color(0xFFD1846B),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(27),
-                  topRight: Radius.circular(27),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_month_rounded,
-                    color: Colors.white,
-                    size: 25,
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Jadwal Praktik',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Jadwal Praktik',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const DoctorScheduleScreen(),
                       ),
-                    ),
+                    );
+                  },
+                  child: const Row(
+                    children: [
+                      Text(
+                        'Lihat Semua',
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                       color: Colors.black,
+                        size: 22,
+                      ),
+                    ],
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const DoctorScheduleScreen(),
-                        ),
-                      );
-                    },
-                    child: const Row(
-                      children: [
-                        Text(
-                          'Lihat Semua',
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          color: Colors.white,
-                          size: 21,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
 
-            // KARTU HARI DAN JAM PRAKTIK
+            const SizedBox(height: 14),
+
+            // KARTU HARI, TANGGAL, DAN JAM
             Container(
               width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(12, 0, 12, 0),
               padding: const EdgeInsets.symmetric(
                 horizontal: 12,
-                vertical: 17,
+                vertical: 19,
               ),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFFCFA),
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 7,
+                    color: Colors.black.withOpacity(0.10),
+                    blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),
                 ],
@@ -432,16 +409,17 @@ Widget _buildPracticeSchedule() {
                 children: [
                   // HARI DAN TANGGAL
                   Expanded(
-                    flex: 5,
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           today,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontFamily: 'Nunito',
                             fontSize: 19,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFF2F211D),
+                            color: Color(0xFF30231F),
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -459,17 +437,17 @@ Widget _buildPracticeSchedule() {
                     ),
                   ),
 
-                  // GARIS PEMBATAS
+                  // GARIS PEMBATAS TENGAH
                   Container(
-                    width: 1,
+                    width: 1.5,
                     height: 65,
                     color: const Color(0xFFE5DAD4),
                   ),
 
                   // JAM DAN DURASI
                   Expanded(
-                    flex: 6,
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           hasSchedule
@@ -487,10 +465,10 @@ Widget _buildPracticeSchedule() {
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
-                            vertical: 9,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFE1D2),
+                            color: const Color(0xFFFFE3D1),
                             borderRadius: BorderRadius.circular(25),
                           ),
                           child: Text(
@@ -512,34 +490,6 @@ Widget _buildPracticeSchedule() {
                 ],
               ),
             ),
-
-            // KETERANGAN BAGIAN BAWAH
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 13),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.info_outline_rounded,
-                    size: 19,
-                    color: Color(0xFFB05039),
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Text(
-                      hasSchedule
-                          ? 'Hari lainnya belum diatur'
-                          : 'Jadwal praktik hari ini belum diatur',
-                      style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF493C37),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       );
@@ -549,12 +499,6 @@ Widget _buildPracticeSchedule() {
 
   // ===============================================================
   // HEADER
-  //
-  // Lonceng notifikasi memakai widget _DoctorNotificationBell
-  // yang angka badge-nya dihitung dari AppNotification
-  // (sumber yang sama dengan halaman notifikasi dokter),
-  // BUKAN dari unreadForDoctor. Supaya badge dan isi halaman
-  // notifikasi selalu konsisten.
   // ===============================================================
 
   Widget _buildHeader() {
@@ -927,14 +871,14 @@ Row(
               fontFamily: 'Nunito',
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Color(0xFFAA4E39),
+              color: Colors.black,
             ),
           ),
           SizedBox(width: 2),
           Icon(
             Icons.chevron_right_rounded,
             size: 19,
-            color: Color(0xFFAA4E39),
+            color: Colors.black,
           ),
         ],
       ),

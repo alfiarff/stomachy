@@ -203,7 +203,7 @@ if (firestorePhotoUrl != null &&
         }
 
         if (!name.toLowerCase().startsWith('dr.')) {
-          name = 'Dr. $name';
+          name = 'dr. $name';
         }
 
         return _buildProfileHeaderContent(
@@ -397,26 +397,6 @@ if (firestorePhotoUrl != null &&
 
               MaterialPageRoute(
                 builder: (context) => const DoctorPersonalInformationScreen(),
-              ),
-            );
-          },
-        ),
-
-        const SizedBox(height: 14),
-
-        _buildProfileMenuCard(
-          icon: Icons.calendar_month_outlined,
-
-          title: 'Jadwal Dokter',
-
-          subtitle: 'Atur jadwal praktik dokter',
-
-          onTap: () {
-            Navigator.push(
-              context,
-
-              MaterialPageRoute(
-                builder: (context) => const DoctorScheduleScreen(),
               ),
             );
           },
