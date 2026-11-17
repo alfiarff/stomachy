@@ -129,21 +129,34 @@ class ScreeningDataDiri extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFFCF9),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: const Color(0xFF8B817D),
                   ),
                 ),
-                child: Text(
-                  formattedBirthDate,
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    color: birthDate == null
-                        ? const Color(0xFF99918E)
-                        : Colors.black,
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        formattedBirthDate,
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: birthDate == null
+                              ? const Color(0xFF99918E)
+                              : Colors.black,
+                        ),
+                      ),
+                    ),
+
+                    const Icon(
+                      Icons.calendar_month_outlined,
+                      size: 22,
+                      color: Color(0xFFB05039),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -184,7 +197,7 @@ class ScreeningDataDiri extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3ECE7),
+                  color: const Color(0xFFEFEAE7),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: const Color(0xFFBDB3AE),
