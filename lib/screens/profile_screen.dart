@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,8 +17,6 @@ import '../services/notification_service.dart';
 import 'personal_information_screen.dart';
 import 'about_stomachy_screen.dart';
 import 'history_screen.dart';
-import 'food_recommendation_screen.dart';
-import 'sport_recommendation_screen.dart';
 import 'settings_screen.dart';
 import 'grafik_screen.dart';
 
@@ -363,44 +361,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const HistoryScreen()),
-            );
-          },
-        ),
-
-        const SizedBox(height: 14),
-
-        // ===========================================================
-        // REKOMENDASI OLAHRAGA
-        // ===========================================================
-        _buildProfileMenuCard(
-          icon: Icons.directions_bike_outlined,
-          title: 'Rekomendasi Olahraga',
-          subtitle: 'Pilihan olahraga untukmu',
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const RecommendationSportScreen(),
-              ),
-            );
-          },
-        ),
-
-        const SizedBox(height: 14),
-
-        // ===========================================================
-        // REKOMENDASI MAKANAN
-        // ===========================================================
-        _buildProfileMenuCard(
-          icon: Icons.local_drink_outlined,
-          title: 'Rekomendasi Makanan',
-          subtitle: 'Pilihan makanan untuk lambungmu',
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const FoodRecommendationScreen(),
-              ),
             );
           },
         ),

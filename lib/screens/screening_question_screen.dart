@@ -422,7 +422,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
           'Langkah $currentStep dari 4',
           style: const TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
             color: Colors.black,
           ),
@@ -505,7 +505,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
           title,
           style: const TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
@@ -517,7 +517,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
           subtitle,
           style: const TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 11,
+            fontSize: 12,
             color: Color(0xFF5C514C),
           ),
         ),
@@ -632,7 +632,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
             title,
             style: const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
               color: Color(0xFFB05039),
             ),
@@ -660,7 +660,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
               label,
               style: const TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 11,
+                fontSize: 12,
                 color: Colors.black,
               ),
             ),
@@ -672,7 +672,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
               value ?? '-',
               style: const TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 11,
+                fontSize: 12,
                 color: Colors.black,
               ),
             ),
@@ -708,7 +708,11 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
         width: 230,
         height: 40,
         child: ElevatedButton(
-          onPressed: currentStep == 4 ? _startAnalysis : _nextStep,
+        onPressed: currentStep == 4
+            ? _startAnalysis
+            : currentStep == 3 && !step3Complete
+                ? null
+                : _nextStep,
           style: ElevatedButton.styleFrom(
             backgroundColor: brown,
             foregroundColor: Colors.white,
@@ -722,7 +726,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
             currentStep == 4 ? 'Analisis Data Saya' : 'Lanjutkan',
             style: const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
           ),

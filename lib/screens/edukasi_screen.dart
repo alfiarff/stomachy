@@ -1,14 +1,15 @@
+
 import 'package:flutter/material.dart';
 
-import '../services/admin_content_service.dart';
 import '../widgets/bottom_navigation.dart';
-import '../widgets/stomachy_cover_image.dart';
 
 import 'home_screen.dart';
 import 'screening_screen.dart';
 import 'doctor_screen.dart';
 import 'profile_screen.dart';
-import 'user_content_detail_screen.dart';
+import 'pengetahuan_screen.dart';
+import 'food_recommendation_screen.dart';
+import 'sport_recommendation_screen.dart';
 
 class EdukasiScreen extends StatefulWidget {
   const EdukasiScreen({super.key});
@@ -18,14 +19,14 @@ class EdukasiScreen extends StatefulWidget {
 }
 
 class _EdukasiScreenState extends State<EdukasiScreen> {
-  final Color backgroundColor = const Color(0xFFFFF5EF);
-  final Color primaryBrown = const Color(0xFF493028);
-  final Color borderColor = const Color(0xFFFF806D);
-
   int _selectedIndex = 3;
 
+  final Color backgroundColor = const Color(0xFFFFF5EF);
+  final Color primaryBrown = const Color(0xFF493028);
+  final Color accentBrown = const Color(0xFFB9543A);
+
   void _onNavigationTap(int index) {
-    if (index == 3) return;
+    if (index == _selectedIndex) return;
 
     Widget? destination;
 
@@ -52,34 +53,56 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
     }
   }
 
-  String _getDescription(AdminContentItem item) {
-    // Prioritaskan ringkasan yang diisi admin saat membuat konten.
-    final summary = item.summary.trim();
-    if (summary.isNotEmpty) {
-      return summary;
-    }
+  void _openPage(Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    );
+  }
 
-    final content = item.content.trim();
+  // ===============================================================
+  // HEADER
+  // ===============================================================
 
-    if (content.isEmpty) {
-      return item.category.isNotEmpty
-          ? item.category
-          : 'Pelajari materi edukasi GERD.';
-    }
-
-    final firstParagraph = content
-        .split('\n')
-        .map((line) => line.trim())
-        .firstWhere(
-          (line) => line.isNotEmpty,
-          orElse: () => '',
-        );
-
-    if (firstParagraph.isEmpty) {
-      return 'Pelajari materi edukasi GERD.';
-    }
-
-    return firstParagraph;
+  Widget _buildHeader() {
+    return SizedBox(
+      height: 42,
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              Navigator.maybePop(context);
+            },
+            child: const SizedBox(
+              width: 45,
+              height: 42,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  size: 29,
+                  color: Color(0xFF171310),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: Text(
+                'Edukasi',
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: primaryBrown,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 45),
+        ],
+      ),
+    );
   }
 
   @override
@@ -91,135 +114,47 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.maybePop(context),
-                    child: const SizedBox(
-                      width: 42,
-                      height: 42,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Icon(
-                          Icons.arrow_back_rounded,
-                          size: 30,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        'Edukasi GERD',
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 42),
-                ],
-              ),
+              child: _buildHeader(),
             ),
+
             Expanded(
-              child: StreamBuilder<List<AdminContentItem>>(
-                stream: AdminContentService.getContentsStream('edukasi'),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFA9583C),
-                      ),
-                    );
-                  }
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 30),
+                child: Column(
+                  children: [
+                    _buildMenuCard(
+                      icon: Icons.menu_book_rounded,
+                      title: 'Pengetahuan GERD',
+                      subtitle: 'Pelajari informasi dan pengetahuan seputar GERD.',
+                      onTap: () {
+                        _openPage(const PengetahuanScreen());
+                      },
+                    ),
 
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.error_outline_rounded,
-                              size: 42,
-                              color: Color(0xFFB9543A),
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Edukasi gagal dimuat.',
-                              style: TextStyle(
-                                fontFamily: 'Nunito',
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Periksa koneksi dan aturan akses Firestore.\n'
-                              '${snapshot.error}',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontFamily: 'Nunito',
-                                fontSize: 12,
-                                color: Color(0xFF6B5147),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
+                    const SizedBox(height: 18),
 
-                  final items = snapshot.data ?? [];
+                    _buildMenuCard(
+                      icon: Icons.restaurant_rounded,
+                      title: 'Rekomendasi Makanan',
+                      subtitle: 'Temukan pilihan makanan yang baik untuk lambung.',
+                      onTap: () {
+                        _openPage(const FoodRecommendationScreen());
+                      },
+                    ),
 
-                  if (items.isEmpty) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.menu_book_outlined,
-                              size: 48,
-                              color: Color(0xFFB9543A),
-                            ),
-                            SizedBox(height: 12),
-                            Text(
-                              'Belum ada konten edukasi.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'Nunito',
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF493C37),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
+                    const SizedBox(height: 18),
 
-                  return ListView.separated(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 90),
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: 20),
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-
-                      return _buildEducationCard(
-                        item: item,
-                        description: _getDescription(item),
-                      );
-                    },
-                  );
-                },
+                    _buildMenuCard(
+                      icon: Icons.directions_run_rounded,
+                      title: 'Rekomendasi Olahraga',
+                      subtitle: 'Kenali pilihan olahraga yang sesuai untuk penderita GERD.',
+                      onTap: () {
+                        _openPage(const RecommendationSportScreen());
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -232,102 +167,88 @@ class _EdukasiScreenState extends State<EdukasiScreen> {
     );
   }
 
-  Widget _buildEducationCard({
-    required AdminContentItem item,
-    required String description,
+  Widget _buildMenuCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => UserContentDetailScreen(item: item),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 20,
           ),
-        );
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: double.infinity,
-        height: 130,
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFCFA),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.10),
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 90,
-              height: 90,
-              margin: const EdgeInsets.only(left: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFE9D9),
-                borderRadius: BorderRadius.circular(18),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFCFA),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.09),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                // Mendukung base64 (hasil simpan admin) / URL / asset
-                child: ClipRRect(
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 55,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFE9D9),
                   borderRadius: BorderRadius.circular(14),
-                  child: StomachyCoverImage(
-                    imageSrc: item.imageAsset,
-                    fit: BoxFit.cover,
-                    fallbackIcon: Icons.menu_book_rounded,
-                    fallbackIconSize: 38,
-                    fallbackColor: const Color(0xFFB9543A),
-                    fallbackBackgroundColor: const Color(0xFFFFE9D9),
-                  ),
+                ),
+                child: Icon(
+                  icon,
+                  size: 30,
+                  color: accentBrown,
                 ),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: primaryBrown,
+
+              const SizedBox(width: 14),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: primaryBrown,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 7),
-                  Text(
-                    description,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      height: 1.25,
-                      color: Color(0xFF39302C),
+                    const SizedBox(height: 5),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
+                        height: 1.4,
+                        color: Color(0xFF766D68),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(left: 5, right: 14),
-              child: Icon(
+
+              const SizedBox(width: 8),
+
+              const Icon(
                 Icons.chevron_right_rounded,
-                size: 30,
+                size: 27,
                 color: Colors.black,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:stomachy/widgets/stomachy_card.dart';
 
@@ -24,21 +25,24 @@ class ScreeningGejala extends StatelessWidget {
       children: [
         _buildFrequencyCard(
           title: 'Sesak napas',
-          question: 'Seberapa sering kamu merasakan sesak napas atau kesulitan saat bernapas?',
+          question:
+              'Seberapa sering kamu merasakan sesak napas atau kesulitan saat bernapas?',
         ),
 
         const SizedBox(height: 15),
 
         _buildFrequencyCard(
           title: 'Asam lambung naik',
-          question: 'Seberapa sering kamu merasakan asam atau rasa pahit naik ke tenggorokan?',
+          question:
+              'Seberapa sering kamu merasakan asam atau rasa pahit naik ke tenggorokan?',
         ),
 
         const SizedBox(height: 15),
 
         _buildFrequencyCard(
           title: 'Nyeri dada atau ulu hati',
-          question: 'Seberapa sering kamu merasakan nyeri atau tidak nyaman di dada atau ulu hati?',
+          question:
+              'Seberapa sering kamu merasakan nyeri atau tidak nyaman di dada atau ulu hati?',
         ),
       ],
     );
@@ -55,143 +59,132 @@ class ScreeningGejala extends StatelessWidget {
     return StomachyCard(
       color: cardColor,
       radius: 17,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 110),
-        child: Row(
-          children: [
-            Container(
-              width: 62,
-              height: 62,
-              alignment: Alignment.center,
-              child: symptomImages[title] != null
-                  ? Image.asset(
-                      symptomImages[title]!,
-                      width: 57,
-                      height: 57,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.image_not_supported_outlined,
-                          color: Color(0xFFB05039),
-                          size: 35,
-                        );
-                      },
-                    )
-                  : const Icon(
-                      Icons.image_not_supported_outlined,
-                      color: Color(0xFFB05039),
-                      size: 35,
-                    ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 17,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
             ),
+          ),
 
-            const SizedBox(width: 10),
+          const SizedBox(height: 5),
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ==================================================
-                  // JUDUL CARD
-                  // ==================================================
+          Text(
+            question,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              height: 1.3,
+              color: Color(0xFF8A7D76),
+            ),
+          ),
 
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black,
-                    ),
-                  ),
+          const SizedBox(height: 12),
 
-                  const SizedBox(height: 3),
-
-                  // ==================================================
-                  // ISI / PENJELASAN
-                  // ==================================================
-                  Text(
-                    question,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      height: 1.15,
-                      color: Color(0xFF766D68),
-                    ),
-                  ),
-
-                  const SizedBox(height: 7),
-
-                  Row(
-                    children: [
-                      _buildFrequencyButton(title: title, value: 'Tidak Ada'),
-
-                      const SizedBox(width: 7),
-
-                      _buildFrequencyButton(title: title, value: 'Harian'),
-
-                      const SizedBox(width: 7),
-
-                      _buildFrequencyButton(title: title, value: 'Mingguan'),
-
-                      const SizedBox(width: 7),
-
-                      _buildFrequencyButton(title: title, value: 'Bulanan'),
-                    ],
-                  ),
-                ],
+          // PILIHAN FREKUENSI VERTIKAL
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildFrequencyOption(
+                title: title,
+                value: 'Tidak Ada',
               ),
-            ),
-          ],
-        ),
+
+              const SizedBox(height: 9),
+
+              _buildFrequencyOption(
+                title: title,
+                value: 'Harian',
+              ),
+
+              const SizedBox(height: 9),
+
+              _buildFrequencyOption(
+                title: title,
+                value: 'Mingguan',
+              ),
+
+              const SizedBox(height: 9),
+
+              _buildFrequencyOption(
+                title: title,
+                value: 'Bulanan',
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   // ============================================================
-  // TOMBOL FREKUENSI
+  // PILIHAN RADIO DENGAN TANDA CENTANG
   // ============================================================
 
-  Widget _buildFrequencyButton({required String title, required String value}) {
+  Widget _buildFrequencyOption({
+    required String title,
+    required String value,
+  }) {
     final bool selected = answers[title] == value;
 
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         onAnswer(MapEntry(title, value));
       },
-      child: Container(
-        height: 21,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFFFE0D5) : Colors.white,
-          borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 25,
+              height: 25,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? brown : Colors.white,
+                border: Border.all(
+                  color: selected
+                      ? brown
+                      : const Color(0xFFA49B97),
+                  width: 1.8,
+                ),
+              ),
+              child: selected
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 17,
+                      color: Colors.white,
+                    )
+                  : null,
+            ),
 
-          // BORDER TOMBOL TETAP
-          border: Border.all(
-            color: selected ? brown : const Color(0xFFFF765B),
-            width: 1,
-          ),
+            const SizedBox(width: 12),
 
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 2,
-              offset: const Offset(0, 2),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 13,
+                  fontWeight: selected
+                      ? FontWeight.w800
+                      : FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
             ),
           ],
-        ),
-        child: Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 10,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-            color: Colors.black,
-          ),
         ),
       ),
     );

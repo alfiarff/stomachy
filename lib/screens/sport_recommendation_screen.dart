@@ -30,7 +30,7 @@ class RecommendationSportScreen extends StatefulWidget {
 
 class _RecommendationSportScreenState
     extends State<RecommendationSportScreen> {
-  int _selectedIndex = 4;
+  int _selectedIndex = 3;
 
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color mainBrown = const Color(0xFFB9543A);

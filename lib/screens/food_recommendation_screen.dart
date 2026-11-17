@@ -34,7 +34,7 @@ class _FoodRecommendationScreenState
   // BOTTOM NAVIGATION
   // ===============================================================
 
-  int _selectedIndex = 4;
+  int _selectedIndex = 3;
 
   // ===============================================================
   // WARNA

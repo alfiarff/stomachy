@@ -26,18 +26,19 @@ class ScreeningDataDiri extends StatelessWidget {
     required this.cardColor,
   });
 
-  // Memilih tanggal lahir menggunakan date picker
+  // ============================================================
+  // MEMILIH TANGGAL LAHIR
+  // ============================================================
+
   Future<void> _selectBirthDate(BuildContext context) async {
     final DateTime today = DateTime.now();
 
-    // Tanggal awal yang ditampilkan pada date picker
     final DateTime defaultDate = DateTime(
       today.year - 20,
       today.month,
       today.day,
     );
 
-    // Pastikan tanggal awal tidak melebihi tanggal hari ini
     final DateTime initialDate =
         birthDate != null && !birthDate!.isAfter(today)
             ? birthDate!
@@ -65,13 +66,16 @@ class ScreeningDataDiri extends StatelessWidget {
       },
     );
 
-    // Pastikan widget masih aktif setelah date picker ditutup
     if (!context.mounted) return;
 
     if (selectedDate != null) {
       onBirthDateChanged(selectedDate);
     }
   }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +90,10 @@ class ScreeningDataDiri extends StatelessWidget {
     );
   }
 
-  // Kartu tanggal lahir
+  // ============================================================
+  // KARTU TANGGAL LAHIR
+  // ============================================================
+
   Widget _buildBirthDateCard(BuildContext context) {
     final String formattedBirthDate = birthDate == null
         ? 'Pilih tanggal lahir'
@@ -98,68 +105,46 @@ class ScreeningDataDiri extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: SizedBox(
         height: 95,
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(
-              width: 55,
-              child: Icon(
-                Icons.calendar_month_rounded,
-                size: 40,
-                color: Color(0xFFB05039),
+            const Text(
+              'Tanggal Lahir',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: Colors.black,
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Tanggal Lahir',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black,
-                    ),
+
+            const SizedBox(height: 7),
+
+            GestureDetector(
+              onTap: () => _selectBirthDate(context),
+              child: Container(
+                height: 38,
+                width: double.infinity,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFCF9),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: const Color(0xFF8B817D),
                   ),
-                  const SizedBox(height: 7),
-                  GestureDetector(
-                    onTap: () => _selectBirthDate(context),
-                    child: Container(
-                      height: 38,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFCF9),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: const Color(0xFF8B817D),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              formattedBirthDate,
-                              style: TextStyle(
-                                fontFamily: 'Nunito',
-                                fontSize: 11,
-                                color: birthDate == null
-                                    ? const Color(0xFF99918E)
-                                    : Colors.black,
-                              ),
-                            ),
-                          ),
-                          const Icon(
-                            Icons.calendar_today_rounded,
-                            size: 16,
-                            color: Color(0xFFB05039),
-                          ),
-                        ],
-                      ),
-                    ),
+                ),
+                child: Text(
+                  formattedBirthDate,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    color: birthDate == null
+                        ? const Color(0xFF99918E)
+                        : Colors.black,
                   ),
-                ],
+                ),
               ),
             ),
           ],
@@ -168,7 +153,10 @@ class ScreeningDataDiri extends StatelessWidget {
     );
   }
 
-  // Kartu usia (otomatis dari tanggal lahir)
+  // ============================================================
+  // KARTU USIA OTOMATIS
+  // ============================================================
+
   Widget _buildAgeCard() {
     return StomachyCard(
       color: cardColor,
@@ -178,25 +166,18 @@ class ScreeningDataDiri extends StatelessWidget {
         height: 75,
         child: Row(
           children: [
-            const SizedBox(
-              width: 55,
-              child: Icon(
-                Icons.person_rounded,
-                size: 42,
-                color: Color(0xFFB05039),
-              ),
-            ),
-            const SizedBox(width: 10),
             const Text(
               'Usia',
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w800,
                 color: Colors.black,
               ),
             ),
+
             const SizedBox(width: 15),
+
             Expanded(
               child: Container(
                 height: 38,
@@ -213,18 +194,20 @@ class ScreeningDataDiri extends StatelessWidget {
                   age.isEmpty ? 'Otomatis' : age,
                   style: const TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Colors.black,
                   ),
                 ),
               ),
             ),
+
             const SizedBox(width: 15),
+
             const Text(
               'Tahun',
               style: TextStyle(
                 fontFamily: 'Nunito',
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: Colors.black,
               ),
@@ -235,83 +218,98 @@ class ScreeningDataDiri extends StatelessWidget {
     );
   }
 
-  // Kartu jenis kelamin
+  // ============================================================
+  // KARTU JENIS KELAMIN
+  // ============================================================
+
   Widget _buildGenderCard() {
     return StomachyCard(
       color: cardColor,
       radius: 17,
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: SizedBox(
-        height: 95,
-        child: Row(
-          children: [
-            const SizedBox(
-              width: 55,
-              child: Icon(
-                Icons.wc_rounded,
-                size: 44,
-                color: Color(0xFFB05039),
-              ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 17,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Jenis Kelamin',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Jenis Kelamin',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _buildGenderButton('Perempuan'),
-                      const SizedBox(width: 8),
-                      _buildGenderButton('Laki - laki'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 12),
+
+          _buildGenderOption('Perempuan'),
+
+          const SizedBox(height: 9),
+
+          _buildGenderOption('Laki - laki'),
+        ],
       ),
     );
   }
 
-  // Tombol pilihan jenis kelamin
-  Widget _buildGenderButton(String value) {
+  // ============================================================
+  // RADIO BUTTON JENIS KELAMIN
+  // ============================================================
+
+  Widget _buildGenderOption(String value) {
     final bool selected = gender == value;
 
-    return GestureDetector(
-      onTap: () => onGenderChanged(value),
-      child: Container(
-        width: 98,
-        height: 36,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFFFE3D9)
-              : const Color(0xFFFFFCF9),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: selected ? brown : const Color(0xFF9A908B),
-          ),
-        ),
-        child: Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 11,
-            color: selected ? brown : const Color(0xFF827A76),
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-          ),
+    return InkWell(
+      onTap: () {
+        onGenderChanged(value);
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 25,
+              height: 25,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? brown : Colors.white,
+                border: Border.all(
+                  color: selected
+                      ? brown
+                      : const Color(0xFFA49B97),
+                  width: 1.8,
+                ),
+              ),
+              child: selected
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 17,
+                      color: Colors.white,
+                    )
+                  : null,
+            ),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 13,
+                  fontWeight: selected
+                      ? FontWeight.w800
+                      : FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
