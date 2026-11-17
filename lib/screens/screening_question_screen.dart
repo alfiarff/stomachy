@@ -29,7 +29,7 @@ class _ScreeningQuestionScreenState extends State<ScreeningQuestionScreen> {
   final Color backgroundColor = const Color(0xFFFFF5ED);
   final Color brown = const Color(0xFFB05039);
   final Color orangeLine = const Color(0xFFE07A61);
-  final Color cardColor = const Color(0xFFFFFCF9);
+  final Color cardColor = Colors.white;
 
   // ============================================================
   // BOTTOM NAVIGATION

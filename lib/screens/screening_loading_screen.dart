@@ -488,7 +488,7 @@ class _ScreeningLoadingScreenState extends State<ScreeningLoadingScreen> {
           const Text(
             'Periksa koneksi internetmu lalu coba lagi.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontsize: 13, height: 1.4),
+            style: TextStyle(fontSize: 13, height: 1.4),
           ),
 
           const SizedBox(height: 22),
@@ -618,7 +618,7 @@ class _ScreeningLoadingScreenState extends State<ScreeningLoadingScreen> {
                                 'Mohon tunggu beberapa saat.\n'
                                 'Hasil akan segera ditampilkan.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontsize: 13, height: 1.4),
+                                style: TextStyle(fontSize: 13, height: 1.4),
                               ),
 
                               const SizedBox(height: 18),
@@ -647,7 +647,7 @@ class _ScreeningLoadingScreenState extends State<ScreeningLoadingScreen> {
                                   Text(
                                     '$percentage%',
                                     style: const TextStyle(
-                                      fontsize: 13,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -698,7 +698,7 @@ class _ScreeningLoadingScreenState extends State<ScreeningLoadingScreen> {
                                             'Tahukah kamu?',
                                             style: TextStyle(
                                               fontFamily: 'Nunito',
-                                              fontsize: 13,
+                                              fontSize: 13,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -709,7 +709,7 @@ class _ScreeningLoadingScreenState extends State<ScreeningLoadingScreen> {
                                             'Menjaga pola hidup sehat dapat membantu\n'
                                             'mengurangi risiko GERD.',
                                             style: TextStyle(
-                                              fontsize: 12,
+                                              fontSize: 12,
                                               height: 1.3,
                                             ),
                                           ),
