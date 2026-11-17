@@ -197,6 +197,7 @@ void _loadDoctorSchedule(Map<String, dynamic> data) {
   _watchBookedSlots();
 }
 
+
 void _watchBookedSlots() {
   _bookingSubscription?.cancel();
 
@@ -209,29 +210,26 @@ void _watchBookedSlots() {
       final Set<String> booked = {};
 
       for (final slot in _scheduleSlots) {
-        final DateTime consultationDate = _getNextOccurrence(
+        final DateTime targetDate = _getNextOccurrence(
           slot.day,
           slot.time,
         );
 
-        final String date =
-            '${consultationDate.year.toString().padLeft(4, '0')}-'
-            '${consultationDate.month.toString().padLeft(2, '0')}-'
-            '${consultationDate.day.toString().padLeft(2, '0')}';
-
         for (final doc in snapshot.docs) {
           final data = doc.data();
 
-          final String status =
-              (data['status'] ?? '').toString().toLowerCase();
+          final status = (data['status'] ?? '')
+              .toString()
+              .toLowerCase();
 
-          final bool isBooked =
+          final timestamp = data['consultationTimestamp'];
+
+          final bool isActiveBooking =
               status == 'booked' || status == 'active';
 
-          if (isBooked &&
-              data['consultationDay'] == slot.day &&
-              data['consultationTime'] == slot.time &&
-              data['consultationDate'] == date) {
+          if (isActiveBooking &&
+              timestamp is Timestamp &&
+              timestamp.toDate().isAtSameMomentAs(targetDate)) {
             booked.add('${slot.day}|${slot.time}');
             break;
           }
@@ -243,10 +241,10 @@ void _watchBookedSlots() {
       setState(() {
         _bookedSlots = booked;
 
-        if (_selectedDay != null && _selectedTime != null) {
-          if (_bookedSlots.contains('$_selectedDay|$_selectedTime')) {
-            _selectedTime = null;
-          }
+        if (_selectedDay != null &&
+            _selectedTime != null &&
+            booked.contains('$_selectedDay|$_selectedTime')) {
+          _selectedTime = null;
         }
       });
     },
@@ -1016,6 +1014,34 @@ Widget _buildTimeGrid() {
       );
       final String doctorImage =
           widget.doctor.photoBase64 ?? widget.doctor.photoUrl ?? '';
+          // Cek apakah jadwal dokter sudah dibooking pasien lain.
+final existingDoctorBookings = await firestore
+    .collection('consultations')
+    .where('doctorId', isEqualTo: widget.doctor.id)
+    .get();
+
+final bool slotAlreadyTaken = existingDoctorBookings.docs.any((doc) {
+  final data = doc.data();
+  final status = (data['status'] ?? '').toString().toLowerCase();
+  final timestamp = data['consultationTimestamp'];
+
+  return (status == 'booked' || status == 'active') &&
+      timestamp is Timestamp &&
+      timestamp.toDate().isAtSameMomentAs(consultationDate);
+});
+
+if (slotAlreadyTaken) {
+  if (mounted) {
+    setState(() {
+      _isCreatingConsultation = false;
+      _selectedTime = null;
+    });
+  }
+
+  _showMessage('Maaf, jadwal ini sudah dibooking pasien lain.');
+  _watchBookedSlots();
+  return;
+}
 
       // Simpan booking.
       final consultationReference = firestore.collection('consultations').doc();
