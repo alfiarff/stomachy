@@ -76,8 +76,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
               const SizedBox(height: 18),
               _buildMenuCard(
                 icon: Icons.article_outlined,
-                title: 'Edukasi',
-                subtitle: 'Kelola materi edukasi seputar GERD',
+                title: 'Pengetahuan',
+                subtitle: 'Kelola materi pengetahuan seputar GERD',
                 onTap: () => _openManageScreen(const AdminManageEdukasiScreen()),
               ),
               const SizedBox(height: 14),

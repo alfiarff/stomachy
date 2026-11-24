@@ -46,7 +46,7 @@ class _AdminManageEdukasiScreenState
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader('Kelola Edukasi'),
+            _buildHeader('Kelola Pengetahuan'),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
@@ -125,7 +125,7 @@ class _AdminManageEdukasiScreenState
       foregroundColor: Colors.white,
       icon: const Icon(Icons.add_rounded),
       label: const Text(
-        'Tambah Edukasi',
+        'Tambah Pengetahuan',
         style: TextStyle(
           fontFamily: 'Nunito',
           fontSize: 13,
@@ -160,7 +160,7 @@ class _AdminManageEdukasiScreenState
           color: headingDark,
         ),
         decoration: InputDecoration(
-          hintText: 'Cari judul atau kategori edukasi...',
+          hintText: 'Cari judul atau kategori pengetahuan...',
           hintStyle: const TextStyle(
             fontFamily: 'Nunito',
             fontSize: 11,
@@ -223,7 +223,7 @@ class _AdminManageEdukasiScreenState
           return _buildState(
             keyword.isNotEmpty
                 ? 'Konten tidak ditemukan. Coba kata kunci lain.'
-                : 'Belum ada konten edukasi',
+                : 'Belum ada konten pengetahuan',
             keyword.isNotEmpty
                 ? Icons.search_off_rounded
                 : Icons.article_outlined,

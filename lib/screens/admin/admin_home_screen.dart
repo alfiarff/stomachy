@@ -648,7 +648,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           Expanded(
             child: _buildContentCard(
               icon: Icons.article_outlined,
-              title: 'Edukasi',
+              title: 'Pengetahuan',
               onTap: () {
                 Navigator.push(
                   context,

@@ -121,7 +121,7 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
           Expanded(
             child: Center(
               child: Text(
-                _isEditing ? 'Edit Edukasi' : 'Tambah Edukasi',
+                _isEditing ? 'Edit Pengetahuan' : 'Tambah Pengetahuan',
                 style: const TextStyle(
                   fontFamily: 'Fredoka',
                   fontSize: 22,
@@ -364,7 +364,7 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
           hint: 'Contoh: Materi Dasar',
         ),
         const SizedBox(height: 14),
-        _fieldLabel('Judul Edukasi'),
+        _fieldLabel('Judul Pengetahuan'),
         const SizedBox(height: 6),
         _textField(
           controller: _titleController,
@@ -515,8 +515,8 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
           backgroundColor: const Color(0xFF2E7D42),
           content: Text(
             _isEditing
-                ? 'Perubahan edukasi berhasil disimpan!'
-                : 'Edukasi berhasil ditambahkan!',
+                ? 'Perubahan pengetahuan berhasil disimpan!'
+                : 'Pengetahuan berhasil ditambahkan!',
           ),
         ),
       );
@@ -527,7 +527,7 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
           behavior: SnackBarBehavior.floating,
           backgroundColor: const Color(0xFFB9543A),
           duration: const Duration(seconds: 5),
-          content: Text('Gagal menyimpan edukasi: $e'),
+          content: Text('Gagal menyimpan pengetahuan: $e'),
         ),
       );
     }
@@ -562,7 +562,7 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildFormCard(
-                      title: 'Informasi Edukasi',
+                      title: 'Informasi Pengetahuan',
                       icon: Icons.edit_note_rounded,
                       child: _buildInfoFields(),
                     ),
@@ -776,7 +776,7 @@ class _AdminEdukasiFormScreenState extends State<AdminEdukasiFormScreen> {
                 ),
               )
             : Text(
-                _isEditing ? 'Simpan Perubahan' : 'Simpan Edukasi',
+                _isEditing ? 'Simpan Perubahan' : 'Simpan Pengetahuan',
                 style: const TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 13,
