@@ -5,7 +5,9 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../services/notification_service.dart';
 import '../widgets/stomachy_card.dart';
 import '../widgets/bottom_navigation.dart';
 import 'home_screen.dart';
@@ -25,6 +27,8 @@ class DoctorDetailScreen extends StatefulWidget {
 }
 
 class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
+  static const MethodChannel _alarmChannel =
+      MethodChannel('com.example.stomachy/alarm');
   int _selectedIndex = 2;
   final Color backgroundColor = const Color(0xFFFFF5ED);
   final Color primaryBrown = const Color(0xFFB65339);
@@ -977,6 +981,27 @@ Future<void> _createBooking() async {
 
     final Timestamp selectedTimestamp =
         Timestamp.fromDate(consultationDate);
+    
+    // Ambil durasi konsultasi dari jadwal dokter.
+final dynamic scheduleData = _doctorData?['doctorSchedule'];
+final dynamic selectedDayData =
+    scheduleData is Map ? scheduleData[selectedDay] : null;
+
+int durationMinutes = selectedDayData is Map
+    ? (selectedDayData['durationMinutes'] as num?)?.toInt() ?? 60
+    : 60;
+
+// Pastikan durasi sesuai pilihan yang didukung.
+if (![15, 30, 60].contains(durationMinutes)) {
+  durationMinutes = 60;
+}
+
+// Hitung waktu berakhir konsultasi.
+final DateTime consultationEndDate =
+    consultationDate.add(Duration(minutes: durationMinutes));
+
+final Timestamp endTimestamp =
+    Timestamp.fromDate(consultationEndDate);
 
     final firestore = FirebaseFirestore.instance;
 
@@ -1038,6 +1063,8 @@ Future<void> _createBooking() async {
         'consultationTime': selectedTime,
         'consultationDate': date,
         'consultationTimestamp': selectedTimestamp,
+        'durationMinutes': durationMinutes,
+        'consultationEndTimestamp': endTimestamp,
         'status': 'booked',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -1054,13 +1081,15 @@ Future<void> _createBooking() async {
         'consultationTime': selectedTime,
         'consultationDate': date,
         'consultationTimestamp': selectedTimestamp,
+        'durationMinutes': durationMinutes,
+        'consultationEndTimestamp': endTimestamp,
         'consultationId': consultationReference.id,
         'status': 'booked',
         'createdAt': FieldValue.serverTimestamp(),
       });
     });
 
-    // Buat notifikasi setelah transaksi berhasil.
+    // Simpan notifikasi booking ke halaman notifikasi aplikasi.
     try {
       await AppNotification.create(
         uid: user.uid,
@@ -1071,8 +1100,43 @@ Future<void> _createBooking() async {
             '$selectedDay, $selectedTime WIB berhasil dibuat.',
       );
     } catch (e) {
-      debugPrint('Notifikasi booking gagal: $e');
+      debugPrint('Notifikasi booking in-app gagal: $e');
     }
+
+    // Tampilkan popup lokal bahwa booking berhasil.
+    try {
+      await NotificationService.showBookingSuccess(
+        consultationId: consultationReference.id,
+        doctorName: doctorName,
+        day: selectedDay,
+        time: selectedTime,
+      );
+    } catch (e) {
+      debugPrint('Popup booking berhasil gagal: $e');
+    }
+
+    // Jadwalkan empat pengingat pada perangkat pasien:
+    // 5 menit sebelum mulai, saat mulai, 5 menit sebelum selesai,
+    // dan saat konsultasi selesai.
+    try {
+      await NotificationService.scheduleConsultationNotifications(
+        consultationId: consultationReference.id,
+        consultationStartTime: consultationDate,
+        consultationEndTime: consultationEndDate,
+        doctorName: doctorName,
+        patientName: userName.isEmpty ? 'Pasien' : userName,
+        forDoctor: false,
+      );
+    } catch (e) {
+      debugPrint('Pengingat konsultasi gagal dijadwalkan: $e');
+    }
+
+    // Buka aplikasi Jam Samsung dengan waktu konsultasi terisi.
+    // Jika gagal, booking dan pengingat Stomachy tetap tersimpan.
+    await _openSamsungClockAlarm(
+      consultationDate: consultationDate,
+      doctorName: doctorName,
+    );
 
     if (!mounted) return;
 
@@ -1135,6 +1199,70 @@ Future<void> _createBooking() async {
       daysUntil += 7;
     result = result.add(Duration(days: daysUntil));
     return result;
+  }
+
+
+  // ===============================================================
+  // BUKA APLIKASI JAM SAMSUNG
+  // ===============================================================
+  Future<void> _openSamsungClockAlarm({
+    required DateTime consultationDate,
+    required String doctorName,
+  }) async {
+    final String cleanDoctorName = doctorName.trim();
+    final String displayDoctorName =
+        cleanDoctorName.toLowerCase().startsWith('dr.')
+            ? cleanDoctorName
+            : 'dr. $cleanDoctorName';
+
+    try {
+      debugPrint(
+        'STOMACHY ALARM: mengirim waktu '
+        '${consultationDate.hour}:${consultationDate.minute}',
+      );
+
+      final bool? opened = await _alarmChannel.invokeMethod<bool>(
+        'setConsultationAlarm',
+        {
+          'hour': consultationDate.hour,
+          'minute': consultationDate.minute,
+          'message': 'Konsultasi Stomachy dengan $displayDoctorName',
+        },
+      );
+
+      debugPrint('STOMACHY ALARM: hasil MethodChannel = $opened');
+
+      if (opened != true && mounted) {
+        _showMessage(
+          'Booking tersimpan, tetapi aplikasi Jam tidak berhasil dibuka.',
+        );
+      }
+    } on PlatformException catch (e) {
+      debugPrint(
+        'STOMACHY ALARM PlatformException: ${e.code} ${e.message}',
+      );
+
+      if (mounted) {
+        _showMessage(
+          'Booking tersimpan. Jam gagal dibuka: ${e.message ?? e.code}',
+        );
+      }
+    } on MissingPluginException catch (e) {
+      debugPrint('STOMACHY ALARM MissingPluginException: $e');
+
+      if (mounted) {
+        _showMessage(
+          'Fitur alarm belum terpasang. Tutup aplikasi lalu jalankan ulang.',
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint('STOMACHY ALARM error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (mounted) {
+        _showMessage('Booking tersimpan, tetapi aplikasi Jam gagal dibuka.');
+      }
+    }
   }
 
   // ===============================================================

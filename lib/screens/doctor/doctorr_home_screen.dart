@@ -29,7 +29,8 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   final Color brown = const Color(0xFFB05039);
   String _doctorName = 'Dokter';
   Timer? _activationTimer;
-
+  bool _syncingConsultations = false;
+  
   @override
   void initState() {
     super.initState();
@@ -88,76 +89,159 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     return null;
   }
 
-  Future<void> _activateDueConsultations() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('consultations')
-          .where('doctorId', isEqualTo: user.uid)
-          .get();
-      final batch = FirebaseFirestore.instance.batch();
-      bool changed = false;
-      final now = DateTime.now();
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        final status = (data['status'] ?? '').toString().toLowerCase();
-        final date = _consultationDate(data);
-        if (status == 'booked' && date != null && !date.isAfter(now)) {
-          batch.set(doc.reference, {
-            'status': 'active',
-            'updatedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-          changed = true;
+
+Future<void> _activateDueConsultations() async {
+  if (_syncingConsultations) return;
+
+  final doctor = FirebaseAuth.instance.currentUser;
+  if (doctor == null) return;
+
+  _syncingConsultations = true;
+
+  try {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('consultations')
+        .where('doctorId', isEqualTo: doctor.uid)
+        .get();
+
+    for (final doc in snapshot.docs) {
+      final consultationRef = doc.reference;
+
+      final transition =
+          await FirebaseFirestore.instance.runTransaction<String?>(
+        (transaction) async {
+          final freshSnapshot =
+              await transaction.get(consultationRef);
+
+          if (!freshSnapshot.exists) return null;
+
+          final data = freshSnapshot.data() ?? {};
+
+          final status =
+              (data['status'] ?? '').toString().toLowerCase();
+
+          if (status != 'booked' && status != 'active') {
+            return null;
+          }
+
+          final startValue = data['consultationTimestamp'];
+          if (startValue is! Timestamp) return null;
+
+          final startTime = startValue.toDate();
+
+          DateTime endTime;
+          final endValue = data['consultationEndTimestamp'];
+
+          if (endValue is Timestamp) {
+            endTime = endValue.toDate();
+          } else {
+            final duration =
+                (data['durationMinutes'] as num?)?.toInt() ?? 60;
+
+            if (![15, 30, 60].contains(duration)) {
+              return null;
+            }
+
+            endTime = startTime.add(
+              Duration(minutes: duration),
+            );
+          }
+
+          final now = DateTime.now();
+
+          // Belum waktunya konsultasi.
+          if (now.isBefore(startTime)) return null;
+
+          // Waktu konsultasi sudah habis.
+          if (!now.isBefore(endTime)) {
+            transaction.update(consultationRef, {
+              'status': 'completed',
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+
+            return status == 'booked'
+                ? 'started_and_completed'
+                : 'completed';
+          }
+
+          // Waktu konsultasi dimulai.
+          if (status == 'booked') {
+            transaction.update(consultationRef, {
+              'status': 'active',
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+
+            return 'started';
+          }
+
+          return null;
+        },
+      );
+
+      if (transition == null) continue;
+
+      final data = doc.data();
+
+      final patientId = (data['userId'] ?? '').toString();
+      final patientName =
+          (data['userName'] ?? 'Pasien').toString();
+
+      // Notifikasi konsultasi dimulai.
+      if (transition == 'started' ||
+          transition == 'started_and_completed') {
+        try {
+          await AppNotification.create(
+            uid: doctor.uid,
+            type: 'consultation',
+            title: 'Konsultasi Dimulai',
+            body: 'Konsultasi dengan $patientName sudah dimulai.',
+          );
+
+          if (patientId.isNotEmpty) {
+            await AppNotification.create(
+              uid: patientId,
+              type: 'consultation',
+              title: 'Waktunya Konsultasi!',
+              body:
+                  'Konsultasi dengan dr. $_doctorName sudah dimulai. Kamu bisa mulai chat sekarang.',
+            );
+          }
+        } catch (e) {
+          debugPrint('Notifikasi konsultasi dimulai gagal: $e');
         }
       }
-      if (changed) await batch.commit();
-    } catch (_) {}
-  }
 
-  int _getUnreadCount(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
-  ) {
-    int total = 0;
-    for (final doc in consultations) {
-      final value = doc.data()['unreadForDoctor'];
-      final unread = value is int
-          ? value
-          : value is num
-          ? value.toInt()
-          : int.tryParse(value?.toString() ?? '0') ?? 0;
-      if (unread > 0) total += unread;
-    }
-    return total;
-  }
+      // Notifikasi konsultasi selesai.
+      if (transition == 'completed' ||
+          transition == 'started_and_completed') {
+        try {
+          await AppNotification.create(
+            uid: doctor.uid,
+            type: 'consultation',
+            title: 'Konsultasi Selesai',
+            body: 'Konsultasi dengan $patientName telah berakhir.',
+          );
 
-  int _getPatientTodayCount(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
-  ) {
-    final now = DateTime.now();
-    final start = DateTime(now.year, now.month, now.day);
-    final end = start.add(const Duration(days: 1));
-    final patients = <String>{};
-    for (final doc in consultations) {
-      final data = doc.data();
-      final userId = (data['userId'] ?? '').toString();
-      final date = _consultationDate(data);
-      if (userId.isEmpty || date == null) continue;
-      if (!date.isBefore(start) && date.isBefore(end)) patients.add(userId);
+          if (patientId.isNotEmpty) {
+            await AppNotification.create(
+              uid: patientId,
+              type: 'consultation',
+              title: 'Konsultasi Selesai',
+              body:
+                  'Konsultasi dengan dr. $_doctorName telah berakhir. Kamu masih bisa melihat riwayat chat.',
+            );
+          }
+        } catch (e) {
+          debugPrint('Notifikasi konsultasi selesai gagal: $e');
+        }
+      }
     }
-    return patients.length;
+  } catch (e) {
+    debugPrint('Gagal memperbarui status konsultasi dokter: $e');
+  } finally {
+    _syncingConsultations = false;
   }
-
-  int _getPatientCount(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
-  ) {
-    final patients = <String>{};
-    for (final doc in consultations) {
-      final userId = (doc.data()['userId'] ?? '').toString().trim();
-      if (userId.isNotEmpty) patients.add(userId);
-    }
-    return patients.length;
-  }
+}
 
   void _onNavigationTap(int index) {
     if (index == 0) {
@@ -684,6 +768,72 @@ Widget _buildHeaderContent({
       ),
     );
   }
+
+
+int _getUnreadCount(
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
+) {
+  int total = 0;
+
+  for (final document in consultations) {
+    final data = document.data();
+    final value = data['unreadForDoctor'];
+
+    if (value is num) {
+      total += value.toInt();
+    } else {
+      total += int.tryParse(value?.toString() ?? '0') ?? 0;
+    }
+  }
+
+  return total;
+}
+
+int _getPatientTodayCount(
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
+) {
+  final now = DateTime.now();
+  final todayPatients = <String>{};
+
+  for (final document in consultations) {
+    final data = document.data();
+
+    final userId = (data['userId'] ?? '').toString().trim();
+    if (userId.isEmpty) continue;
+
+    final consultationDate = _consultationDate(data);
+    if (consultationDate == null) continue;
+
+    final isToday =
+        consultationDate.year == now.year &&
+        consultationDate.month == now.month &&
+        consultationDate.day == now.day;
+
+    if (isToday) {
+      todayPatients.add(userId);
+    }
+  }
+
+  return todayPatients.length;
+}
+
+int _getPatientCount(
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,
+) {
+  final patientIds = <String>{};
+
+  for (final document in consultations) {
+    final data = document.data();
+    final userId = (data['userId'] ?? '').toString().trim();
+
+    if (userId.isNotEmpty) {
+      patientIds.add(userId);
+    }
+  }
+
+  return patientIds.length;
+}
+
 
   Widget _buildStatistics(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> consultations,

@@ -48,6 +48,20 @@ class NotificationService {
       },
     );
 
+    // Minta izin notifikasi dan alarm terjadwal pada Android.
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    await androidPlugin?.requestNotificationsPermission();
+    await androidPlugin?.requestExactAlarmsPermission();
+
+    final iosPlugin = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    await iosPlugin?.requestPermissions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
     // Tangani notifikasi yang membuka aplikasi dari kondisi tertutup.
     final launchDetails =
         await _plugin.getNotificationAppLaunchDetails();
@@ -203,6 +217,25 @@ class NotificationService {
   // =============================================================
 
   static final ValueNotifier<int> badgeSignal = ValueNotifier<int>(0);
+
+  // =============================================================
+// FORMAT NAMA DOKTER
+// =============================================================
+
+static String _formatDoctorName(String name) {
+  final trimmedName = name.trim();
+
+  if (trimmedName.isEmpty) return trimmedName;
+
+  if (RegExp(
+    r'^dr\.?\s+',
+    caseSensitive: false,
+  ).hasMatch(trimmedName)) {
+    return trimmedName;
+  }
+
+  return 'dr. $trimmedName';
+}
 
   static void _notifyBadgeChanged() {
     badgeSignal.value = badgeSignal.value + 1;
@@ -924,6 +957,164 @@ static ({String notifType, String notifTitle}) _contentMeta(
   // PENGINGAT JADWAL KONSULTASI
   // =============================================================
 
+  /// Menjadwalkan empat notifikasi untuk satu sesi konsultasi.
+  /// Semua waktu menggunakan zona waktu perangkat.
+  static Future<void> scheduleConsultationNotifications({
+    required String consultationId,
+    required DateTime consultationStartTime,
+    required DateTime consultationEndTime,
+    required String doctorName,
+    required String patientName,
+    required bool forDoctor,
+  }) async {
+    if (consultationId.trim().isEmpty) return;
+
+    if (!consultationEndTime.isAfter(consultationStartTime)) {
+      debugPrint('KONSULTASI: waktu selesai harus setelah waktu mulai.');
+      return;
+    }
+
+    final location = _resolveLocation();
+    final now = tz.TZDateTime.now(location);
+    final start = tz.TZDateTime.from(consultationStartTime, location);
+    final end = tz.TZDateTime.from(consultationEndTime, location);
+
+    // Hapus jadwal lama agar perubahan jadwal tidak menghasilkan duplikat.
+    await cancelConsultationReminder(consultationId);
+
+    final String formattedDoctorName = _formatDoctorName(doctorName);
+
+final String counterpart = forDoctor
+    ? patientName
+    : formattedDoctorName;
+   final String beforeStartBody = forDoctor
+    ? 'Konsultasi dengan $patientName akan dimulai dalam 5 menit.'
+    : 'Konsultasi dengan $formattedDoctorName akan dimulai dalam 5 menit.';
+
+final String startBody = forDoctor
+    ? 'Konsultasi dengan $patientName sudah dimulai.'
+    : 'Konsultasi dengan $formattedDoctorName sudah dimulai. Kamu bisa mulai chat sekarang.';
+
+final String beforeEndBody = forDoctor
+    ? 'Konsultasi dengan $patientName akan berakhir dalam 5 menit.'
+    : 'Konsultasi dengan $formattedDoctorName akan berakhir dalam 5 menit.';
+
+final String endBody = forDoctor
+    ? 'Konsultasi dengan $patientName telah berakhir.'
+    : 'Konsultasi dengan $formattedDoctorName telah berakhir.';
+
+    final baseId = _consultationId(consultationId);
+
+    final notices = <({int id, String title, String body, tz.TZDateTime time, bool alarm})>[
+      (
+        id: baseId,
+        title: 'Konsultasi Segera Dimulai',
+        body: beforeStartBody,
+        time: start.subtract(const Duration(minutes: 5)),
+        alarm: false,
+      ),
+      (
+        id: baseId + 1,
+        title: 'Waktunya Konsultasi!',
+        body: startBody,
+        time: start,
+        alarm: true,
+      ),
+      (
+        id: baseId + 2,
+        title: 'Konsultasi Segera Berakhir',
+        body: beforeEndBody,
+        time: end.subtract(const Duration(minutes: 5)),
+        alarm: false,
+      ),
+      (
+        id: baseId + 3,
+        title: 'Konsultasi Telah Berakhir',
+        body: endBody,
+        time: end,
+        alarm: false,
+      ),
+    ];
+
+    for (final notice in notices) {
+      if (!notice.time.isAfter(now)) {
+        debugPrint('KONSULTASI: jadwal dilewati karena waktunya sudah lewat (${notice.title}).');
+        continue;
+      }
+
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final reminderIndex = notice.id - baseId;
+        await AppNotification.create(
+          uid: currentUser.uid,
+          type: 'consultation',
+          title: notice.title,
+          body: notice.body,
+          notificationId: 'consultation_${consultationId}_reminder_$reminderIndex',
+          createdAt: notice.time.toLocal(),
+          visibleAt: notice.time.toLocal(),
+          respectSetting: false,
+          overwriteExisting: true,
+        );
+      }
+
+      final details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          notice.alarm ? 'consultation_start_alarm_v2' : 'consultation_schedule_v2',
+          notice.alarm ? 'Alarm Mulai Konsultasi' : 'Pengingat Jadwal Konsultasi',
+          channelDescription: notice.alarm
+              ? 'Alarm saat konsultasi dimulai'
+              : 'Pengingat sebelum dan sesudah konsultasi',
+          importance: notice.alarm ? Importance.max : Importance.high,
+          priority: Priority.max,
+          category: notice.alarm
+              ? AndroidNotificationCategory.alarm
+              : AndroidNotificationCategory.event,
+          playSound: true,
+          audioAttributesUsage: notice.alarm
+              ? AudioAttributesUsage.alarm
+              : AudioAttributesUsage.notification,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      );
+
+      try {
+        await _plugin.zonedSchedule(
+          notice.id,
+          notice.title,
+          notice.body,
+          notice.time,
+          details,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        );
+        debugPrint('KONSULTASI: ${notice.title} dijadwalkan pada ${notice.time}.');
+      } catch (e) {
+        // Fallback agar pengingat tetap terjadwal jika izin exact alarm ditolak.
+        debugPrint('KONSULTASI: exact alarm gagal (${notice.title}): $e. Menggunakan inexact.');
+        await _plugin.zonedSchedule(
+          notice.id,
+          notice.title,
+          notice.body,
+          notice.time,
+          details,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        );
+      }
+    }
+
+    debugPrint('KONSULTASI: proses penjadwalan selesai untuk $consultationId ($counterpart).');
+  }
+
+  /// Kompatibilitas untuk pemanggilan lama. Method ini hanya menjadwalkan
+  /// alarm tepat saat konsultasi dimulai.
   static Future<void> scheduleConsultationReminder({
     required String consultationId,
     required DateTime consultationTime,
@@ -933,41 +1124,42 @@ static ({String notifType, String notifTitle}) _contentMeta(
   }) async {
     if (consultationId.isEmpty) return;
 
-    final tz.Location location = _resolveLocation();
-    final tz.TZDateTime scheduled = tz.TZDateTime.from(
-      consultationTime,
-      location,
-    );
+    final location = _resolveLocation();
+    final scheduled = tz.TZDateTime.from(consultationTime, location);
+    if (!scheduled.isAfter(tz.TZDateTime.now(location))) return;
 
-    if (!scheduled.isAfter(tz.TZDateTime.now(location))) {
-      return;
-    }
+final formattedDoctorName = _formatDoctorName(doctorName);
 
-    final String body = forDoctor
-        ? 'Konsultasi dengan $patientName sudah dimulai.'
-        : 'Konsultasi dengan $doctorName sudah dimulai. Kamu bisa mulai chat sekarang.';
+final body = forDoctor
+    ? 'Konsultasi dengan $patientName sudah dimulai.'
+    : 'Konsultasi dengan $formattedDoctorName sudah dimulai. Kamu bisa mulai chat sekarang.';
 
-    const NotificationDetails details = NotificationDetails(
+    const details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'consultation_reminder',
-        'Pengingat Konsultasi',
-        channelDescription:
-            'Pengingat saat konsultasi dengan dokter dimulai',
+        'consultation_start_alarm_v2',
+        'Alarm Mulai Konsultasi',
+        channelDescription: 'Alarm saat konsultasi dimulai',
         importance: Importance.max,
-        priority: Priority.high,
+        priority: Priority.max,
+        category: AndroidNotificationCategory.alarm,
+        playSound: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
       ),
-      iOS: DarwinNotificationDetails(),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentSound: true,
+      ),
     );
 
     await _plugin.zonedSchedule(
-      _consultationId(consultationId),
+      _consultationId(consultationId) + 1,
       'Waktunya Konsultasi!',
       body,
       scheduled,
       details,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 
@@ -975,7 +1167,10 @@ static ({String notifType, String notifTitle}) _contentMeta(
     String consultationId,
   ) async {
     if (consultationId.isEmpty) return;
-    await _plugin.cancel(_consultationId(consultationId));
+    final baseId = _consultationId(consultationId);
+    for (var offset = 0; offset < 4; offset++) {
+      await _plugin.cancel(baseId + offset);
+    }
   }
 
   // =============================================================
@@ -1019,12 +1214,14 @@ static ({String notifType, String notifTitle}) _contentMeta(
         iOS: DarwinNotificationDetails(),
       );
 
-      await _plugin.show(
-        _doctorReplyId(messageId),
-        'Pesan baru dari Dokter',
-        '$doctorName: ${message.trim()}',
-        details,
-      );
+final formattedDoctorName = _formatDoctorName(doctorName);
+
+await _plugin.show(
+  _doctorReplyId(messageId),
+  'Pesan baru dari Dokter',
+  '$formattedDoctorName: ${message.trim()}',
+  details,
+);
     } catch (e) {
       debugPrint('NOTIFIKASI BALASAN DOKTER ERROR: $e');
     }
@@ -1077,10 +1274,28 @@ static ({String notifType, String notifTitle}) _contentMeta(
       iOS: DarwinNotificationDetails(),
     );
 
+final formattedDoctorName = _formatDoctorName(doctorName);
+    final bookingBody =
+        'Konsultasi dengan $formattedDoctorName pada $day, $time WIB berhasil dibuat.';
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await AppNotification.create(
+        uid: user.uid,
+        type: 'consultation',
+        title: 'Booking Berhasil',
+        body: bookingBody,
+        notificationId: 'consultation_${consultationId}_booking',
+        createdAt: DateTime.now(),
+        respectSetting: false,
+        overwriteExisting: true,
+      );
+    }
+
     await _plugin.show(
       _consultationId(consultationId) + 50000,
       'Booking Berhasil',
-      'Konsultasi dengan $doctorName pada $day, $time WIB berhasil dibuat.',
+      bookingBody,
       details,
     );
   }

@@ -1,4 +1,4 @@
-
+import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,7 +29,10 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
   static const Color softOrange = Color(0xFFFFE3D1);
 
   bool _isSending = false;
+  String _liveStatus = '';
 
+StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    _consultationSubscription;
   bool _notificationBaselineReady = false;
   final Set<String> _notifiedPatientMessageIds = {};
 
@@ -122,33 +125,76 @@ Widget _buildPatientPhoto({double size = 54}) {
   String get _consultationTime =>
       (widget.patient['consultationTime'] ?? '').toString();
 
-  String get _status =>
-      (widget.patient['status'] ?? '').toString().toLowerCase();
+String get _status {
+  if (_liveStatus.isNotEmpty) {
+    return _liveStatus;
+  }
+
+  return (widget.patient['status'] ?? '')
+      .toString()
+      .toLowerCase();
+}
 
   bool get _isActive => _status == 'active';
 
   bool get _isCompleted => _status == 'completed';
 
-  @override
-  void initState() {
-    super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_isActive) {
+@override
+void initState() {
+  super.initState();
+
+  _liveStatus = (widget.patient['status'] ?? '')
+      .toString()
+      .toLowerCase();
+
+  _listenToConsultationStatus();
+}
+
+void _listenToConsultationStatus() {
+  if (_consultationId.isEmpty) return;
+
+  _consultationSubscription = FirebaseFirestore.instance
+      .collection('consultations')
+      .doc(_consultationId)
+      .snapshots()
+      .listen(
+    (snapshot) {
+      if (!mounted || !snapshot.exists) return;
+
+      final data = snapshot.data();
+      if (data == null) return;
+
+      final newStatus = (data['status'] ?? '')
+          .toString()
+          .toLowerCase();
+
+      if (newStatus == _liveStatus) return;
+
+      setState(() {
+        _liveStatus = newStatus;
+      });
+
+      if (newStatus == 'active') {
         _markAsRead();
       }
-    });
-  }
+    },
+    onError: (error) {
+      debugPrint('Gagal memantau status konsultasi: $error');
+    },
+  );
+}
 
   @override
-  void dispose() {
-    _messageController.dispose();
+void dispose() {
+  _consultationSubscription?.cancel();
 
-    _scrollController.dispose();
+  _messageController.dispose();
 
-    super.dispose();
-  }
+  _scrollController.dispose();
 
+  super.dispose();
+}
   Stream<QuerySnapshot<Map<String, dynamic>>> _messageStream() {
     if (_consultationId.isEmpty) {
       return const Stream.empty();
@@ -1435,68 +1481,131 @@ Future<void> _markAsRead() async {
     );
   }
 
-  Future<void> _sendMessage() async {
-    final String message = _messageController.text.trim();
+ 
+Future<void> _sendMessage() async {
+  final String message = _messageController.text.trim();
 
-    if (message.isEmpty || _isSending || !_isActive) {
-      return;
-    }
+  if (message.isEmpty || _isSending || !_isActive) {
+    return;
+  }
 
-    final User? doctor = FirebaseAuth.instance.currentUser;
+  final User? doctor = FirebaseAuth.instance.currentUser;
 
-    if (doctor == null || _consultationId.isEmpty) {
-      return;
-    }
+  if (doctor == null || _consultationId.isEmpty) {
+    return;
+  }
 
-    setState(() {
-      _isSending = true;
-    });
+  setState(() {
+    _isSending = true;
+  });
 
-    try {
-      final reference = FirebaseFirestore.instance
-          .collection('consultations')
-          .doc(_consultationId);
+  try {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
 
-      final messageDoc = await reference.collection('messages').add({
+    final consultationRef = db
+        .collection('consultations')
+        .doc(_consultationId);
+
+    // Buat ID pesan sebelum transaksi.
+    final messageRef = consultationRef
+        .collection('messages')
+        .doc();
+
+    await db.runTransaction((transaction) async {
+      // Periksa status konsultasi terbaru dari Firestore.
+      final consultationSnapshot =
+          await transaction.get(consultationRef);
+
+      if (!consultationSnapshot.exists) {
+        throw StateError('CONSULTATION_NOT_FOUND');
+      }
+
+      final consultationData = consultationSnapshot.data()!;
+
+      final String currentStatus =
+          (consultationData['status'] ?? '')
+              .toString()
+              .toLowerCase();
+
+      final String doctorId =
+          (consultationData['doctorId'] ?? '').toString();
+
+      // Pastikan konsultasi masih aktif.
+      if (currentStatus != 'active') {
+        throw StateError('CONSULTATION_NOT_ACTIVE');
+      }
+
+      // Pastikan dokter yang mengirim adalah dokter pemilik konsultasi.
+      if (doctorId != doctor.uid) {
+        throw StateError('NOT_AUTHORIZED');
+      }
+
+      // Simpan pesan.
+      transaction.set(messageRef, {
         'senderId': doctor.uid,
         'senderRole': 'doctor',
         'message': message,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      await reference.set({
+      // Perbarui informasi konsultasi.
+      transaction.update(consultationRef, {
         'updatedAt': FieldValue.serverTimestamp(),
         'lastMessage': message,
         'lastSenderId': doctor.uid,
-        'lastMessageId': messageDoc.id,
+        'lastMessageId': messageRef.id,
         'unreadForUser': FieldValue.increment(1),
-      }, SetOptions(merge: true));
+      });
+    });
 
-      _messageController.clear();
+    if (!mounted) return;
 
-      await Future.delayed(const Duration(milliseconds: 100));
+    _messageController.clear();
 
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    if (mounted) {
       _scrollToBottom();
-    } catch (_) {
-      if (!mounted) return;
+    }
+  } catch (e) {
+    debugPrint('GAGAL MENGIRIM PESAN: $e');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Pesan gagal dikirim.',
-            style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
+    if (!mounted) return;
+
+    String errorMessage = 'Pesan gagal dikirim.';
+
+    if (e is StateError &&
+        e.message == 'CONSULTATION_NOT_ACTIVE') {
+      errorMessage =
+          'Konsultasi sudah selesai. Pesan tidak dapat dikirim.';
+    } else if (e is StateError &&
+        e.message == 'CONSULTATION_NOT_FOUND') {
+      errorMessage = 'Data konsultasi tidak ditemukan.';
+    } else if (e is StateError &&
+        e.message == 'NOT_AUTHORIZED') {
+      errorMessage = 'Kamu tidak memiliki akses ke konsultasi ini.';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          errorMessage,
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 11,
           ),
-          behavior: SnackBarBehavior.floating,
         ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSending = false;
-        });
-      }
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isSending = false;
+      });
     }
   }
+}
 
   void _showFinishConfirmation() {
     showDialog(
@@ -1592,88 +1701,144 @@ Future<void> _markAsRead() async {
     );
   }
 
-  Future<void> _finishConsultation() async {
-    try {
-      if (_consultationId.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('consultations')
-            .doc(_consultationId)
-            .set({
-              'status': 'completed',
+ 
+Future<void> _finishConsultation() async {
+  final User? doctor = FirebaseAuth.instance.currentUser;
 
-              'updatedAt': FieldValue.serverTimestamp(),
-            }, SetOptions(merge: true));
+  if (doctor == null || _consultationId.isEmpty) {
+    return;
+  }
+
+  try {
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+
+    final consultationRef = db
+        .collection('consultations')
+        .doc(_consultationId);
+
+    await db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(consultationRef);
+
+      if (!snapshot.exists) {
+        throw StateError('CONSULTATION_NOT_FOUND');
       }
-    } catch (_) {}
+
+      final data = snapshot.data()!;
+
+      final String currentStatus =
+          (data['status'] ?? '').toString().toLowerCase();
+
+      final String doctorId =
+          (data['doctorId'] ?? '').toString();
+
+      if (doctorId != doctor.uid) {
+        throw StateError('NOT_AUTHORIZED');
+      }
+
+      if (currentStatus != 'active') {
+        throw StateError('CONSULTATION_NOT_ACTIVE');
+      }
+
+      transaction.update(consultationRef, {
+        'status': 'completed',
+        'completedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'endedEarly': true,
+        'endedBy': doctor.uid,
+      });
+    });
 
     if (!mounted) return;
 
-    Navigator.pop(context);
-  }
-
-  void _scrollToBottom() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-
-      duration: const Duration(milliseconds: 300),
-
-      curve: Curves.easeOut,
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Konsultasi berhasil diakhiri.'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
-  }
+  } catch (e) {
+    debugPrint('GAGAL MENGAKHIRI KONSULTASI: $e');
 
-  String _formatTime(dynamic timestamp) {
-    if (timestamp is! Timestamp) {
-      return '';
+    if (!mounted) return;
+
+    String errorMessage = 'Konsultasi gagal diakhiri.';
+
+    if (e is StateError &&
+        e.message == 'CONSULTATION_NOT_FOUND') {
+      errorMessage = 'Data konsultasi tidak ditemukan.';
+    } else if (e is StateError &&
+        e.message == 'NOT_AUTHORIZED') {
+      errorMessage = 'Kamu tidak memiliki akses ke konsultasi ini.';
+    } else if (e is StateError &&
+        e.message == 'CONSULTATION_NOT_ACTIVE') {
+      errorMessage = 'Konsultasi sudah tidak aktif.';
     }
-
-    final date = timestamp.toDate();
-
-    return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
-  Widget _buildError(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-
-        children: [
-          const Icon(Icons.error_outline_rounded, size: 45, color: brown),
-
-          const SizedBox(height: 12),
-
-          const Text(
-            'Chat gagal dimuat.',
-
-            style: TextStyle(
-              fontFamily: 'Nunito',
-
-              fontSize: 13,
-
-              fontWeight: FontWeight.w700,
-
-              color: Colors.black,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          Text(
-            message,
-
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-
-              fontSize: 10,
-
-              color: Colors.black,
-            ),
-          ),
-        ],
+ 
+        ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(errorMessage),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
 }
+
+void _scrollToBottom() {
+  if (!_scrollController.hasClients) {
+    return;
+  }
+
+  _scrollController.animateTo(
+    _scrollController.position.maxScrollExtent,
+    duration: const Duration(milliseconds: 300),
+    curve: Curves.easeOut,
+  );
+}
+
+String _formatTime(dynamic timestamp) {
+  if (timestamp is! Timestamp) {
+    return '';
+  }
+
+  final date = timestamp.toDate();
+
+  return '${date.hour.toString().padLeft(2, '0')}:'
+      '${date.minute.toString().padLeft(2, '0')}';
+}
+
+Widget _buildError(String message) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.error_outline_rounded,
+          size: 45,
+          color: brown,
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Chat gagal dimuat.',
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          message,
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 10,
+            color: Colors.black,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+}
+

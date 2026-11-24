@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,15 +26,24 @@ class AppNotification {
     'olahraga': 'notifOlahraga',
   };
 
-  static CollectionReference<Map<String, dynamic>> _notifications(String uid) {
+  static CollectionReference<Map<String, dynamic>> _notifications(
+    String uid,
+  ) {
     return _db.collection('users').doc(uid).collection('notifications');
   }
 
+  // ===============================================================
+  // CEK PENGATURAN NOTIFIKASI
+  // ===============================================================
+
   static Future<bool> isCategoryEnabled(String uid, String type) async {
-    // Notifikasi pesan pasien untuk akun dokter bukan kategori preferensi pasien.
-    if (type == 'pesan_pasien') return true;
+    // Booking dan pesan pasien selalu diizinkan.
+    if (type == 'consultation' || type == 'pesan_pasien') {
+      return true;
+    }
 
     final key = _settingKeys[type];
+
     if (key == null) return false;
 
     final userDoc = await _db.collection('users').doc(uid).get();
@@ -43,65 +53,80 @@ class AppNotification {
       return settings[key] == true;
     }
 
-    // Default sesuai nilai awal pada SettingsScreen.
+    // Default sesuai nilai awal SettingsScreen.
     return type != 'chat';
   }
 
+  // ===============================================================
+  // MEMBUAT NOTIFIKASI
+  // ===============================================================
 
-static Future<void> create({
-  required String uid,
-  required String type,
-  required String title,
-  required String body,
-  String? contentId,
-  DateTime? createdAt,
-  String? notificationId,
-  bool respectSetting = true,
-}) async {
-  if (uid.isEmpty || title.trim().isEmpty) return;
+  static Future<void> create({
+    required String uid,
+    required String type,
+    required String title,
+    required String body,
+    String? contentId,
+    DateTime? createdAt,
+    DateTime? visibleAt,
+    String? notificationId,
+    bool respectSetting = true,
+    bool overwriteExisting = false,
+  }) async {
+    if (uid.isEmpty || title.trim().isEmpty) return;
 
-  try {
-    // Periksa pengaturan hanya jika respectSetting bernilai true.
-    if (respectSetting &&
-        !await isCategoryEnabled(uid, type)) {
-      debugPrint(
-        'Notifikasi $type dilewati karena kategori nonaktif.',
-      );
-      return;
+    try {
+      if (respectSetting &&
+          !await isCategoryEnabled(uid, type)) {
+        debugPrint(
+          'Notifikasi $type dilewati karena kategori nonaktif.',
+        );
+        return;
+      }
+
+      final collection = _notifications(uid);
+
+      final hasCustomId =
+          notificationId != null && notificationId.trim().isNotEmpty;
+
+      final doc = hasCustomId
+          ? collection.doc(notificationId)
+          : collection.doc();
+
+      // Mencegah notifikasi dengan ID yang sama tersimpan dua kali.
+      if (hasCustomId && !overwriteExisting && (await doc.get()).exists) {
+        return;
+      }
+
+      await doc.set({
+        'id': doc.id,
+        'type': type,
+        'title': title,
+        'body': body,
+        'contentId': contentId,
+        'createdAt': Timestamp.fromDate(
+          createdAt ?? DateTime.now(),
+        ),
+        if (visibleAt != null) 'visibleAt': Timestamp.fromDate(visibleAt),
+        'isRead': false,
+      });
+
+      debugPrint('NOTIFIKASI TERSIMPAN DI FIRESTORE: $title');
+
+      // Perbarui badge khusus notifikasi booking.
+      // Mekanisme notifikasi chat tetap dipertahankan.
+      if (type == 'consultation') {
+        NotificationService.badgeSignal.value++;
+      }
+    } catch (e) {
+      debugPrint('NOTIFIKASI CREATE ERROR: $e');
+      rethrow;
     }
-
-    final collection = _notifications(uid);
-
-    final doc =
-        notificationId != null &&
-                notificationId.trim().isNotEmpty
-            ? collection.doc(notificationId)
-            : collection.doc();
-
-    // Hindari menyimpan notifikasi yang sama dua kali.
-    if (notificationId != null &&
-        notificationId.trim().isNotEmpty) {
-      if ((await doc.get()).exists) return;
-    }
-
-    await doc.set({
-      'id': doc.id,
-      'type': type,
-      'title': title,
-      'body': body,
-      'contentId': contentId,
-      'createdAt': Timestamp.fromDate(
-        createdAt ?? DateTime.now(),
-      ),
-      'isRead': false,
-    });
-
-    debugPrint('NOTIFIKASI TERSIMPAN DI FIRESTORE: $title');
-  } catch (e) {
-    debugPrint('NOTIFIKASI CREATE ERROR: $e');
-    rethrow;
   }
-}
+
+  // ===============================================================
+  // MENGAMBIL SEMUA NOTIFIKASI
+  // ===============================================================
 
   static Future<List<LocalNotification>> getAll(String uid) async {
     final snapshot = await _notifications(uid)
@@ -110,49 +135,92 @@ static Future<void> create({
         .get();
 
     return snapshot.docs
-        .map((doc) => LocalNotification.fromMap({...doc.data(), 'id': doc.id}))
+        .map(
+          (doc) => LocalNotification.fromMap({
+            ...doc.data(),
+            'id': doc.id,
+          }),
+        )
         .toList();
   }
 
-  static bool isFresh(LocalNotification item) =>
-      item.createdAt.isAfter(DateTime.now().subtract(freshWindow));
+  static bool isFresh(LocalNotification item) {
+    return item.createdAt.isAfter(
+      DateTime.now().subtract(freshWindow),
+    );
+  }
 
   static Future<int> getRecentUnreadCount(String uid) async {
     final items = await getAll(uid);
-    return items.where((item) => !item.isRead && isFresh(item)).length;
+
+    return items
+        .where((item) => !item.isRead && isFresh(item))
+        .length;
   }
+
+  // ===============================================================
+  // TANDAI SEMUA DIBACA
+  // ===============================================================
 
   static Future<void> markAllAsRead(String uid) async {
     final snapshot = await _notifications(uid)
         .where('isRead', isEqualTo: false)
         .get();
 
-    for (var start = 0; start < snapshot.docs.length; start += 450) {
+    final now = DateTime.now();
+    final visibleDocs = snapshot.docs.where((doc) {
+      final rawVisibleAt = doc.data()['visibleAt'];
+      if (rawVisibleAt == null) return true;
+      final visibleAt = rawVisibleAt is Timestamp
+          ? rawVisibleAt.toDate()
+          : DateTime.tryParse(rawVisibleAt.toString());
+      return visibleAt == null || !visibleAt.isAfter(now);
+    }).toList();
+
+    for (var start = 0; start < visibleDocs.length; start += 450) {
       final batch = _db.batch();
-      final end = (start + 450 < snapshot.docs.length)
+
+      final end = (start + 450 < visibleDocs.length)
           ? start + 450
-          : snapshot.docs.length;
+          : visibleDocs.length;
+
       for (var i = start; i < end; i++) {
-        batch.update(snapshot.docs[i].reference, {'isRead': true});
+        batch.update(
+          visibleDocs[i].reference,
+          {'isRead': true},
+        );
       }
+
       await batch.commit();
     }
   }
 
+  // ===============================================================
+  // HAPUS SEMUA NOTIFIKASI
+  // ===============================================================
+
   static Future<void> clearAll(String uid) async {
     final snapshot = await _notifications(uid).get();
+
     for (var start = 0; start < snapshot.docs.length; start += 450) {
       final batch = _db.batch();
+
       final end = (start + 450 < snapshot.docs.length)
           ? start + 450
           : snapshot.docs.length;
+
       for (var i = start; i < end; i++) {
         batch.delete(snapshot.docs[i].reference);
       }
+
       await batch.commit();
     }
   }
 }
+
+// ===============================================================
+// MODEL NOTIFIKASI
+// ===============================================================
 
 class LocalNotification {
   final String id;
@@ -160,6 +228,7 @@ class LocalNotification {
   final String title;
   final String body;
   final DateTime createdAt;
+  final DateTime? visibleAt;
   final bool isRead;
   final String? contentId;
 
@@ -169,21 +238,36 @@ class LocalNotification {
     required this.title,
     required this.body,
     required this.createdAt,
+    this.visibleAt,
     required this.isRead,
     required this.contentId,
   });
 
   factory LocalNotification.fromMap(Map<String, dynamic> map) {
     final rawDate = map['createdAt'];
+
     DateTime date;
+
     if (rawDate is Timestamp) {
       date = rawDate.toDate();
     } else if (rawDate is DateTime) {
       date = rawDate;
     } else if (rawDate is num) {
-      date = DateTime.fromMillisecondsSinceEpoch(rawDate.toInt());
+      date = DateTime.fromMillisecondsSinceEpoch(
+        rawDate.toInt(),
+      );
     } else {
       date = DateTime.now();
+    }
+
+    final rawVisibleAt = map['visibleAt'];
+    DateTime? visibleAt;
+    if (rawVisibleAt is Timestamp) {
+      visibleAt = rawVisibleAt.toDate();
+    } else if (rawVisibleAt is DateTime) {
+      visibleAt = rawVisibleAt;
+    } else if (rawVisibleAt != null) {
+      visibleAt = DateTime.tryParse(rawVisibleAt.toString());
     }
 
     return LocalNotification(
@@ -192,20 +276,26 @@ class LocalNotification {
       title: map['title']?.toString() ?? '',
       body: map['body']?.toString() ?? '',
       createdAt: date,
+      visibleAt: visibleAt,
       isRead: map['isRead'] == true,
       contentId: map['contentId']?.toString(),
     );
   }
 
-  LocalNotification copyWith({bool? isRead}) => LocalNotification(
-        id: id,
-        type: type,
-        title: title,
-        body: body,
-        createdAt: createdAt,
-        isRead: isRead ?? this.isRead,
-        contentId: contentId,
-      );
+  bool get isVisible => visibleAt == null || !visibleAt!.isAfter(DateTime.now());
+
+  LocalNotification copyWith({bool? isRead}) {
+    return LocalNotification(
+      id: id,
+      type: type,
+      title: title,
+      body: body,
+      createdAt: createdAt,
+      visibleAt: visibleAt,
+      isRead: isRead ?? this.isRead,
+      contentId: contentId,
+    );
+  }
 }
 
 // ===============================================================
@@ -216,205 +306,289 @@ class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
   @override
-  State<NotificationScreen> createState() => _NotificationScreenState();
+  State<NotificationScreen> createState() =>
+      _NotificationScreenState();
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
   final Color backgroundColor = const Color(0xFFFFF5EF);
   final Color accentBrown = const Color(0xFFB9543A);
 
+  bool _isLoading = true;
 
-bool _isLoading = true;
+  List<LocalNotification> _unread = [];
+  List<LocalNotification> _read = [];
+  List<LocalNotification> _allNotifications = [];
+  Timer? _visibilityTimer;
 
-List<LocalNotification> _unread = [];
-List<LocalNotification> _read = [];
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _notificationSubscription;
 
-StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
-    _notificationSubscription;
+  @override
+  void initState() {
+    super.initState();
 
-
-
-
-@override
-void initState() {
-  super.initState();
-  _listenToNotifications();
-  _markNotificationsAsReadOnOpen();
-}
-
-
-Future<void> _openNotificationContent(LocalNotification item) async {
-  final contentId = item.contentId;
-
-  if (contentId == null || contentId.isEmpty) {
-    debugPrint('NOTIFIKASI: contentId tidak tersedia.');
-    return;
+    _listenToNotifications();
+    _markNotificationsAsReadOnOpen();
+    _visibilityTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) => _applyVisibleNotifications(),
+    );
   }
 
-  try {
-    if (item.type == 'artikel') {
-      final doc = await FirebaseFirestore.instance
-          .collection('articles')
-          .doc(contentId)
-          .get();
+  // ===============================================================
+  // FORMAT NAMA DOKTER
+  // ===============================================================
 
-      if (!mounted || !doc.exists) return;
+  String _addDoctorPrefix(String name) {
+    final trimmedName = name.trim();
 
-      final article = AdminArticle.fromFirestore(doc);
+    if (trimmedName.isEmpty) return trimmedName;
 
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => AdminArticleDetailScreen(
-            article: article,
-          ),
-        ),
-      );
+    if (RegExp(r'^dr\.?\s', caseSensitive: false)
+        .hasMatch(trimmedName)) {
+      return trimmedName;
+    }
 
+    return 'dr. $trimmedName';
+  }
+
+  String _formatNotificationBody(LocalNotification item) {
+    final body = item.body.trim();
+
+    if (body.isEmpty) return body;
+
+    // Notifikasi dokter membalas pesan.
+    if (item.type == 'chat' &&
+        item.title == 'Dokter Membalas Pesanmu') {
+      return _addDoctorPrefix(body);
+    }
+
+    // Notifikasi booking konsultasi.
+    // Format: Konsultasi dengan Nama Dokter pada ...
+    if (item.type == 'consultation') {
+      const prefix = 'Konsultasi dengan ';
+
+      if (body.toLowerCase().startsWith(
+            prefix.toLowerCase(),
+          )) {
+        final startIndex = prefix.length;
+        final endIndex = body.toLowerCase().indexOf(
+              ' pada ',
+              startIndex,
+            );
+
+        if (endIndex > startIndex) {
+          final doctorName = body.substring(
+            startIndex,
+            endIndex,
+          ).trim();
+
+          final formattedName = _addDoctorPrefix(doctorName);
+
+          return '$prefix$formattedName${body.substring(endIndex)}';
+        }
+      }
+    }
+
+    return body;
+  }
+
+  // ===============================================================
+  // BUKA KONTEN NOTIFIKASI
+  // ===============================================================
+
+  Future<void> _openNotificationContent(
+    LocalNotification item,
+  ) async {
+    final contentId = item.contentId;
+
+    if (contentId == null || contentId.isEmpty) {
+      debugPrint('NOTIFIKASI: contentId tidak tersedia.');
       return;
     }
 
-    if (['edukasi', 'makanan', 'olahraga'].contains(item.type)) {
-      final doc = await FirebaseFirestore.instance
-          .collection('contents')
-          .doc(contentId)
-          .get();
+    try {
+      if (item.type == 'artikel') {
+        final doc = await FirebaseFirestore.instance
+            .collection('articles')
+            .doc(contentId)
+            .get();
 
-      if (!mounted || !doc.exists) return;
+        if (!mounted || !doc.exists) return;
 
-      final content = AdminContentItem.fromFirestore(doc);
+        final article = AdminArticle.fromFirestore(doc);
 
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => UserContentDetailScreen(item: content),
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AdminArticleDetailScreen(
+              article: article,
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      if (['edukasi', 'makanan', 'olahraga']
+          .contains(item.type)) {
+        final doc = await FirebaseFirestore.instance
+            .collection('contents')
+            .doc(contentId)
+            .get();
+
+        if (!mounted || !doc.exists) return;
+
+        final content = AdminContentItem.fromFirestore(doc);
+
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => UserContentDetailScreen(
+              item: content,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('NOTIFIKASI: gagal membuka konten: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Konten gagal dibuka.'),
         ),
       );
     }
-  } catch (e) {
-    debugPrint('NOTIFIKASI: gagal membuka konten: $e');
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Konten gagal dibuka.')),
-    );
   }
-}
-
-Future<void> _markNotificationsAsReadOnOpen() async {
-  final user = FirebaseAuth.instance.currentUser;
-
-  if (user == null) return;
-
-  try {
-    await AppNotification.markAllAsRead(user.uid);
-  } catch (e) {
-    debugPrint('NOTIFIKASI MARK AS READ ERROR: $e');
-  }
-}
-
-
-void _listenToNotifications() {
-  final user = FirebaseAuth.instance.currentUser;
-
-  if (user == null) {
-    setState(() => _isLoading = false);
-    return;
-  }
-
-  _notificationSubscription = FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.uid)
-      .collection('notifications')
-      .orderBy('createdAt', descending: true)
-      .limit(100)
-      .snapshots()
-      .listen(
-    (snapshot) {
-      final items = snapshot.docs
-          .map(
-            (doc) => LocalNotification.fromMap({
-              ...doc.data(),
-              'id': doc.id,
-            }),
-          )
-          .toList();
-
-      final unread = items
-          .where(
-            (item) =>
-                !item.isRead && AppNotification.isFresh(item),
-          )
-          .toList();
-
-      final read = items
-          .where(
-            (item) =>
-                item.isRead || !AppNotification.isFresh(item),
-          )
-          .toList();
-
-      if (!mounted) return;
-
-      setState(() {
-        _unread = unread;
-        _read = read;
-        _isLoading = false;
-      });
-    },
-    onError: (Object error) {
-      debugPrint('NOTIFIKASI REALTIME ERROR: $error');
-
-      if (!mounted) return;
-
-      setState(() => _isLoading = false);
-    },
-  );
-}
-
-@override
-void dispose() {
-  _notificationSubscription?.cancel();
-  super.dispose();
-}
 
   // ===============================================================
-  // LOAD NOTIFIKASI + TANDAI SEMUA DIBACA
+  // TANDAI NOTIFIKASI DIBACA SAAT HALAMAN DIBUKA
+  // ===============================================================
+
+  Future<void> _markNotificationsAsReadOnOpen() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return;
+
+    try {
+      await AppNotification.markAllAsRead(user.uid);
+    } catch (e) {
+      debugPrint('NOTIFIKASI MARK AS READ ERROR: $e');
+    }
+  }
+
+  // ===============================================================
+  // REALTIME LISTENER
+  // ===============================================================
+
+  void _listenToNotifications() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+      return;
+    }
+
+    _notificationSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .listen(
+      (snapshot) {
+        final items = snapshot.docs
+            .map(
+              (doc) => LocalNotification.fromMap({
+                ...doc.data(),
+                'id': doc.id,
+              }),
+            )
+            .toList();
+
+        _allNotifications = items;
+        _applyVisibleNotifications();
+      },
+      onError: (Object error) {
+        debugPrint('NOTIFIKASI REALTIME ERROR: $error');
+
+        if (!mounted) return;
+
+        setState(() => _isLoading = false);
+      },
+    );
+  }
+
+  void _applyVisibleNotifications() {
+    final visibleItems = _allNotifications
+        .where((item) => item.isVisible)
+        .toList();
+
+    final unread = visibleItems
+        .where((item) => !item.isRead && AppNotification.isFresh(item))
+        .toList();
+
+    final read = visibleItems
+        .where((item) => item.isRead || !AppNotification.isFresh(item))
+        .toList();
+
+    if (!mounted) return;
+    setState(() {
+      _unread = unread;
+      _read = read;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _visibilityTimer?.cancel();
+    _notificationSubscription?.cancel();
+    super.dispose();
+  }
+
+  // ===============================================================
+  // LOAD NOTIFIKASI
   // ===============================================================
 
   Future<void> _loadNotifications() async {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
       return;
     }
 
     try {
       final items = await AppNotification.getAll(user.uid);
-      final unread = items
-          .where((item) => !item.isRead && AppNotification.isFresh(item))
-          .toList();
-      final read = items
-          .where((item) => item.isRead || !AppNotification.isFresh(item))
-          .toList();
+
+      _allNotifications = items;
+      _applyVisibleNotifications();
 
       if (!mounted) return;
-      setState(() {
-        _unread = unread;
-        _read = read;
-        _isLoading = false;
-      });
 
-      // Dipertahankan sesuai perilaku kode asli: tandai dibaca saat halaman dibuka.
       await AppNotification.markAllAsRead(user.uid);
     } catch (e) {
       debugPrint('NOTIFIKASI LOAD ERROR: $e');
+
       if (!mounted) return;
+
       setState(() => _isLoading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notifikasi gagal dimuat. Periksa koneksi dan aturan Firestore.')),
+        const SnackBar(
+          content: Text(
+            'Notifikasi gagal dimuat. Periksa koneksi dan aturan Firestore.',
+          ),
+        ),
       );
     }
   }
@@ -423,7 +597,10 @@ void dispose() {
   // FORMAT WAKTU
   // ===============================================================
 
-  String _formatLabel(DateTime date, {required bool isUnread}) {
+  String _formatLabel(
+    DateTime date, {
+    required bool isUnread,
+  }) {
     if (isUnread) {
       final hour = date.hour.toString().padLeft(2, '0');
       final minute = date.minute.toString().padLeft(2, '0');
@@ -433,12 +610,11 @@ void dispose() {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-
     final thatDay = DateTime(date.year, date.month, date.day);
 
-    final int diffDays = today.difference(thatDay).inDays;
+    final diffDays = today.difference(thatDay).inDays;
 
-    if (diffDays <= 7) {
+    if (diffDays >= 0 && diffDays <= 7) {
       const days = [
         'Senin',
         'Selasa',
@@ -481,26 +657,53 @@ void dispose() {
 
   ({String emoji, Color bg}) _typeStyle(String type) {
     switch (type) {
+      case 'consultation':
+        return (
+          emoji: '📅',
+          bg: const Color(0xFFFFE8D8),
+        );
+
       case 'chat':
-        return (emoji: '👨‍⚕️', bg: const Color(0xFFDFF2E4));
+        return (
+          emoji: '👨‍⚕️',
+          bg: const Color(0xFFDFF2E4),
+        );
 
       case 'artikel':
-        return (emoji: '📰', bg: const Color(0xFFE9E2F8));
+        return (
+          emoji: '📰',
+          bg: const Color(0xFFE9E2F8),
+        );
 
       case 'edukasi':
-        return (emoji: '📚', bg: const Color(0xFFE9E2F8));
+        return (
+          emoji: '📚',
+          bg: const Color(0xFFE9E2F8),
+        );
 
       case 'olahraga':
-        return (emoji: '🏃', bg: const Color(0xFFE2F1DB));
+        return (
+          emoji: '🏃',
+          bg: const Color(0xFFE2F1DB),
+        );
 
       case 'makanan':
-        return (emoji: '🥗', bg: const Color(0xFFE2F1DB));
+        return (
+          emoji: '🥗',
+          bg: const Color(0xFFE2F1DB),
+        );
 
       case 'skrining':
-        return (emoji: '⏰', bg: const Color(0xFFFCE0DB));
+        return (
+          emoji: '⏰',
+          bg: const Color(0xFFFCE0DB),
+        );
 
       default:
-        return (emoji: '🔔', bg: const Color(0xFFFFE8D8));
+        return (
+          emoji: '🔔',
+          bg: const Color(0xFFFFE8D8),
+        );
     }
   }
 
@@ -512,11 +715,12 @@ void dispose() {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-
       body: SafeArea(
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFFB9543A)),
+                child: CircularProgressIndicator(
+                  color: Color(0xFFB9543A),
+                ),
               )
             : _buildContent(),
       ),
@@ -528,7 +732,7 @@ void dispose() {
   // ===============================================================
 
   Widget _buildContent() {
-    final bool isEmpty = _unread.isEmpty && _read.isEmpty;
+    final isEmpty = _unread.isEmpty && _read.isEmpty;
 
     if (isEmpty) {
       return _buildEmptyState();
@@ -542,12 +746,9 @@ void dispose() {
         children: [
           _buildHeader(),
 
-          // ================================================
           // BELUM DIBACA
-          // ================================================
           if (_unread.isNotEmpty) ...[
             const SizedBox(height: 24),
-
             Text(
               'Belum Dibaca (${_unread.length})',
               style: const TextStyle(
@@ -557,22 +758,20 @@ void dispose() {
                 color: Color(0xFF30221E),
               ),
             ),
-
             const SizedBox(height: 12),
-
             for (int i = 0; i < _unread.length; i++) ...[
-              _buildNotificationCard(item: _unread[i], isUnread: true),
-
-              if (i != _unread.length - 1) const SizedBox(height: 11),
+              _buildNotificationCard(
+                item: _unread[i],
+                isUnread: true,
+              ),
+              if (i != _unread.length - 1)
+                const SizedBox(height: 11),
             ],
           ],
 
-          // ================================================
           // SEBELUMNYA
-          // ================================================
           if (_read.isNotEmpty) ...[
             const SizedBox(height: 22),
-
             const Text(
               'Sebelumnya',
               style: TextStyle(
@@ -582,13 +781,14 @@ void dispose() {
                 color: Color(0xFF30221E),
               ),
             ),
-
             const SizedBox(height: 12),
-
             for (int i = 0; i < _read.length; i++) ...[
-              _buildNotificationCard(item: _read[i], isUnread: false),
-
-              if (i != _read.length - 1) const SizedBox(height: 11),
+              _buildNotificationCard(
+                item: _read[i],
+                isUnread: false,
+              ),
+              if (i != _read.length - 1)
+                const SizedBox(height: 11),
             ],
           ],
 
@@ -624,7 +824,6 @@ void dispose() {
               ),
             ),
           ),
-
           const Expanded(
             child: Center(
               child: Text(
@@ -638,7 +837,6 @@ void dispose() {
               ),
             ),
           ),
-
           const SizedBox(width: 45),
         ],
       ),
@@ -676,72 +874,73 @@ void dispose() {
           ],
         ),
         child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(color: style.bg, shape: BoxShape.circle),
-            child: Center(
-              child: Text(style.emoji, style: const TextStyle(fontSize: 19)),
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 13,
-                    fontWeight: isUnread ? FontWeight.w800 : FontWeight.w700,
-                    color: const Color(0xFF30221E),
-                  ),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: style.bg,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  style.emoji,
+                  style: const TextStyle(fontSize: 19),
                 ),
-
-                const SizedBox(height: 3),
-
-
-                Text(
-                  item.type == 'chat' &&
-                          item.title == 'Dokter Membalas Pesanmu' &&
-                          item.body.trim().isNotEmpty &&
-                          !item.body.trim().toLowerCase().startsWith('dr.')
-                      ? 'dr. ${item.body.trim()}'
-                      : item.body,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 11.5,
-                    height: 1.25,
-                    fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
-                    color: const Color(0xFF675B57),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 13,
+                      fontWeight: isUnread
+                          ? FontWeight.w800
+                          : FontWeight.w700,
+                      color: const Color(0xFF30221E),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 3),
+                  Text(
+                    _formatNotificationBody(item),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11.5,
+                      height: 1.25,
+                      fontWeight: isUnread
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: const Color(0xFF675B57),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-
-          const SizedBox(width: 10),
-
-          Text(
-            _formatLabel(item.createdAt, isUnread: isUnread),
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF77716E),
+            const SizedBox(width: 10),
+            Text(
+              _formatLabel(
+                item.createdAt,
+                isUnread: isUnread,
+              ),
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF77716E),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -765,12 +964,13 @@ void dispose() {
                 shape: BoxShape.circle,
               ),
               child: const Center(
-                child: Text('🔔', style: TextStyle(fontSize: 52)),
+                child: Text(
+                  '🔔',
+                  style: TextStyle(fontSize: 52),
+                ),
               ),
             ),
-
             const SizedBox(height: 30),
-
             const Text(
               'Belum Ada Notifikasi',
               textAlign: TextAlign.center,
@@ -781,9 +981,7 @@ void dispose() {
                 color: Color(0xFF171310),
               ),
             ),
-
             const SizedBox(height: 10),
-
             const Text(
               'Notifikasi balasan dokter, artikel mingguan, konten baru dan pengingat skrining mingguan akan muncul disini.',
               textAlign: TextAlign.center,
@@ -794,11 +992,9 @@ void dispose() {
                 color: Color(0xFF493C37),
               ),
             ),
-
           ],
         ),
       ),
     );
   }
-
 }

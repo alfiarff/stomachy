@@ -52,49 +52,133 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
         .snapshots();
   }
 
+
   bool _isDue(Map<String, dynamic> data) {
     final status = (data['status'] ?? '').toString().toLowerCase();
-    if (status == 'active') return true;
-    if (status != 'booked') return false;
 
-    final ts = data['consultationTimestamp'];
-    return ts is Timestamp && !DateTime.now().isBefore(ts.toDate());
+    if (status != 'booked' && status != 'active') {
+      return false;
+    }
+
+    final startValue = data['consultationTimestamp'];
+    if (startValue is! Timestamp) return false;
+
+    final DateTime now = DateTime.now();
+    final DateTime startTime = startValue.toDate();
+
+    DateTime? endTime;
+    final endValue = data['consultationEndTimestamp'];
+
+    if (endValue is Timestamp) {
+      endTime = endValue.toDate();
+    } else {
+      final duration =
+          (data['durationMinutes'] as num?)?.toInt() ?? 60;
+
+      endTime = startTime.add(Duration(minutes: duration));
+    }
+
+    if (now.isBefore(startTime)) return false;
+    if (!now.isBefore(endTime)) return false;
+
+    return true;
   }
 
   Future<void> _syncStatuses() async {
     if (_syncing) return;
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     _syncing = true;
+
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('consultations')
           .where('userId', isEqualTo: user.uid)
           .get();
 
-      final due = <MapEntry<String, Map<String, dynamic>>>[];
-      final batch = FirebaseFirestore.instance.batch();
-
       for (final doc in snapshot.docs) {
+        final consultationRef = doc.reference;
+
+        final transition =
+            await FirebaseFirestore.instance.runTransaction<String?>(
+          (transaction) async {
+            final freshSnapshot =
+                await transaction.get(consultationRef);
+
+            if (!freshSnapshot.exists) return null;
+
+            final data = freshSnapshot.data() ?? {};
+
+            final status =
+                (data['status'] ?? '').toString().toLowerCase();
+
+            final startValue = data['consultationTimestamp'];
+
+            if (startValue is! Timestamp) return null;
+
+            final DateTime now = DateTime.now();
+            final DateTime startTime = startValue.toDate();
+
+            DateTime? endTime;
+            final endValue = data['consultationEndTimestamp'];
+
+            if (endValue is Timestamp) {
+              endTime = endValue.toDate();
+            } else {
+              final duration =
+                  (data['durationMinutes'] as num?)?.toInt() ?? 60;
+
+              endTime = startTime.add(
+                Duration(minutes: duration),
+              );
+            }
+
+            // Konsultasi belum dimulai.
+            if (now.isBefore(startTime)) return null;
+
+            // Konsultasi sudah melewati waktu selesai.
+            if (!now.isBefore(endTime)) {
+              if (status == 'booked' || status == 'active') {
+                transaction.update(consultationRef, {
+                  'status': 'completed',
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+
+                return status == 'booked'
+                    ? 'started_and_completed'
+                    : 'completed';
+              }
+
+              return null;
+            }
+
+            // Konsultasi dimulai.
+            if (status == 'booked') {
+              transaction.update(consultationRef, {
+                'status': 'active',
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+
+              return 'started';
+            }
+
+            return null;
+          },
+        );
+
+        if (transition == null) continue;
+
         final data = doc.data();
-        final status = (data['status'] ?? '').toString().toLowerCase();
 
-        if (status == 'booked' && _isDue(data)) {
-          batch.set(doc.reference, {
-            'status': 'active',
-            'updatedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-          due.add(MapEntry(doc.id, data));
-        }
-      }
+        final doctorName =
+            (data['doctorName'] ?? 'Dokter').toString();
 
-      if (due.isNotEmpty) {
-        await batch.commit();
-        for (final item in due) {
+        // Notifikasi ketika konsultasi dimulai.
+        if (transition == 'started' ||
+            transition == 'started_and_completed') {
           try {
-            final doctorName = (item.value['doctorName'] ?? 'Dokter')
-                .toString();
             await AppNotification.create(
               uid: user.uid,
               type: 'consultation',
@@ -102,64 +186,76 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
               body:
                   'Konsultasi dengan $doctorName sudah dimulai. Kamu bisa mulai chat sekarang.',
             );
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('Notifikasi mulai gagal: $e');
+          }
+        }
+
+        // Notifikasi ketika konsultasi selesai.
+        if (transition == 'completed' ||
+            transition == 'started_and_completed') {
+          try {
+            await AppNotification.create(
+              uid: user.uid,
+              type: 'consultation',
+              title: 'Konsultasi Selesai',
+              body:
+                  'Konsultasi dengan $doctorName telah berakhir. Kamu masih bisa melihat riwayat chat.',
+            );
+          } catch (e) {
+            debugPrint('Notifikasi selesai gagal: $e');
+          }
         }
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Gagal memperbarui status konsultasi: $e');
     } finally {
       _syncing = false;
     }
   }
 
-  Future<void> _openChat(
-    Map<String, dynamic> data,
-    String consultationId,
-  ) async {
-    var status = (data['status'] ?? '').toString().toLowerCase();
+  Future<void> _openChat(String consultationId) async {
+    // Periksa status terbaru sebelum membuka chat.
+    await _syncStatuses();
 
-    if (status == 'booked') {
-      if (_isDue(data)) {
-        await _syncStatuses();
-        status = 'active';
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Belum waktunya konsultasi.',
-                style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
-              ),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        return;
-      }
-    }
+    if (!mounted) return;
 
-    // Konsultasi yang sudah selesai tetap bisa dibuka
-    // untuk melihat riwayat chat.
-    if (status != 'active' && status != 'completed') {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Konsultasi ini belum dapat dibuka.',
-              style: TextStyle(fontFamily: 'Nunito', fontSize: 11),
-            ),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+    final consultationRef = FirebaseFirestore.instance
+        .collection('consultations')
+        .doc(consultationId);
+
+    final latestSnapshot = await consultationRef.get();
+
+    if (!latestSnapshot.exists) {
+      _showConsultationMessage(
+        'Data konsultasi tidak ditemukan.',
+      );
       return;
     }
 
-    await FirebaseFirestore.instance
-        .collection('consultations')
-        .doc(consultationId)
-        .set({'unreadForUser': 0}, SetOptions(merge: true));
+    final latestData = latestSnapshot.data() ?? {};
+
+    final status =
+        (latestData['status'] ?? '').toString().toLowerCase();
+
+    if (status == 'booked') {
+      _showConsultationMessage(
+        'Belum waktunya konsultasi.',
+      );
+      return;
+    }
+
+    if (status != 'active' && status != 'completed') {
+      _showConsultationMessage(
+        'Konsultasi ini belum dapat dibuka.',
+      );
+      return;
+    }
+
+    await consultationRef.set(
+      {'unreadForUser': 0},
+      SetOptions(merge: true),
+    );
 
     if (!mounted) return;
 
@@ -168,13 +264,36 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
       MaterialPageRoute(
         builder: (_) => ConsultationChatScreen(
           consultationId: consultationId,
-          doctorName: (data['doctorName'] ?? 'Dokter').toString(),
-          specialty: (data['specialty'] ?? '').toString(),
-          doctorImage: (data['doctorImage'] ?? '').toString(),
-          selectedTime: (data['consultationTime'] ?? '').toString(),
+          doctorName:
+              (latestData['doctorName'] ?? 'Dokter').toString(),
+          specialty:
+              (latestData['specialty'] ?? '').toString(),
+          doctorImage:
+              (latestData['doctorImage'] ?? '').toString(),
+          selectedTime:
+              (latestData['consultationTime'] ?? '').toString(),
         ),
       ),
     );
+  }
+
+  void _showConsultationMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 11,
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   bool _matchesSearch(Map<String, dynamic> data) {
@@ -190,18 +309,6 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
         specialty.contains(query) ||
         day.contains(query) ||
         time.contains(query);
-  }
-
-  String _statusText(String status, bool due) {
-    if (status == 'completed') return 'Selesai';
-    if (status == 'active' || due) return 'Mulai Chat';
-    return 'Belum waktunya';
-  }
-
-  Color _statusColor(String status, bool due) {
-    if (status == 'completed') return const Color(0xFF77716E);
-    if (status == 'active' || due) return const Color(0xFF18A957);
-    return const Color(0xFFB8860B);
   }
 
   Widget _buildDoctorAvatar(String image) {
@@ -259,7 +366,7 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
     final data = doc.data();
     final status = (data['status'] ?? 'booked').toString().toLowerCase();
     final due = _isDue(data);
-    final canChat = status == 'active' || (status == 'booked' && due);
+    final canChat = status == 'active' && due;
 
     final doctorName = (data['doctorName'] ?? 'Dokter').toString();
     final message = (data['lastMessage'] ?? '').toString().trim();
@@ -286,7 +393,7 @@ class _UserConsultationsScreenState extends State<UserConsultationsScreen> {
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => _openChat(data, doc.id),
+      onTap: () => _openChat(doc.id),
       child: Container(
         height: 100,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
